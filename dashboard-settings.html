@@ -1,0 +1,872 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Settings — Kreddlo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        navy:'#0d2145','navy-deep':'#091830','navy-mid':'#162f5e',
+        green:'#2d8a5e','green-light':'#3dbd7a','green-pale':'#e8f5ef',
+        cream:'#f8f9fb',border:'#e2e8f0'
+      },
+      fontFamily: { sans: ['Plus Jakarta Sans','sans-serif'] }
+    }
+  }
+};
+</script>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+
+/* Glass */
+.glass{background:rgba(255,255,255,0.65);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.35);border-radius:20px;box-shadow:0 8px 32px rgba(13,33,69,0.08)}
+
+/* Buttons */
+.btn-green{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#2d8a5e;color:#fff;border:none;border-radius:50px;padding:11px 24px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;box-shadow:0 4px 16px rgba(45,138,94,0.30);transition:transform .15s,box-shadow .15s,background .15s}
+.btn-green:hover{background:#236b49;transform:translateY(-1px);box-shadow:0 6px 20px rgba(45,138,94,0.38)}
+.btn-green:active{transform:translateY(0)}
+.btn-primary{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#0d2145;color:#fff;border:none;border-radius:50px;padding:11px 24px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;box-shadow:0 4px 16px rgba(13,33,69,0.20);transition:transform .15s,box-shadow .15s,background .15s}
+.btn-primary:hover{background:#162f5e;transform:translateY(-1px)}
+.btn-primary:active{transform:translateY(0)}
+.btn-secondary{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:rgba(13,33,69,0.06);color:#0d2145;border:1px solid transparent;border-radius:50px;padding:10px 20px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;text-decoration:none;transition:background .15s,transform .15s,box-shadow .15s;white-space:nowrap}
+.btn-secondary:hover{background:rgba(13,33,69,0.10);transform:translateY(-1px);box-shadow:0 4px 12px rgba(13,33,69,0.10)}
+.btn-secondary:active{transform:translateY(0)}
+.btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:transparent;color:rgba(13,33,69,0.55);border:1.5px solid #e2e8f0;border-radius:50px;padding:10px 20px;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;transition:background .15s,border-color .15s,color .15s}
+.btn-ghost:hover{border-color:#0d2145;color:#0d2145;background:rgba(13,33,69,0.04)}
+
+/* Input */
+.input-field{width:100%;padding:12px 16px;background:rgba(255,255,255,0.85);border:1.5px solid #e2e8f0;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:500;color:#0d2145;outline:none;transition:border-color .2s,box-shadow .2s}
+.input-field:focus{border-color:#2d8a5e;box-shadow:0 0 0 3px rgba(45,138,94,0.11)}
+.input-field::placeholder{color:rgba(13,33,69,0.35)}
+textarea.input-field{resize:vertical;font-family:'Plus Jakarta Sans',sans-serif;line-height:1.6}
+
+/* Read-only display */
+.ro-field{width:100%;padding:13px 16px;background:rgba(13,33,69,0.03);border:1.5px solid #e2e8f0;border-radius:12px;font-size:14px;font-weight:500;color:rgba(13,33,69,0.55)}
+
+/* Label */
+.label{display:block;font-size:12px;font-weight:600;color:#0d2145;margin-bottom:6px}
+.lbl{font-size:11px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:rgba(13,33,69,0.48)}
+
+/* Badges */
+.badge{display:inline-flex;align-items:center;padding:3px 11px;border-radius:50px;font-size:11px;font-weight:600;letter-spacing:.3px;white-space:nowrap}
+.badge-green{background:#e8f5ef;color:#2d8a5e}
+.badge-amber{background:#fff3cd;color:#856404}
+
+/* Pills (skills preview) */
+.skill-pill{display:inline-flex;align-items:center;gap:6px;padding:5px 13px;border-radius:50px;background:rgba(45,138,94,0.10);color:#2d8a5e;font-size:12px;font-weight:600}
+.skill-pill button{background:none;border:none;color:#2d8a5e;cursor:pointer;display:flex;padding:0;line-height:0}
+
+/* Tabs */
+.tab-btn{border-radius:50px;padding:10px 20px;font-weight:600;font-size:13px;cursor:pointer;border:none;font-family:'Plus Jakarta Sans',sans-serif;transition:background .15s,color .15s,transform .15s;white-space:nowrap}
+.tab-btn.active{background:#0d2145;color:#fff;box-shadow:0 4px 16px rgba(13,33,69,0.20)}
+.tab-btn:not(.active){background:rgba(13,33,69,0.06);color:#0d2145}
+.tab-btn:not(.active):hover{background:rgba(13,33,69,0.12);transform:translateY(-1px)}
+.tab-btn:focus-visible{outline:2px solid #2d8a5e;outline-offset:2px}
+
+/* Toggle switch */
+.toggle{position:relative;width:48px;height:28px;border-radius:50px;border:none;cursor:pointer;flex-shrink:0;transition:background .2s;padding:0;background:#e2e8f0}
+.toggle.on{background:#2d8a5e}
+.toggle .knob{position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 3px rgba(13,33,69,0.25);transition:transform .2s}
+.toggle.on .knob{transform:translateX(20px)}
+.toggle.disabled{opacity:0.55;cursor:not-allowed}
+.toggle:focus-visible{outline:2px solid #2d8a5e;outline-offset:2px}
+
+/* Settings row */
+.settings-row{display:flex;justify-content:space-between;align-items:center;padding:16px 0;border-bottom:1px solid #e2e8f0;gap:16px}
+.settings-row:last-child{border-bottom:none}
+
+/* Char counter */
+.char-count{font-size:12px;font-weight:500;color:rgba(13,33,69,0.40);text-align:right;margin-top:4px}
+.char-count.over{color:#c81e1e}
+
+/* Nav */
+.nav-link{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:11px;font-size:13px;font-weight:600;color:rgba(255,255,255,0.52);text-decoration:none;transition:background .15s,color .15s;cursor:pointer;border:none;background:transparent;width:100%;text-align:left}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.88)}
+.nav-link.active{background:rgba(45,138,94,0.22);color:#fff;border-left:3px solid #3dbd7a;padding-left:10px}
+
+/* Mobile menu */
+.slide-in{transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
+.slide-in.open{transform:translateX(0)}
+.dim{opacity:0;pointer-events:none;transition:opacity .28s}
+.dim.open{opacity:1;pointer-events:all}
+
+/* Toast */
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:#091830;color:#fff;border-radius:50px;padding:11px 22px;font-size:13px;font-weight:600;z-index:3000;opacity:0;pointer-events:none;transition:transform .25s,opacity .25s;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+/* Blobs */
+.blob-n{position:absolute;width:500px;height:500px;background:radial-gradient(circle,rgba(13,33,69,0.09) 0%,transparent 70%);top:-100px;right:-100px;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
+.blob-g{position:absolute;width:440px;height:440px;background:radial-gradient(circle,rgba(45,138,94,0.07) 0%,transparent 70%);bottom:-60px;left:-80px;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
+
+/* Fade up */
+.fu{opacity:0;transform:translateY(18px);animation:fu .45s ease forwards}
+@keyframes fu{to{opacity:1;transform:translateY(0)}}
+.fu-1{animation-delay:.05s}.fu-2{animation-delay:.12s}
+
+/* Section panels */
+.tab-panel{display:none}
+.tab-panel.active{display:block}
+
+/* Error text */
+.field-error{font-size:12px;font-weight:600;color:#c81e1e;margin-top:6px;display:none}
+.field-error.show{display:block}
+
+/* Wallet sub-tabs */
+.wtab-btn{flex:1;padding:10px 0;border-radius:12px;font-size:13px;font-weight:600;cursor:pointer;border:none;font-family:'Plus Jakarta Sans',sans-serif;transition:background .15s,color .15s;text-align:center}
+.wtab-btn.active{background:#0d2145;color:#fff;box-shadow:0 3px 12px rgba(13,33,69,0.18)}
+.wtab-btn:not(.active){background:transparent;color:rgba(13,33,69,0.55)}
+.wtab-btn:not(.active):hover{background:rgba(13,33,69,0.06);color:#0d2145}
+.wtab-btn:focus-visible{outline:2px solid #2d8a5e;outline-offset:2px}
+.wtab-panel{display:none}
+.wtab-panel.active{display:block}
+
+/* Country select */
+select.input-field{appearance:none;-webkit-appearance:none;background-image:url("data:image/svg+xml,%3Csvg width='12' height='8' viewBox='0 0 12 8' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%230d2145' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 16px center;padding-right:40px;cursor:pointer}
+@media(min-width:1024px){
+  #sidebar{display:flex!important}
+  #hamburger{display:none!important}
+  #main-wrap{margin-left:248px}
+}
+@media(min-width:768px){
+  #page-content{padding:32px!important}
+  .settings-card{padding:32px!important}
+  .save-btn-row{justify-content:flex-end!important}
+  .save-btn-row .btn-green{width:auto!important}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay" style="position:fixed;inset:0;z-index:9999;background:#f8f9fb;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;">
+  <div style="font-size:30px;font-weight:800;color:#0d2145;letter-spacing:-0.8px;">Kreddl<span style="color:#2d8a5e;">o</span></div>
+  <div style="width:44px;height:3px;border-radius:2px;overflow:hidden;background:#e8eaf0;position:relative;">
+    <div id="loader-bar" style="position:absolute;top:0;left:-100%;width:100%;height:100%;background:linear-gradient(to right,#2d8a5e,#3dbd7a);"></div>
+  </div>
+</div>
+<style>
+@keyframes loaderSlide{0%{left:-100%}100%{left:100%}}
+#loader-bar{animation:loaderSlide 1.1s ease-in-out infinite}
+</style>
+
+<!-- MOBILE BACKDROP -->
+<div id="mobile-dim" class="dim" onclick="closeMobileMenu()" style="position:fixed;inset:0;z-index:400;background:rgba(9,24,48,0.58);"></div>
+
+<!-- MOBILE MENU -->
+<div id="mobile-menu" class="slide-in" style="position:fixed;top:0;right:0;width:272px;height:100%;background:#091830;z-index:500;padding:30px 22px;display:flex;flex-direction:column;overflow-y:auto;">
+  <button onclick="closeMobileMenu()" style="position:absolute;top:18px;right:18px;width:34px;height:34px;background:rgba(255,255,255,0.08);border:none;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.14)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.5px;margin-bottom:36px;margin-top:2px;">Kreddl<span style="color:#3dbd7a;">o</span></div>
+  <nav id="mobile-nav" style="flex:1;display:flex;flex-direction:column;gap:3px;"></nav>
+  <button id="mb-signout" style="margin-top:20px;width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:11px;padding:11px 15px;color:rgba(255,255,255,0.58);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s,color .2s;" onmouseover="this.style.background='rgba(255,255,255,0.10)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='rgba(255,255,255,0.58)'">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Sign Out
+  </button>
+</div>
+
+<!-- DESKTOP SIDEBAR -->
+<aside id="sidebar" style="position:fixed;top:0;left:0;width:248px;height:100%;background:#091830;z-index:300;padding:30px 18px;display:none;flex-direction:column;overflow-y:auto;">
+  <a href="/dashboard.html" style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.5px;text-decoration:none;display:block;margin-bottom:44px;">Kreddl<span style="color:#3dbd7a;">o</span></a>
+  <nav id="desktop-nav" style="flex:1;display:flex;flex-direction:column;gap:3px;"></nav>
+  <button id="dt-signout" style="margin-top:auto;width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:11px;padding:11px 15px;color:rgba(255,255,255,0.58);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s,color .2s;" onmouseover="this.style.background='rgba(255,255,255,0.10)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='rgba(255,255,255,0.58)'">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Sign Out
+  </button>
+</aside>
+
+<!-- MAIN WRAPPER -->
+<div id="main-wrap" style="min-height:100vh;display:flex;flex-direction:column;">
+
+  <!-- TOPBAR -->
+  <header style="position:sticky;top:0;z-index:200;height:64px;background:rgba(248,249,251,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;padding:0 20px;">
+    <h1 style="font-size:17px;font-weight:800;color:#0d2145;letter-spacing:-0.3px;margin:0;">Settings</h1>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button onclick="window.location.href='/notifications.html'" style="position:relative;width:38px;height:38px;background:transparent;border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(13,33,69,0.06)'" onmouseout="this.style.background='transparent'">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0d2145" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span id="bell-dot" style="display:none;position:absolute;top:7px;right:7px;width:8px;height:8px;background:#c81e1e;border-radius:50%;border:2px solid #f8f9fb;"></span>
+      </button>
+      <div id="user-avatar" style="width:35px;height:35px;background:linear-gradient(135deg,#2d8a5e,#3dbd7a);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;cursor:pointer;">MR</div>
+      <button id="hamburger" onclick="openMobileMenu()" style="width:38px;height:38px;background:transparent;border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(13,33,69,0.06)'" onmouseout="this.style.background='transparent'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0d2145" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- PAGE CONTENT -->
+  <main id="page-content" style="flex:1;padding:22px 18px;max-width:1200px;width:100%;margin:0 auto;position:relative;">
+    <div class="blob-n"></div>
+    <div class="blob-g"></div>
+    <div style="position:relative;z-index:1;">
+
+      <!-- TAB NAV -->
+      <div class="fu fu-1" style="display:flex;gap:4px;margin-bottom:32px;overflow-x:auto;-webkit-overflow-scrolling:touch;padding-bottom:2px;">
+        <button class="tab-btn active" data-tab="profile" onclick="selectTab('profile')">Profile</button>
+        <button class="tab-btn" data-tab="security" onclick="selectTab('security')">Security</button>
+        <button class="tab-btn" data-tab="wallet" onclick="selectTab('wallet')">Wallet</button>
+        <button class="tab-btn" data-tab="notifications" onclick="selectTab('notifications')">Notifications</button>
+      </div>
+
+      <div class="fu fu-2">
+
+        <!-- ===================== PROFILE TAB ===================== -->
+        <div id="tab-profile" class="tab-panel active">
+          <div class="glass settings-card" style="padding:24px;">
+
+            <!-- Photo row -->
+            <div style="display:flex;gap:20px;align-items:center;margin-bottom:28px;flex-wrap:wrap;">
+              <div style="position:relative;flex-shrink:0;">
+                <div id="photo-circle" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#2d8a5e,#3dbd7a);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;overflow:hidden;">
+                  <img id="photo-img" style="width:100%;height:100%;object-fit:cover;display:none;" alt="Profile photo"/>
+                  <span id="photo-initials">MR</span>
+                </div>
+              </div>
+              <div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
+                <h2 style="font-size:18px;font-weight:800;color:#0d2145;margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
+                  Marco Ricci
+                  <span id="verified-badge" class="badge badge-green" style="display:inline-flex;align-items:center;gap:4px;">
+                    <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
+                    Pro
+                  </span>
+                </h2>
+                <p style="font-size:13px;font-weight:500;color:rgba(13,33,69,0.50);margin:0;">@marco-ricci</p>
+                <div>
+                  <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="handlePhotoChange(event)"/>
+                  <button type="button" onclick="document.getElementById('photo-input').click()" style="background:none;border:none;color:#2d8a5e;font-size:13px;font-weight:600;cursor:pointer;padding:0;font-family:'Plus Jakarta Sans',sans-serif;">Change Photo</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Form -->
+            <div style="display:flex;flex-direction:column;gap:18px;">
+              <div>
+                <label class="label" for="f-name">Full Name</label>
+                <input type="text" id="f-name" class="input-field" value="Marco Ricci"/>
+              </div>
+              <div>
+                <label class="label" for="f-title">Professional Title</label>
+                <input type="text" id="f-title" class="input-field" value="Full Stack Developer &amp; UI Designer"/>
+              </div>
+              <div>
+                <label class="label" for="f-skills">Skills</label>
+                <input type="text" id="f-skills" class="input-field" placeholder="Type a skill and press Enter" onkeydown="handleSkillKeydown(event)"/>
+                <div id="skills-preview" style="display:flex;flex-wrap:wrap;gap:8px;margin-top:10px;"></div>
+              </div>
+              <div>
+                <label class="label" for="f-desc">Service Description</label>
+                <textarea id="f-desc" class="input-field" rows="4" maxlength="600" oninput="updateCharCount()">Full stack developer with 6 years of experience building e-commerce platforms, dashboards and brand identity systems for clients across Europe. I focus on clean code, pixel-perfect UI and reliable delivery.</textarea>
+                <div class="char-count" id="char-count">0 / 600</div>
+              </div>
+              <div>
+                <label class="label" for="f-price">Starting Price (USD)</label>
+                <input type="number" id="f-price" class="input-field" value="250" min="0"/>
+              </div>
+            </div>
+
+            <div class="save-btn-row" style="display:flex;margin-top:28px;">
+              <button class="btn-green" style="width:100%;" onclick="saveProfile()">
+                <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><polyline points="17 21 17 13 7 13 7 21"/><polyline points="7 3 7 8 15 8"/></svg>
+                Save Changes
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ===================== SECURITY TAB ===================== -->
+        <div id="tab-security" class="tab-panel">
+          <div class="glass settings-card" style="padding:24px;">
+
+            <!-- Email -->
+            <div>
+              <label class="label">Email Address</label>
+              <div class="ro-field">marco.ricci@example.com</div>
+              <p style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.45);margin:6px 0 0;">Email cannot be changed once set.</p>
+            </div>
+
+            <!-- Change password -->
+            <div style="margin-top:28px;">
+              <h3 style="font-size:16px;font-weight:700;color:#0d2145;margin:0 0 16px;">Change Password</h3>
+              <div style="display:flex;flex-direction:column;gap:14px;">
+                <div>
+                  <label class="label" for="cur-pass">Current Password</label>
+                  <input type="password" id="cur-pass" class="input-field" placeholder="Enter current password"/>
+                </div>
+                <div>
+                  <label class="label" for="new-pass">New Password</label>
+                  <input type="password" id="new-pass" class="input-field" placeholder="At least 8 characters"/>
+                </div>
+                <div>
+                  <label class="label" for="confirm-pass">Confirm New Password</label>
+                  <input type="password" id="confirm-pass" class="input-field" placeholder="Re-enter new password"/>
+                </div>
+                <p id="pass-error" class="field-error"></p>
+                <div style="display:flex;">
+                  <button class="btn-primary" onclick="updatePasswordHandler()">Update Password</button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2FA -->
+            <div class="settings-row" style="margin-top:28px;border-top:1px solid #e2e8f0;padding-top:24px;">
+              <div style="min-width:0;">
+                <h3 style="font-size:15px;font-weight:700;color:#0d2145;margin:0 0 4px;">Two Factor Authentication</h3>
+                <p style="font-size:13px;font-weight:500;color:rgba(13,33,69,0.50);margin:0;">Add an extra layer of security to your account using an authenticator app.</p>
+              </div>
+              <button class="toggle" id="toggle-2fa" onclick="toggle2FA()" role="switch" aria-checked="false">
+                <div class="knob"></div>
+              </button>
+            </div>
+
+          </div>
+        </div>
+
+        <!-- ===================== WALLET TAB ===================== -->
+        <div id="tab-wallet" class="tab-panel">
+          <div class="glass settings-card" style="padding:24px;">
+
+            <h2 style="font-size:18px;font-weight:700;color:#0d2145;margin:0 0 4px;">Payment Details</h2>
+            <p style="font-size:14px;font-weight:500;color:rgba(13,33,69,0.50);margin:0 0 20px;">Manage where your earnings are sent when you withdraw.</p>
+
+            <!-- Wallet sub-tab bar -->
+            <div style="display:flex;gap:4px;background:rgba(13,33,69,0.05);border-radius:14px;padding:4px;margin-bottom:24px;">
+              <button class="wtab-btn active" data-wtab="crypto" onclick="selectWalletTab('crypto')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:middle;margin-right:5px;"><circle cx="12" cy="12" r="10"/><path d="M9.5 8.5h3a2 2 0 0 1 0 4h-3v4"/><path d="M9.5 8.5V7"/><path d="M12.5 16.5v1.5"/></svg>
+                Crypto Wallet
+              </button>
+              <button class="wtab-btn" data-wtab="bank" onclick="selectWalletTab('bank')">
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" style="vertical-align:middle;margin-right:5px;"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+                Bank Account
+              </button>
+            </div>
+
+            <!-- ===== CRYPTO WALLET SUB-PANEL ===== -->
+            <div id="wtab-crypto" class="wtab-panel active">
+
+              <!-- Display view -->
+              <div id="wallet-display-view">
+                <label class="label">Wallet Address</label>
+                <div style="display:flex;gap:10px;align-items:stretch;">
+                  <div class="ro-field" id="wallet-address-display" style="flex:1;font-weight:500;font-size:14px;color:#0d2145;overflow-wrap:anywhere;word-break:break-all;"></div>
+                  <button class="btn-secondary" onclick="copyWalletAddress()" title="Copy address" style="flex-shrink:0;padding:0 16px;">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                  </button>
+                </div>
+                <div style="margin-top:14px;">
+                  <button class="btn-secondary" onclick="editWallet()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit Wallet Address
+                  </button>
+                </div>
+              </div>
+
+              <!-- Edit view -->
+              <div id="wallet-edit-view" style="display:none;">
+                <label class="label" for="wallet-edit-input">New Wallet Address</label>
+                <input type="text" id="wallet-edit-input" class="input-field" placeholder="Enter your USDT, BTC or ETH address"/>
+                <div style="display:flex;gap:10px;margin-top:14px;flex-wrap:wrap;">
+                  <button class="btn-green" onclick="saveWallet()">Save Address</button>
+                  <button class="btn-ghost" onclick="cancelEditWallet()">Cancel</button>
+                </div>
+              </div>
+
+              <!-- Warning -->
+              <div style="background:#fff3cd;border:1px solid rgba(133,100,4,0.18);border-radius:12px;padding:14px 16px;margin-top:20px;display:flex;gap:12px;align-items:flex-start;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#856404" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <p style="color:#856404;font-size:13px;font-weight:600;margin:0;line-height:1.6;">Changes apply to future withdrawals only. Any payouts already initiated will be sent to your previous address.</p>
+              </div>
+            </div>
+
+            <!-- ===== BANK ACCOUNT SUB-PANEL ===== -->
+            <div id="wtab-bank" class="wtab-panel">
+
+              <!-- Display view -->
+              <div id="bank-display-view">
+                <div style="display:flex;flex-direction:column;gap:14px;">
+                  <div>
+                    <div class="lbl" style="margin-bottom:6px;">Bank Name</div>
+                    <div class="ro-field" id="bank-name-display"></div>
+                  </div>
+                  <div>
+                    <div class="lbl" style="margin-bottom:6px;">Account Number</div>
+                    <div style="display:flex;gap:10px;align-items:stretch;">
+                      <div class="ro-field" id="bank-account-display" style="flex:1;letter-spacing:1px;"></div>
+                      <button class="btn-secondary" onclick="copyBankAccount()" title="Copy account number" style="flex-shrink:0;padding:0 16px;">
+                        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                      </button>
+                    </div>
+                  </div>
+                  <div>
+                    <div class="lbl" style="margin-bottom:6px;">Account Name</div>
+                    <div class="ro-field" id="bank-acct-name-display"></div>
+                  </div>
+                  <div>
+                    <div class="lbl" style="margin-bottom:6px;">Country</div>
+                    <div class="ro-field" id="bank-country-display"></div>
+                  </div>
+                </div>
+                <div style="margin-top:16px;">
+                  <button class="btn-secondary" onclick="editBank()">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"/><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"/></svg>
+                    Edit Bank Details
+                  </button>
+                </div>
+              </div>
+
+              <!-- Edit view -->
+              <div id="bank-edit-view" style="display:none;">
+                <div style="display:flex;flex-direction:column;gap:16px;">
+                  <div>
+                    <label class="label" for="b-name">Bank Name</label>
+                    <input type="text" id="b-name" class="input-field" placeholder="e.g. Guaranty Trust Bank"/>
+                  </div>
+                  <div>
+                    <label class="label" for="b-account">Account Number</label>
+                    <input type="text" id="b-account" class="input-field" placeholder="Enter your account number" inputmode="numeric" maxlength="20"/>
+                  </div>
+                  <div>
+                    <label class="label" for="b-acct-name">Account Name</label>
+                    <input type="text" id="b-acct-name" class="input-field" placeholder="Name on the account"/>
+                  </div>
+                  <div>
+                    <label class="label" for="b-country">Country</label>
+                    <select id="b-country" class="input-field">
+                      <option value="">Select country</option>
+                      <option value="Nigeria">Nigeria</option>
+                      <option value="Ghana">Ghana</option>
+                      <option value="Kenya">Kenya</option>
+                      <option value="South Africa">South Africa</option>
+                      <option value="Egypt">Egypt</option>
+                      <option value="Ethiopia">Ethiopia</option>
+                      <option value="Tanzania">Tanzania</option>
+                      <option value="Uganda">Uganda</option>
+                      <option value="Rwanda">Rwanda</option>
+                      <option value="Cameroon">Cameroon</option>
+                      <option value="Senegal">Senegal</option>
+                      <option value="Ivory Coast">Ivory Coast</option>
+                      <option value="Angola">Angola</option>
+                      <option value="Mozambique">Mozambique</option>
+                      <option value="Zambia">Zambia</option>
+                      <option value="Zimbabwe">Zimbabwe</option>
+                      <option value="Bangladesh">Bangladesh</option>
+                      <option value="Pakistan">Pakistan</option>
+                      <option value="India">India</option>
+                      <option value="Philippines">Philippines</option>
+                      <option value="Indonesia">Indonesia</option>
+                      <option value="Vietnam">Vietnam</option>
+                      <option value="Brazil">Brazil</option>
+                      <option value="Colombia">Colombia</option>
+                      <option value="Argentina">Argentina</option>
+                      <option value="Mexico">Mexico</option>
+                      <option value="Other">Other</option>
+                    </select>
+                  </div>
+                  <p id="bank-error" class="field-error"></p>
+                  <div style="display:flex;gap:10px;flex-wrap:wrap;">
+                    <button class="btn-green" onclick="saveBank()">Save Bank Details</button>
+                    <button class="btn-ghost" onclick="cancelEditBank()">Cancel</button>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Empty state — shown when no bank details saved yet -->
+              <div id="bank-empty-view" style="display:none;text-align:center;padding:32px 16px;">
+                <div style="width:52px;height:52px;background:rgba(13,33,69,0.06);border-radius:14px;display:flex;align-items:center;justify-content:center;margin:0 auto 14px;">
+                  <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(13,33,69,0.35)" stroke-width="1.8" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+                </div>
+                <p style="font-size:14px;font-weight:700;color:#0d2145;margin:0 0 6px;">No bank account saved</p>
+                <p style="font-size:13px;font-weight:500;color:rgba(13,33,69,0.48);margin:0 0 18px;line-height:1.6;">Add your bank details to receive fiat withdrawals via Paystack or Stripe.</p>
+                <button class="btn-primary" onclick="addBank()">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+                  Add Bank Account
+                </button>
+              </div>
+
+              <!-- Warning -->
+              <div style="background:#fff3cd;border:1px solid rgba(133,100,4,0.18);border-radius:12px;padding:14px 16px;margin-top:20px;display:flex;gap:12px;align-items:flex-start;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#856404" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px;"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+                <p style="color:#856404;font-size:13px;font-weight:600;margin:0;line-height:1.6;">Changes apply to future withdrawals only. Any fiat transfers already initiated will be sent to your previous account.</p>
+              </div>
+
+            </div>
+            <!-- end bank panel -->
+
+          </div>
+        </div>
+
+        <!-- ===================== NOTIFICATIONS TAB ===================== -->
+        <div id="tab-notifications" class="tab-panel">
+          <div class="glass settings-card" style="padding:24px;">
+            <h2 style="font-size:18px;font-weight:700;color:#0d2145;margin:0 0 24px;">Notification Preferences</h2>
+            <div id="notif-rows"></div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </main>
+</div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<script>
+// ============ DEMO DATA ============
+var DEMO = { name: 'Marco Ricci', role: 'freelancer' };
+
+var SKILLS = ['React', 'Node.js', 'Figma', 'Tailwind CSS'];
+
+var TWO_FA_ENABLED = false;
+
+var WALLET_ADDRESS = 'TXh9k3mP2qR7vL4nW8zY1aB6cD5eF0gH3i';
+
+// Bank details — mirrors Firestore users/{uid}.bankDetails map
+// Set to null to preview the empty state
+var BANK_DETAILS = {
+  bankName:    'Guaranty Trust Bank',
+  accountNumber: '0123456789',
+  accountName: 'Marco Ricci',
+  country:     'Nigeria'
+};
+
+var NOTIF_PREFS = {
+  paymentReceived: true,
+  contractSigned: true,
+  payoutSent: true,
+  disputeUpdate: true,
+  newMessage: true,
+  platformAnnouncements: false
+};
+
+var NOTIF_TYPES = [
+  { key:'paymentReceived',        label:'Payment Received',       desc:'When a client funds escrow for your project.',           locked:true  },
+  { key:'contractSigned',         label:'Contract Signed',        desc:'When a service agreement is signed by both parties.',    locked:false },
+  { key:'payoutSent',             label:'Payout Sent',            desc:'When a withdrawal has been processed and sent.',         locked:true  },
+  { key:'disputeUpdate',          label:'Dispute Update',         desc:'When there is an update on a dispute you are part of.',  locked:false },
+  { key:'newMessage',             label:'New Message',            desc:'When you receive a new message from a client.',          locked:false },
+  { key:'platformAnnouncements',  label:'Platform Announcements', desc:'News, feature updates and important platform notices.',  locked:false }
+];
+
+// ============ NAV ============
+var NAV = [
+  { label:'Dashboard',     href:'/dashboard.html',          icon:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>' },
+  { label:'Earnings',      href:'/dashboard-earnings.html', icon:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' },
+  { label:'Projects',      href:'/dashboard-projects.html', icon:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><polyline points="22 12 18 12 15 21 9 3 6 12 2 12"/></svg>' },
+  { label:'Contracts',     href:'/dashboard-contracts.html',icon:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/></svg>' },
+  { label:'Withdraw',      href:'/dashboard-withdraw.html', icon:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' },
+  { label:'Notifications', href:'/notifications.html',      icon:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>' },
+  { label:'Settings',      href:'/dashboard-settings.html', icon:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M4.93 4.93a10 10 0 0 0 0 14.14"/></svg>' }
+];
+
+function buildNav() {
+  var cur = (window.location.pathname.split('/').pop() || 'dashboard-settings.html');
+  var html = NAV.map(function(n) {
+    var active = cur === n.href.replace('/','') ? ' active' : '';
+    return '<a href="'+n.href+'" class="nav-link'+active+'">'+n.icon+n.label+'</a>';
+  }).join('');
+  document.getElementById('mobile-nav').innerHTML = html;
+  document.getElementById('desktop-nav').innerHTML = html;
+}
+
+// ============ MOBILE MENU ============
+function openMobileMenu() {
+  document.getElementById('mobile-menu').classList.add('open');
+  document.getElementById('mobile-dim').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMobileMenu() {
+  document.getElementById('mobile-menu').classList.remove('open');
+  document.getElementById('mobile-dim').classList.remove('open');
+  document.body.style.overflow = '';
+}
+
+// ============ LOGOUT ============
+function handleLogout() { showToast('Signed out (demo mode)'); }
+document.getElementById('mb-signout').onclick = handleLogout;
+document.getElementById('dt-signout').onclick = handleLogout;
+
+// ============ TABS ============
+function selectTab(tab) {
+  document.querySelectorAll('.tab-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.tab === tab);
+  });
+  document.querySelectorAll('.tab-panel').forEach(function(p) {
+    p.classList.toggle('active', p.id === 'tab-'+tab);
+  });
+}
+
+// ============ PHOTO ============
+function handlePhotoChange(e) {
+  var file = e.target.files && e.target.files[0];
+  if (!file) return;
+  var reader = new FileReader();
+  reader.onload = function(ev) {
+    var img = document.getElementById('photo-img');
+    img.src = ev.target.result;
+    img.style.display = 'block';
+    document.getElementById('photo-initials').style.display = 'none';
+  };
+  reader.readAsDataURL(file);
+  showToast('Photo selected. Save Changes to apply.');
+}
+
+// ============ SKILLS ============
+function renderSkills() {
+  document.getElementById('skills-preview').innerHTML = SKILLS.map(function(s, i) {
+    return '<span class="skill-pill">'+s
+      +'<button type="button" onclick="removeSkill('+i+')" aria-label="Remove '+s+'">'
+        +'<svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>'
+      +'</button>'
+    +'</span>';
+  }).join('');
+}
+function handleSkillKeydown(e) {
+  if (e.key !== 'Enter') return;
+  e.preventDefault();
+  var input = document.getElementById('f-skills');
+  var val = input.value.trim();
+  if (!val) return;
+  if (SKILLS.map(function(s){return s.toLowerCase();}).indexOf(val.toLowerCase()) !== -1) {
+    input.value = '';
+    return;
+  }
+  SKILLS.push(val);
+  input.value = '';
+  renderSkills();
+}
+function removeSkill(i) {
+  SKILLS.splice(i, 1);
+  renderSkills();
+}
+
+// ============ CHAR COUNT ============
+function updateCharCount() {
+  var ta = document.getElementById('f-desc');
+  var count = ta.value.length;
+  var el = document.getElementById('char-count');
+  el.textContent = count + ' / 600';
+  el.classList.toggle('over', count > 600);
+}
+
+// ============ PROFILE SAVE ============
+function saveProfile() {
+  var name = document.getElementById('f-name').value.trim();
+  var title = document.getElementById('f-title').value.trim();
+  var price = document.getElementById('f-price').value;
+  if (!name) { showToast('Full name is required'); return; }
+  if (!title) { showToast('Professional title is required'); return; }
+  if (SKILLS.length === 0) { showToast('Add at least one skill'); return; }
+  if (price === '' || Number(price) < 0) { showToast('Enter a valid starting price'); return; }
+  // Demo mode: would write to Firestore (users/{uid}) and upload photo to Storage here
+  showToast('Profile updated successfully');
+}
+
+// ============ SECURITY ============
+function updatePasswordHandler() {
+  var cur = document.getElementById('cur-pass').value;
+  var pass = document.getElementById('new-pass').value;
+  var confirm = document.getElementById('confirm-pass').value;
+  var errEl = document.getElementById('pass-error');
+  errEl.classList.remove('show');
+
+  if (!cur) { errEl.textContent = 'Enter your current password.'; errEl.classList.add('show'); return; }
+  if (pass.length < 8) { errEl.textContent = 'New password must be at least 8 characters.'; errEl.classList.add('show'); return; }
+  if (pass !== confirm) { errEl.textContent = 'New password and confirmation do not match.'; errEl.classList.add('show'); return; }
+
+  // Demo mode: would call Firebase Auth updatePassword here
+  document.getElementById('cur-pass').value = '';
+  document.getElementById('new-pass').value = '';
+  document.getElementById('confirm-pass').value = '';
+  showToast('Password updated successfully');
+}
+
+function toggle2FA() {
+  TWO_FA_ENABLED = !TWO_FA_ENABLED;
+  var btn = document.getElementById('toggle-2fa');
+  btn.classList.toggle('on', TWO_FA_ENABLED);
+  btn.setAttribute('aria-checked', TWO_FA_ENABLED ? 'true' : 'false');
+  showToast(TWO_FA_ENABLED ? 'Two factor authentication enabled' : 'Two factor authentication disabled');
+}
+
+// ============ WALLET ============
+function copyWalletAddress() {
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(WALLET_ADDRESS).then(function() { showToast('Copied'); });
+  } else {
+    showToast(WALLET_ADDRESS);
+  }
+}
+function editWallet() {
+  document.getElementById('wallet-edit-input').value = WALLET_ADDRESS;
+  document.getElementById('wallet-display-view').style.display = 'none';
+  document.getElementById('wallet-edit-view').style.display = 'block';
+}
+function cancelEditWallet() {
+  document.getElementById('wallet-edit-view').style.display = 'none';
+  document.getElementById('wallet-display-view').style.display = 'block';
+}
+function saveWallet() {
+  var val = document.getElementById('wallet-edit-input').value.trim();
+  if (!val) { showToast('Wallet address cannot be empty'); return; }
+  WALLET_ADDRESS = val;
+  document.getElementById('wallet-address-display').textContent = WALLET_ADDRESS;
+  document.getElementById('wallet-edit-view').style.display = 'none';
+  document.getElementById('wallet-display-view').style.display = 'block';
+  showToast('Wallet address updated');
+}
+
+// ============ WALLET SUB-TABS ============
+function selectWalletTab(tab) {
+  document.querySelectorAll('.wtab-btn').forEach(function(b) {
+    b.classList.toggle('active', b.dataset.wtab === tab);
+  });
+  document.querySelectorAll('.wtab-panel').forEach(function(p) {
+    p.classList.toggle('active', p.id === 'wtab-' + tab);
+  });
+}
+
+// ============ BANK DETAILS ============
+function renderBankDisplay() {
+  if (!BANK_DETAILS) {
+    document.getElementById('bank-display-view').style.display = 'none';
+    document.getElementById('bank-edit-view').style.display   = 'none';
+    document.getElementById('bank-empty-view').style.display  = 'block';
+    return;
+  }
+  document.getElementById('bank-empty-view').style.display  = 'none';
+  document.getElementById('bank-edit-view').style.display   = 'none';
+  document.getElementById('bank-display-view').style.display = 'block';
+  document.getElementById('bank-name-display').textContent    = BANK_DETAILS.bankName    || '-';
+  document.getElementById('bank-account-display').textContent = BANK_DETAILS.accountNumber || '-';
+  document.getElementById('bank-acct-name-display').textContent = BANK_DETAILS.accountName || '-';
+  document.getElementById('bank-country-display').textContent  = BANK_DETAILS.country    || '-';
+}
+
+function editBank() {
+  var bd = BANK_DETAILS || {};
+  document.getElementById('b-name').value      = bd.bankName      || '';
+  document.getElementById('b-account').value   = bd.accountNumber || '';
+  document.getElementById('b-acct-name').value = bd.accountName   || '';
+  var sel = document.getElementById('b-country');
+  sel.value = bd.country || '';
+  document.getElementById('bank-display-view').style.display = 'none';
+  document.getElementById('bank-empty-view').style.display   = 'none';
+  document.getElementById('bank-edit-view').style.display    = 'block';
+  document.getElementById('bank-error').classList.remove('show');
+}
+
+function addBank() {
+  BANK_DETAILS = null;
+  editBank();
+}
+
+function cancelEditBank() {
+  document.getElementById('bank-edit-view').style.display = 'none';
+  document.getElementById('bank-error').classList.remove('show');
+  renderBankDisplay();
+}
+
+function saveBank() {
+  var errEl  = document.getElementById('bank-error');
+  errEl.classList.remove('show');
+
+  var bName    = document.getElementById('b-name').value.trim();
+  var bAccount = document.getElementById('b-account').value.trim();
+  var bAcctName= document.getElementById('b-acct-name').value.trim();
+  var bCountry = document.getElementById('b-country').value;
+
+  if (!bName)    { errEl.textContent = 'Bank name is required.';       errEl.classList.add('show'); return; }
+  if (!bAccount) { errEl.textContent = 'Account number is required.';  errEl.classList.add('show'); return; }
+  if (!bAcctName){ errEl.textContent = 'Account name is required.';    errEl.classList.add('show'); return; }
+  if (!bCountry) { errEl.textContent = 'Please select a country.';     errEl.classList.add('show'); return; }
+
+  // Save to local state (production: setDoc with merge to users/{uid}.bankDetails)
+  BANK_DETAILS = {
+    bankName:      bName,
+    accountNumber: bAccount,
+    accountName:   bAcctName,
+    country:       bCountry
+  };
+
+  document.getElementById('bank-edit-view').style.display = 'none';
+  renderBankDisplay();
+  showToast('Bank details saved');
+}
+
+function copyBankAccount() {
+  if (!BANK_DETAILS) return;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(BANK_DETAILS.accountNumber).then(function() { showToast('Account number copied'); });
+  } else {
+    showToast(BANK_DETAILS.accountNumber);
+  }
+}
+var lockIcon = '<svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="rgba(13,33,69,0.40)" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>';
+
+function renderNotifPrefs() {
+  document.getElementById('notif-rows').innerHTML = NOTIF_TYPES.map(function(n) {
+    var isOn = !!NOTIF_PREFS[n.key];
+    var lockedAttrs = n.locked ? ' disabled' : '';
+    var toggleCls = 'toggle' + (isOn ? ' on' : '') + (n.locked ? ' disabled' : '');
+    var onclick = n.locked ? '' : ' onclick="toggleNotif(\''+n.key+'\')"';
+    return '<div class="settings-row">'
+      +'<div style="min-width:0;">'
+        +'<div style="font-size:14px;font-weight:600;color:#0d2145;">'+n.label+'</div>'
+        +'<div style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.48);margin-top:2px;">'+n.desc+'</div>'
+      +'</div>'
+      +'<div style="display:flex;align-items:center;gap:10px;flex-shrink:0;">'
+        +(n.locked ? lockIcon : '')
+        +'<button class="'+toggleCls+'"'+lockedAttrs+onclick+' role="switch" aria-checked="'+isOn+'"><div class="knob"></div></button>'
+      +'</div>'
+    +'</div>';
+  }).join('');
+}
+function toggleNotif(key) {
+  NOTIF_PREFS[key] = !NOTIF_PREFS[key];
+  renderNotifPrefs();
+  showToast('Preference updated');
+}
+
+// ============ TOAST ============
+function showToast(msg) {
+  var t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, 3000);
+}
+
+// ============ ESCAPE KEY ============
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  closeMobileMenu();
+});
+
+// ============ BOOT ============
+(function boot() {
+  var parts = DEMO.name.trim().split(' ');
+  var initials = parts.length >= 2 ? parts[0][0]+parts[parts.length-1][0] : DEMO.name.slice(0,2).toUpperCase();
+  document.getElementById('user-avatar').textContent = initials;
+  document.getElementById('photo-initials').textContent = initials;
+
+  buildNav();
+  renderSkills();
+  updateCharCount();
+  renderNotifPrefs();
+  document.getElementById('wallet-address-display').textContent = WALLET_ADDRESS;
+  renderBankDisplay();
+
+  document.getElementById('bell-dot').style.display = 'block';
+
+  var ov = document.getElementById('loading-overlay');
+  ov.style.display = 'none';
+})();
+</script>
+</body>
+</html>

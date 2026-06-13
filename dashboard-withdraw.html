@@ -1,0 +1,1321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>Withdraw Funds — Kreddlo</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap" rel="stylesheet"/>
+<script src="https://cdn.tailwindcss.com"></script>
+<script>
+tailwind.config = {
+  theme: {
+    extend: {
+      colors: {
+        navy:'#0d2145','navy-deep':'#091830','navy-mid':'#162f5e',
+        green:'#2d8a5e','green-light':'#3dbd7a','green-pale':'#e8f5ef',
+        cream:'#f8f9fb',border:'#e2e8f0'
+      },
+      fontFamily: { sans: ['Plus Jakarta Sans','sans-serif'] }
+    }
+  }
+};
+</script>
+<style>
+*,*::before,*::after{box-sizing:border-box}
+body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145;margin:0;padding:0;-webkit-font-smoothing:antialiased}
+
+.glass{background:rgba(255,255,255,0.65);backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.35);border-radius:20px;box-shadow:0 8px 32px rgba(13,33,69,0.08)}
+
+.btn-green{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:#2d8a5e;color:#fff;border:none;border-radius:50px;padding:11px 24px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;box-shadow:0 4px 16px rgba(45,138,94,0.30);transition:transform .15s,box-shadow .15s,background .15s}
+.btn-green:hover{background:#236b49;transform:translateY(-1px);box-shadow:0 6px 20px rgba(45,138,94,0.38)}
+.btn-green:active{transform:translateY(0)}
+.btn-green:disabled{opacity:0.6;cursor:not-allowed;transform:none}
+
+.btn-ghost{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:transparent;color:#0d2145;border:1.5px solid #e2e8f0;border-radius:50px;padding:10px 22px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:600;cursor:pointer;text-decoration:none;transition:transform .15s,border-color .15s,background .15s}
+.btn-ghost:hover{border-color:#0d2145;background:rgba(13,33,69,0.04);transform:translateY(-1px)}
+
+.badge{display:inline-flex;align-items:center;padding:3px 11px;border-radius:50px;font-size:11px;font-weight:600;letter-spacing:.3px;white-space:nowrap}
+.badge-green{background:#e8f5ef;color:#2d8a5e}
+.badge-amber{background:#fff3cd;color:#856404}
+.badge-navy{background:rgba(13,33,69,0.08);color:#0d2145}
+.badge-blue{background:#e8f0fe;color:#1a56db}
+
+.lbl{font-size:11px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:rgba(13,33,69,0.48)}
+
+.sk{background:linear-gradient(90deg,#f0f2f6 25%,#e8eaf0 50%,#f0f2f6 75%);background-size:200% 100%;animation:sk 1.5s infinite linear;border-radius:8px}
+@keyframes sk{0%{background-position:200% 0}100%{background-position:-200% 0}}
+
+.nav-link{display:flex;align-items:center;gap:11px;padding:10px 13px;border-radius:11px;font-size:13px;font-weight:600;color:rgba(255,255,255,0.52);text-decoration:none;transition:background .15s,color .15s;cursor:pointer;border:none;background:transparent;width:100%;text-align:left}
+.nav-link:hover{background:rgba(255,255,255,0.07);color:rgba(255,255,255,0.88)}
+.nav-link.active{background:rgba(45,138,94,0.22);color:#fff;border-left:3px solid #3dbd7a;padding-left:10px}
+
+.slide-in{transform:translateX(100%);transition:transform .28s cubic-bezier(.4,0,.2,1)}
+.slide-in.open{transform:translateX(0)}
+.dim{opacity:0;pointer-events:none;transition:opacity .28s}
+.dim.open{opacity:1;pointer-events:all}
+
+.modal{display:none;position:fixed;inset:0;z-index:1000;background:rgba(9,24,48,0.55);backdrop-filter:blur(4px);align-items:center;justify-content:center;padding:20px}
+.modal.open{display:flex}
+.modal-box{background:#fff;border-radius:24px;box-shadow:0 24px 80px rgba(13,33,69,0.20);width:100%;max-width:480px;max-height:90vh;overflow-y:auto;padding:28px}
+
+.toast{position:fixed;bottom:24px;left:50%;transform:translateX(-50%) translateY(60px);background:#091830;color:#fff;border-radius:50px;padding:11px 22px;font-size:13px;font-weight:600;z-index:3000;opacity:0;pointer-events:none;transition:transform .25s,opacity .25s;white-space:nowrap;max-width:90vw;text-align:center}
+.toast.show{transform:translateX(-50%) translateY(0);opacity:1}
+
+.blob-n{position:absolute;width:500px;height:500px;background:radial-gradient(circle,rgba(13,33,69,0.09) 0%,transparent 70%);top:-100px;right:-100px;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
+.blob-g{position:absolute;width:440px;height:440px;background:radial-gradient(circle,rgba(45,138,94,0.07) 0%,transparent 70%);bottom:-60px;left:-80px;border-radius:50%;filter:blur(80px);pointer-events:none;z-index:0}
+
+.fu{opacity:0;transform:translateY(18px);animation:fu .45s ease forwards}
+@keyframes fu{to{opacity:1;transform:translateY(0)}}
+.fu-1{animation-delay:.05s}.fu-2{animation-delay:.12s}.fu-3{animation-delay:.19s}.fu-4{animation-delay:.26s}.fu-5{animation-delay:.33s}.fu-6{animation-delay:.40s}
+
+.inp{width:100%;padding:12px 15px;background:rgba(255,255,255,0.9);border:1.5px solid #e2e8f0;border-radius:12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:14px;font-weight:500;color:#0d2145;outline:none;transition:border-color .2s,box-shadow .2s}
+.inp:focus{border-color:#2d8a5e;box-shadow:0 0 0 3px rgba(45,138,94,0.11)}
+.inp::placeholder{color:rgba(13,33,69,0.32)}
+select.inp{-webkit-appearance:none;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='rgba(13,33,69,0.4)' stroke-width='2.5'%3E%3Cpolyline points='6 9 12 15 18 9'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 14px center;padding-right:36px}
+
+/* Pulsing live dot */
+@keyframes pulse-dot{0%,100%{transform:scale(1);opacity:1}50%{transform:scale(1.5);opacity:0.6}}
+.live-dot{display:inline-block;border-radius:50%;background:#2d8a5e;animation:pulse-dot 1.8s ease-in-out infinite;flex-shrink:0}
+
+/* ─── METHOD TOGGLE ─── */
+.method-toggle{display:grid;grid-template-columns:1fr 1fr;background:rgba(13,33,69,0.05);border-radius:14px;padding:4px;gap:0}
+.method-tab{display:flex;align-items:center;justify-content:center;gap:8px;padding:11px 16px;border-radius:11px;border:none;font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;background:transparent;color:rgba(13,33,69,0.50);transition:background .2s,color .2s,box-shadow .2s;-webkit-tap-highlight-color:transparent}
+.method-tab:hover{color:rgba(13,33,69,0.80)}
+.method-tab.active{background:#fff;color:#0d2145;box-shadow:0 2px 12px rgba(13,33,69,0.10)}
+.method-tab svg{flex-shrink:0}
+
+/* Panel visibility */
+.method-panel{display:none}
+.method-panel.visible{display:block}
+
+/* Currency button */
+.curr-btn{display:flex;align-items:center;gap:8px;padding:10px 14px;border-radius:12px;border:1.5px solid #e2e8f0;background:#fff;cursor:pointer;transition:all .2s;white-space:nowrap;flex-shrink:0}
+.curr-btn:hover{border-color:rgba(45,138,94,0.4);box-shadow:0 2px 12px rgba(45,138,94,0.10)}
+.curr-btn.selected{border-color:#2d8a5e;background:#e8f5ef}
+
+/* Rate card */
+.rate-card{padding:14px 16px;border-radius:12px;background:rgba(13,33,69,0.025);border:1.5px solid transparent;cursor:pointer;transition:all .2s;flex-shrink:0;min-width:130px}
+.rate-card:hover{background:rgba(45,138,94,0.05);border-color:rgba(45,138,94,0.2)}
+.rate-card.selected{border-color:#2d8a5e;background:#e8f5ef}
+
+/* Amount input wrapper */
+.amt-wrap{position:relative}
+.amt-wrap .inp{padding-right:60px}
+.amt-unit{position:absolute;right:15px;top:50%;transform:translateY(-50%);font-size:13px;font-weight:600;color:rgba(13,33,69,0.4);pointer-events:none}
+
+/* Scrollable row */
+.scroll-row{display:flex;gap:10px;overflow-x:auto;padding-bottom:4px;-ms-overflow-style:none;scrollbar-width:none}
+.scroll-row::-webkit-scrollbar{display:none}
+
+/* Fee row */
+.fee-row{display:flex;align-items:center;justify-content:space-between;padding:6px 0}
+
+/* Spinner */
+@keyframes spin{to{transform:rotate(360deg)}}
+.spinner{width:16px;height:16px;border:2px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin .7s linear infinite;flex-shrink:0}
+
+/* Pull-to-refresh */
+.ptr-indicator{position:fixed;top:64px;left:50%;transform:translateX(-50%) translateY(-56px);z-index:190;display:flex;align-items:center;gap:9px;background:#fff;border:1px solid #e2e8f0;border-radius:50px;padding:8px 18px 8px 12px;box-shadow:0 6px 24px rgba(13,33,69,0.10);font-size:13px;font-weight:600;color:#0d2145;opacity:0;pointer-events:none;transition:transform .28s cubic-bezier(.34,1.4,.64,1),opacity .22s ease;white-space:nowrap}
+.ptr-indicator.ptr-pulling{transform:translateX(-50%) translateY(8px);opacity:1}
+.ptr-indicator.ptr-loading{transform:translateX(-50%) translateY(8px);opacity:1}
+.ptr-spinner{width:18px;height:18px;border:2.5px solid rgba(45,138,94,0.20);border-top-color:#2d8a5e;border-radius:50%;animation:ptr-spin .7s linear infinite;flex-shrink:0}
+@keyframes ptr-spin{to{transform:rotate(360deg)}}
+
+/* Swipe-back hint */
+.swipe-hint{position:fixed;top:0;left:0;width:4px;height:100%;background:linear-gradient(to right,rgba(45,138,94,0.35),transparent);z-index:350;opacity:0;pointer-events:none;transition:opacity .18s}
+.swipe-hint.active{opacity:1}
+
+/* Balance card sections */
+.bal-divider{width:1px;background:rgba(13,33,69,0.08);flex-shrink:0}
+
+/* Input label */
+.field-label{display:block;font-size:12px;font-weight:600;color:rgba(13,33,69,0.55);margin-bottom:8px;letter-spacing:0.3px}
+
+/* Info banner */
+.info-banner{background:#e8f0fe;border-radius:12px;padding:13px 16px;display:flex;gap:10px;align-items:flex-start}
+
+/* Country flag placeholder chip */
+.flag-chip{display:inline-flex;align-items:center;gap:6px;background:#e8f5ef;padding:3px 10px 3px 6px;border-radius:50px;font-size:12px;font-weight:600;color:#2d8a5e}
+
+@media(min-width:1024px){
+  #sidebar{display:flex!important}
+  #hamburger{display:none!important}
+  #main-wrap{margin-left:248px}
+}
+@media(min-width:768px){
+  #page-content{padding:32px!important}
+  #rate-grid{display:grid!important;grid-template-columns:repeat(3,1fr)!important;overflow:visible!important}
+  .method-tab{font-size:14px;padding:12px 20px}
+}
+</style>
+</head>
+<body>
+
+<!-- LOADING OVERLAY -->
+<div id="loading-overlay" style="position:fixed;inset:0;z-index:9999;background:#f8f9fb;display:flex;flex-direction:column;align-items:center;justify-content:center;gap:18px;">
+  <div style="font-size:30px;font-weight:800;color:#0d2145;letter-spacing:-0.8px;">Kreddl<span style="color:#2d8a5e;">o</span></div>
+  <div style="width:44px;height:3px;border-radius:2px;overflow:hidden;background:#e8eaf0;">
+    <div id="loader-bar" style="width:100%;height:100%;background:linear-gradient(to right,#2d8a5e,#3dbd7a);animation:loaderSlide 1.1s ease-in-out infinite;"></div>
+  </div>
+</div>
+<style>@keyframes loaderSlide{0%{transform:translateX(-100%)}100%{transform:translateX(100%)}}</style>
+
+<!-- MOBILE BACKDROP -->
+<div id="mobile-dim" class="dim" onclick="closeMobileMenu()" style="position:fixed;inset:0;z-index:400;background:rgba(9,24,48,0.58);"></div>
+
+<!-- MOBILE MENU -->
+<div id="mobile-menu" class="slide-in" style="position:fixed;top:0;right:0;width:272px;height:100%;background:#091830;z-index:500;padding:30px 22px;display:flex;flex-direction:column;overflow-y:auto;">
+  <button onclick="closeMobileMenu()" style="position:absolute;top:18px;right:18px;width:34px;height:34px;background:rgba(255,255,255,0.08);border:none;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;" onmouseover="this.style.background='rgba(255,255,255,0.14)'" onmouseout="this.style.background='rgba(255,255,255,0.08)'">
+    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+  </button>
+  <div style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.5px;margin-bottom:36px;margin-top:2px;">Kreddl<span style="color:#3dbd7a;">o</span></div>
+  <nav id="mobile-nav" style="flex:1;display:flex;flex-direction:column;gap:3px;"></nav>
+  <button onclick="handleLogout()" style="margin-top:20px;width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:11px;padding:11px 15px;color:rgba(255,255,255,0.58);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s,color .2s;" onmouseover="this.style.background='rgba(255,255,255,0.10)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='rgba(255,255,255,0.58)'">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Sign Out
+  </button>
+</div>
+
+<!-- DESKTOP SIDEBAR -->
+<aside id="sidebar" style="position:fixed;top:0;left:0;width:248px;height:100%;background:#091830;z-index:300;padding:30px 18px;display:none;flex-direction:column;overflow-y:auto;">
+  <a href="/dashboard.html" style="font-size:20px;font-weight:800;color:#fff;letter-spacing:-0.5px;text-decoration:none;display:block;margin-bottom:44px;">Kreddl<span style="color:#3dbd7a;">o</span></a>
+  <nav id="desktop-nav" style="flex:1;display:flex;flex-direction:column;gap:3px;"></nav>
+  <button onclick="handleLogout()" style="margin-top:auto;width:100%;background:rgba(255,255,255,0.06);border:1px solid rgba(255,255,255,0.10);border-radius:11px;padding:11px 15px;color:rgba(255,255,255,0.58);font-family:'Plus Jakarta Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;transition:background .2s,color .2s;" onmouseover="this.style.background='rgba(255,255,255,0.10)';this.style.color='#fff'" onmouseout="this.style.background='rgba(255,255,255,0.06)';this.style.color='rgba(255,255,255,0.58)'">
+    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h4"/><polyline points="16 17 21 12 16 7"/><line x1="21" y1="12" x2="9" y2="12"/></svg>
+    Sign Out
+  </button>
+</aside>
+
+<!-- MAIN WRAPPER -->
+<div id="main-wrap" style="min-height:100vh;display:flex;flex-direction:column;">
+
+  <!-- TOPBAR -->
+  <header style="position:sticky;top:0;z-index:200;height:64px;background:rgba(248,249,251,0.92);backdrop-filter:blur(12px);-webkit-backdrop-filter:blur(12px);border-bottom:1px solid #e2e8f0;display:flex;align-items:center;justify-content:space-between;padding:0 20px;">
+    <h1 style="font-size:17px;font-weight:800;color:#0d2145;letter-spacing:-0.3px;margin:0;">Withdraw</h1>
+    <div style="display:flex;align-items:center;gap:10px;">
+      <button onclick="window.location.href='/notifications.html'" style="position:relative;width:38px;height:38px;background:transparent;border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(13,33,69,0.06)'" onmouseout="this.style.background='transparent'">
+        <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0d2145" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
+        <span id="bell-dot" style="display:none;position:absolute;top:7px;right:7px;width:8px;height:8px;background:#c81e1e;border-radius:50%;border:2px solid #f8f9fb;"></span>
+      </button>
+      <div id="user-avatar" style="width:35px;height:35px;background:linear-gradient(135deg,#2d8a5e,#3dbd7a);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;cursor:pointer;">MR</div>
+      <button id="hamburger" onclick="openMobileMenu()" style="width:38px;height:38px;background:transparent;border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(13,33,69,0.06)'" onmouseout="this.style.background='transparent'">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0d2145" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
+      </button>
+    </div>
+  </header>
+
+  <!-- PAGE CONTENT -->
+  <main id="page-content" style="flex:1;padding:22px 18px;max-width:800px;width:100%;margin:0 auto;position:relative;">
+    <div class="blob-n"></div>
+    <div class="blob-g"></div>
+    <div style="position:relative;z-index:1;">
+
+      <!-- ===================== SECTION A: Dual Balance Hero ===================== -->
+      <div class="fu fu-1" style="margin-bottom:20px;">
+        <div style="background:linear-gradient(135deg,#fff 60%,#e8f5ef 100%);border:1px solid rgba(45,138,94,0.18);border-radius:24px;padding:24px;box-shadow:0 8px 40px rgba(45,138,94,0.10),0 2px 8px rgba(13,33,69,0.06);position:relative;overflow:hidden;">
+          <!-- Decorative circle -->
+          <div style="position:absolute;top:-40px;right:-40px;width:180px;height:180px;background:radial-gradient(circle,rgba(45,138,94,0.10) 0%,transparent 70%);border-radius:50%;pointer-events:none;"></div>
+
+          <!-- Live indicator -->
+          <div style="display:flex;align-items:center;gap:7px;margin-bottom:16px;">
+            <span class="live-dot" style="width:7px;height:7px;"></span>
+            <span style="font-size:12px;font-weight:600;color:#2d8a5e;">Live balances</span>
+            <span style="font-size:11px;color:rgba(13,33,69,0.38);font-weight:500;">Updated in real time</span>
+          </div>
+
+          <!-- Two balance columns — stacked on mobile, side by side on md+ -->
+          <div style="display:grid;grid-template-columns:1fr;gap:16px;" id="balance-grid">
+
+            <!-- Crypto balance -->
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div class="lbl" style="margin-bottom:4px;">Crypto Balance</div>
+              <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+                <div id="balance-crypto" style="font-size:36px;font-weight:800;color:#0d2145;letter-spacing:-1.2px;line-height:1;">$1,240.00</div>
+                <span style="font-size:13px;font-weight:600;color:rgba(13,33,69,0.40);">USD</span>
+              </div>
+              <div style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.48);margin-top:2px;">Available for crypto withdrawal</div>
+            </div>
+
+            <!-- Divider — horizontal on mobile, vertical on md+ -->
+            <div id="bal-sep" style="height:1px;background:rgba(13,33,69,0.08);width:100%;"></div>
+
+            <!-- Fiat balance -->
+            <div style="display:flex;flex-direction:column;gap:4px;">
+              <div class="lbl" style="margin-bottom:4px;">Fiat Balance</div>
+              <div style="display:flex;align-items:baseline;gap:8px;flex-wrap:wrap;">
+                <div id="balance-fiat" style="font-size:36px;font-weight:800;color:#1a56db;letter-spacing:-1.2px;line-height:1;">$380.00</div>
+                <span style="font-size:13px;font-weight:600;color:rgba(26,86,219,0.45);">USD</span>
+              </div>
+              <div style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.48);margin-top:2px;">Available for bank withdrawal</div>
+            </div>
+          </div>
+
+          <!-- Mini stats row -->
+          <div style="display:flex;gap:16px;margin-top:20px;padding-top:16px;border-top:1px solid rgba(13,33,69,0.07);flex-wrap:wrap;">
+            <div>
+              <div style="font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:rgba(13,33,69,0.4);margin-bottom:3px;">Total Earned</div>
+              <div style="font-size:15px;font-weight:800;color:#0d2145;">$8,750.00</div>
+            </div>
+            <div class="bal-divider"></div>
+            <div>
+              <div style="font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:rgba(13,33,69,0.4);margin-bottom:3px;">Total Withdrawn</div>
+              <div style="font-size:15px;font-weight:800;color:#0d2145;">$7,130.00</div>
+            </div>
+            <div class="bal-divider"></div>
+            <div>
+              <div style="font-size:11px;font-weight:600;letter-spacing:1.2px;text-transform:uppercase;color:rgba(13,33,69,0.4);margin-bottom:3px;">Last Payout</div>
+              <div style="font-size:15px;font-weight:800;color:#0d2145;">3 days ago</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ===================== SECTION B: Method Toggle ===================== -->
+      <div class="fu fu-2" style="margin-bottom:20px;">
+        <div class="method-toggle" role="tablist" aria-label="Withdrawal method">
+          <button
+            id="tab-bank"
+            class="method-tab active"
+            role="tab"
+            aria-selected="true"
+            aria-controls="panel-bank"
+            onclick="switchMethod('bank')"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <rect x="1" y="4" width="22" height="16" rx="2"/>
+              <line x1="1" y1="10" x2="23" y2="10"/>
+            </svg>
+            Bank Account
+          </button>
+          <button
+            id="tab-crypto"
+            class="method-tab"
+            role="tab"
+            aria-selected="false"
+            aria-controls="panel-crypto"
+            onclick="switchMethod('crypto')"
+          >
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/>
+              <line x1="12" y1="17" x2="12.01" y2="17"/>
+            </svg>
+            Crypto Wallet
+          </button>
+        </div>
+      </div>
+
+      <!-- ===================== PANEL: BANK ACCOUNT ===================== -->
+      <div id="panel-bank" class="method-panel visible" role="tabpanel" aria-labelledby="tab-bank">
+
+        <!-- Provider info banner — updates based on country selection -->
+        <div id="bank-provider-banner" class="fu fu-3 info-banner" style="margin-bottom:18px;">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;margin-top:1px;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+          <p id="bank-provider-text" style="margin:0;font-size:13px;font-weight:500;color:#1a56db;line-height:1.5;">Select your country to see processing details and estimated arrival time.</p>
+        </div>
+
+        <!-- Bank form card -->
+        <div class="fu fu-3 glass" style="padding:24px 22px;margin-bottom:18px;">
+          <div style="font-size:16px;font-weight:700;color:#0d2145;margin-bottom:20px;">Bank Account Details</div>
+
+          <!-- Country selector — determines Paystack vs Stripe -->
+          <div style="margin-bottom:16px;">
+            <label class="field-label" for="bank-country">Country</label>
+            <select id="bank-country" class="inp" onchange="onCountryChange()">
+              <option value="">Select your country</option>
+              <!-- Africa — Paystack -->
+              <optgroup label="Africa (via Paystack)">
+                <option value="NG">Nigeria</option>
+                <option value="GH">Ghana</option>
+                <option value="KE">Kenya</option>
+                <option value="ZA">South Africa</option>
+                <option value="TZ">Tanzania</option>
+                <option value="UG">Uganda</option>
+                <option value="RW">Rwanda</option>
+                <option value="CI">Cote d'Ivoire</option>
+                <option value="SN">Senegal</option>
+                <option value="CM">Cameroon</option>
+              </optgroup>
+              <!-- International — Stripe -->
+              <optgroup label="International (via Stripe)">
+                <option value="US">United States</option>
+                <option value="GB">United Kingdom</option>
+                <option value="DE">Germany</option>
+                <option value="FR">France</option>
+                <option value="NL">Netherlands</option>
+                <option value="ES">Spain</option>
+                <option value="IT">Italy</option>
+                <option value="CA">Canada</option>
+                <option value="AU">Australia</option>
+                <option value="IN">India</option>
+                <option value="SG">Singapore</option>
+                <option value="AE">UAE</option>
+              </optgroup>
+            </select>
+          </div>
+
+          <!-- Bank name -->
+          <div style="margin-bottom:16px;">
+            <label class="field-label" for="bank-name">Bank Name</label>
+            <input type="text" id="bank-name" class="inp" placeholder="e.g. First Bank, Chase, Barclays"/>
+          </div>
+
+          <!-- Account number / IBAN — label changes per region -->
+          <div style="margin-bottom:16px;">
+            <label class="field-label" id="bank-acct-label" for="bank-account-number">Account Number</label>
+            <input type="text" id="bank-account-number" class="inp" placeholder="Enter your account number" inputmode="numeric"/>
+          </div>
+
+          <!-- Account name — must match KYC -->
+          <div style="margin-bottom:16px;">
+            <label class="field-label" for="bank-account-name">Account Name</label>
+            <input type="text" id="bank-account-name" class="inp" placeholder="Exactly as on your KYC documents"/>
+            <p style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.45);margin:6px 0 0;display:flex;align-items:center;gap:5px;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
+              This must exactly match the name on your Kreddlo KYC verification.
+            </p>
+          </div>
+
+          <!-- Routing / Sort code — shown for US/UK only -->
+          <div id="routing-row" style="margin-bottom:16px;display:none;">
+            <label class="field-label" id="routing-label" for="bank-routing">Routing Number</label>
+            <input type="text" id="bank-routing" class="inp" placeholder="9-digit routing number" inputmode="numeric"/>
+          </div>
+
+          <!-- Swift / BIC — shown for international -->
+          <div id="swift-row" style="margin-bottom:16px;display:none;">
+            <label class="field-label" for="bank-swift">SWIFT / BIC Code</label>
+            <input type="text" id="bank-swift" class="inp" placeholder="e.g. AAAABBCC or AAAABBCCDDD"/>
+          </div>
+
+          <!-- Amount -->
+          <div style="margin-bottom:18px;">
+            <label class="field-label" for="bank-amount">Amount to Withdraw (USD)</label>
+            <div class="amt-wrap">
+              <input type="number" id="bank-amount" class="inp" placeholder="0.00" min="10" step="0.01" oninput="calcBankFees()">
+              <span class="amt-unit">USD</span>
+            </div>
+            <p style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.42);margin:6px 0 0;display:flex;align-items:center;gap:5px;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              Minimum $10.00. Available fiat: <strong style="color:#1a56db;" id="bank-max-display">$380.00</strong>
+            </p>
+          </div>
+
+          <!-- Bank fee breakdown — updates based on country -->
+          <div id="bank-fee-breakdown" style="background:#e8f0fe;border-radius:12px;padding:16px;margin-bottom:20px;">
+            <div style="font-size:12px;font-weight:700;color:rgba(26,86,219,0.70);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;display:flex;align-items:center;gap:6px;">
+              <span id="bank-provider-badge" style="display:inline-flex;align-items:center;gap:4px;background:#1a56db;color:#fff;padding:2px 8px;border-radius:50px;font-size:10px;font-weight:700;letter-spacing:0.5px;">PAYSTACK</span>
+              Fee Breakdown
+            </div>
+
+            <div class="fee-row">
+              <span style="font-size:13px;font-weight:500;color:rgba(13,33,69,0.58);" id="bank-fee-label-1">Processing fee</span>
+              <span id="bank-fee-1" style="font-size:13px;font-weight:600;color:#0d2145;">-</span>
+            </div>
+            <div class="fee-row">
+              <span style="font-size:13px;font-weight:500;color:rgba(13,33,69,0.58);">Platform fee (1.5%)</span>
+              <span id="bank-fee-platform" style="font-size:13px;font-weight:600;color:#0d2145;">-</span>
+            </div>
+            <div style="height:1px;background:rgba(26,86,219,0.15);margin:8px 0;"></div>
+            <div class="fee-row" style="padding-top:4px;">
+              <span style="font-size:14px;font-weight:700;color:#0d2145;">You will receive</span>
+              <div style="text-align:right;">
+                <div id="bank-fee-final" style="font-size:17px;font-weight:800;color:#1a56db;">-</div>
+                <div id="bank-eta" style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.45);margin-top:1px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Error -->
+          <div id="bank-error" style="display:none;font-size:13px;font-weight:500;color:#c81e1e;margin-bottom:12px;padding:10px 14px;background:#fde8e8;border-radius:10px;"></div>
+
+          <!-- Submit -->
+          <button class="btn-green" id="btn-bank-withdraw" onclick="handleBankWithdraw()" style="width:100%;padding:15px 28px;font-size:15px;font-weight:700;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+            Send to Bank Account
+          </button>
+        </div>
+
+        <!-- Early payout — bank panel -->
+        <div id="bank-early-payout-section" class="fu fu-4" style="margin-bottom:18px;">
+          <div style="background:rgba(255,255,255,0.70);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.35);border-left:3px solid #856404;border-radius:20px;box-shadow:0 8px 32px rgba(13,33,69,0.08);padding:20px 22px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+              <div style="width:30px;height:30px;background:#fff3cd;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#856404" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
+              <span style="font-size:14px;font-weight:700;color:#0d2145;">Early Payout</span>
+              <span class="badge badge-amber">Pro Feature</span>
+            </div>
+            <p style="font-size:13px;font-weight:500;color:rgba(13,33,69,0.58);margin:0 0 14px;line-height:1.6;">Funds are normally held for <strong style="color:#0d2145;">7 days</strong> after project completion. Early Payout gives you instant access for a <strong style="color:#856404;">2% fee</strong>.</p>
+            <button class="btn-ghost" onclick="openEarlyPayoutModal()" style="font-size:13px;padding:9px 18px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Request Early Payout
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /panel-bank -->
+
+      <!-- ===================== PANEL: CRYPTO WALLET ===================== -->
+      <div id="panel-crypto" class="method-panel" role="tabpanel" aria-labelledby="tab-crypto">
+
+        <!-- Exchange rates -->
+        <div class="fu fu-3 glass" style="padding:22px;margin-bottom:18px;">
+          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;gap:12px;flex-wrap:wrap;">
+            <span style="font-size:15px;font-weight:700;color:#0d2145;">Exchange Rates</span>
+            <div style="display:flex;align-items:center;gap:6px;">
+              <span class="live-dot" style="width:6px;height:6px;"></span>
+              <span style="font-size:12px;color:rgba(13,33,69,0.48);font-weight:500;">Live, updated in <span id="rate-countdown" style="font-weight:700;color:#2d8a5e;">60</span>s</span>
+            </div>
+          </div>
+          <div id="rate-grid" class="scroll-row" style="gap:10px;">
+            <div class="rate-card" id="rate-usdt" onclick="selectRateCard('usdt')" data-symbol="USDT">
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+                <div style="width:26px;height:26px;background:#26a17b;border-radius:50%;display:flex;align-items:center;justify-content:center;"><span style="font-size:9px;font-weight:800;color:#fff;">T</span></div>
+                <div>
+                  <div style="font-size:13px;font-weight:700;color:#0d2145;">Tether</div>
+                  <div style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.45);">USDT</div>
+                </div>
+              </div>
+              <div id="rate-val-usdt" style="font-size:16px;font-weight:800;color:#2d8a5e;">1.0000 USDT</div>
+              <div style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.4);margin-top:2px;">per USD</div>
+            </div>
+
+            <div class="rate-card" id="rate-bitcoin" onclick="selectRateCard('bitcoin')" data-symbol="BTC">
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+                <div style="width:26px;height:26px;background:#F7931A;border-radius:50%;display:flex;align-items:center;justify-content:center;"><span style="font-size:9px;font-weight:800;color:#fff;">B</span></div>
+                <div>
+                  <div style="font-size:13px;font-weight:700;color:#0d2145;">Bitcoin</div>
+                  <div style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.45);">BTC</div>
+                </div>
+              </div>
+              <div id="rate-val-btc" style="font-size:16px;font-weight:800;color:#2d8a5e;">0.00001524 BTC</div>
+              <div style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.4);margin-top:2px;">per USD</div>
+            </div>
+
+            <div class="rate-card" id="rate-ethereum" onclick="selectRateCard('ethereum')" data-symbol="ETH">
+              <div style="display:flex;align-items:center;gap:7px;margin-bottom:8px;">
+                <div style="width:26px;height:26px;background:#627EEA;border-radius:50%;display:flex;align-items:center;justify-content:center;"><span style="font-size:9px;font-weight:800;color:#fff;">E</span></div>
+                <div>
+                  <div style="font-size:13px;font-weight:700;color:#0d2145;">Ethereum</div>
+                  <div style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.45);">ETH</div>
+                </div>
+              </div>
+              <div id="rate-val-eth" style="font-size:16px;font-weight:800;color:#2d8a5e;">0.00041820 ETH</div>
+              <div style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.4);margin-top:2px;">per USD</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Currency selector -->
+        <div class="fu fu-3" style="margin-bottom:18px;">
+          <div class="lbl" style="margin-bottom:10px;">Choose Withdrawal Currency</div>
+          <div class="scroll-row" id="currency-selector">
+            <button class="curr-btn selected" id="curr-USDT" onclick="selectCurrency('USDT','usdt')">
+              <div style="width:24px;height:24px;background:#26a17b;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="font-size:8px;font-weight:800;color:#fff;">T</span></div>
+              <span style="font-size:13px;font-weight:600;color:#0d2145;">USDT</span>
+            </button>
+            <button class="curr-btn" id="curr-BTC" onclick="selectCurrency('BTC','bitcoin')">
+              <div style="width:24px;height:24px;background:#F7931A;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="font-size:8px;font-weight:800;color:#fff;">B</span></div>
+              <span style="font-size:13px;font-weight:600;color:#0d2145;">Bitcoin</span>
+            </button>
+            <button class="curr-btn" id="curr-ETH" onclick="selectCurrency('ETH','ethereum')">
+              <div style="width:24px;height:24px;background:#627EEA;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="font-size:8px;font-weight:800;color:#fff;">E</span></div>
+              <span style="font-size:13px;font-weight:600;color:#0d2145;">Ethereum</span>
+            </button>
+            <button class="curr-btn" id="curr-BNB" onclick="selectCurrency('BNB','binancecoin')">
+              <div style="width:24px;height:24px;background:#F3BA2F;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="font-size:8px;font-weight:800;color:#fff;">B</span></div>
+              <span style="font-size:13px;font-weight:600;color:#0d2145;">BNB</span>
+            </button>
+            <button class="curr-btn" id="curr-USDC" onclick="selectCurrency('USDC','usd-coin')">
+              <div style="width:24px;height:24px;background:#2775CA;border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="font-size:8px;font-weight:800;color:#fff;">U</span></div>
+              <span style="font-size:13px;font-weight:600;color:#0d2145;">USDC</span>
+            </button>
+            <button class="curr-btn" onclick="openMoreModal()" style="border-style:dashed;color:rgba(13,33,69,0.5);">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="16"/><line x1="8" y1="12" x2="16" y2="12"/></svg>
+              <span style="font-size:13px;font-weight:600;">More</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Crypto withdrawal form -->
+        <div class="fu fu-4 glass" style="padding:24px 22px;margin-bottom:18px;">
+          <div style="font-size:16px;font-weight:700;color:#0d2145;margin-bottom:20px;">Withdrawal Details</div>
+
+          <!-- Amount -->
+          <div style="margin-bottom:18px;">
+            <label class="field-label" for="input-withdraw-amount">Amount to Withdraw (USD)</label>
+            <div class="amt-wrap">
+              <input type="number" id="input-withdraw-amount" class="inp" placeholder="0.00" min="5" step="0.01" oninput="calcFees()" style="padding-right:60px;">
+              <span class="amt-unit">USD</span>
+            </div>
+            <p style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.42);margin:6px 0 0;display:flex;align-items:center;gap:5px;">
+              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              Minimum $5.00. Available: <strong style="color:#2d8a5e;" id="max-display">$1,240.00</strong>
+            </p>
+          </div>
+
+          <!-- Wallet address -->
+          <div style="margin-bottom:20px;">
+            <label id="wallet-label" class="field-label" for="input-wallet-address">USDT Wallet Address</label>
+            <input type="text" id="input-wallet-address" class="inp" placeholder="Your wallet address" value="TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE">
+          </div>
+
+          <!-- Crypto fee breakdown -->
+          <div id="fee-breakdown" style="background:#e8f5ef;border-radius:12px;padding:16px;margin-bottom:20px;">
+            <div style="font-size:12px;font-weight:700;color:rgba(45,138,94,0.70);text-transform:uppercase;letter-spacing:1px;margin-bottom:10px;">Fee Breakdown</div>
+            <div class="fee-row">
+              <span style="font-size:13px;font-weight:500;color:rgba(13,33,69,0.58);">NOWPayments fee (0.5%)</span>
+              <span id="fee-network" style="font-size:13px;font-weight:600;color:#0d2145;">-</span>
+            </div>
+            <div class="fee-row">
+              <span style="font-size:13px;font-weight:500;color:rgba(13,33,69,0.58);">Platform fee (1.5%)</span>
+              <span id="fee-platform" style="font-size:13px;font-weight:600;color:#0d2145;">-</span>
+            </div>
+            <div style="height:1px;background:rgba(45,138,94,0.18);margin:8px 0;"></div>
+            <div class="fee-row" style="padding-top:4px;">
+              <span style="font-size:14px;font-weight:700;color:#0d2145;">You will receive</span>
+              <div style="text-align:right;">
+                <div id="fee-final" style="font-size:17px;font-weight:800;color:#2d8a5e;">-</div>
+                <div id="fee-final-usd" style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.45);margin-top:1px;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Crypto error -->
+          <div id="withdraw-error" style="display:none;font-size:13px;font-weight:500;color:#c81e1e;margin-bottom:12px;padding:10px 14px;background:#fde8e8;border-radius:10px;"></div>
+
+          <!-- Crypto submit -->
+          <button class="btn-green" id="btn-withdraw" onclick="handleWithdraw()" style="width:100%;padding:15px 28px;font-size:15px;font-weight:700;">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            Confirm Withdrawal
+          </button>
+        </div>
+
+        <!-- Crypto early payout -->
+        <div id="early-payout-section" class="fu fu-5" style="margin-bottom:18px;">
+          <div style="background:rgba(255,255,255,0.70);backdrop-filter:blur(14px);border:1px solid rgba(255,255,255,0.35);border-left:3px solid #856404;border-radius:20px;box-shadow:0 8px 32px rgba(13,33,69,0.08);padding:20px 22px;">
+            <div style="display:flex;align-items:center;gap:8px;margin-bottom:8px;flex-wrap:wrap;">
+              <div style="width:30px;height:30px;background:#fff3cd;border-radius:8px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#856404" stroke-width="2" stroke-linecap="round"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              </div>
+              <span style="font-size:14px;font-weight:700;color:#0d2145;">Early Payout</span>
+              <span class="badge badge-amber">Pro Feature</span>
+            </div>
+            <p style="font-size:13px;font-weight:500;color:rgba(13,33,69,0.58);margin:0 0 14px;line-height:1.6;">Funds are normally held for <strong style="color:#0d2145;">7 days</strong> after project completion. Early Payout gives you instant access for a <strong style="color:#856404;">2% fee</strong>.</p>
+            <button class="btn-ghost" onclick="openEarlyPayoutModal()" style="font-size:13px;padding:9px 18px;">
+              <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+              Request Early Payout
+            </button>
+          </div>
+        </div>
+
+      </div><!-- /panel-crypto -->
+
+      <!-- ===================== SECTION: Recent Withdrawals ===================== -->
+      <div class="fu fu-6 glass" style="padding:22px;margin-bottom:32px;">
+        <div style="font-size:15px;font-weight:700;color:#0d2145;margin-bottom:16px;">Recent Withdrawals</div>
+        <div id="withdrawal-history">
+          <!-- Bank row -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid #f0f2f6;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:36px;height:36px;background:#e8f0fe;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:#0d2145;">Bank Transfer - First Bank</div>
+                <div style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.45);">Jun 11, 2026 - NG - via Paystack</div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:14px;font-weight:700;color:#0d2145;">$200.00</div>
+              <span class="badge badge-green" style="margin-top:3px;">Completed</span>
+            </div>
+          </div>
+          <!-- Crypto row -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid #f0f2f6;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:36px;height:36px;background:#e8f5ef;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <span style="font-size:9px;font-weight:800;color:#2d8a5e;">T</span>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:#0d2145;">USDT Withdrawal</div>
+                <div style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.45);">Jun 10, 2026 - TQn9Y2...SMe</div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:14px;font-weight:700;color:#0d2145;">$500.00</div>
+              <span class="badge badge-green" style="margin-top:3px;">Completed</span>
+            </div>
+          </div>
+          <!-- Bank row 2 -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid #f0f2f6;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:36px;height:36px;background:#e8f0fe;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:#0d2145;">Bank Transfer - Barclays</div>
+                <div style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.45);">May 29, 2026 - GB - via Stripe</div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:14px;font-weight:700;color:#0d2145;">$180.00</div>
+              <span class="badge badge-amber" style="margin-top:3px;">Processing</span>
+            </div>
+          </div>
+          <!-- BTC row -->
+          <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;">
+            <div style="display:flex;align-items:center;gap:12px;">
+              <div style="width:36px;height:36px;background:rgba(247,147,26,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+                <span style="font-size:9px;font-weight:800;color:#F7931A;">B</span>
+              </div>
+              <div>
+                <div style="font-size:13px;font-weight:700;color:#0d2145;">Bitcoin Withdrawal</div>
+                <div style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.45);">May 28, 2026 - 1A1zP1...JJk</div>
+              </div>
+            </div>
+            <div style="text-align:right;">
+              <div style="font-size:14px;font-weight:700;color:#0d2145;">$310.00</div>
+              <span class="badge badge-green" style="margin-top:3px;">Completed</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<!-- ===================== EARLY PAYOUT MODAL ===================== -->
+<div id="modal-early" class="modal" onclick="if(event.target===this)closeEarlyModal()">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;">
+      <div style="font-size:18px;font-weight:800;color:#0d2145;">Request Early Payout</div>
+      <button onclick="closeEarlyModal()" style="width:32px;height:32px;background:rgba(13,33,69,0.06);border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0d2145" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="background:#fff3cd;border-radius:12px;padding:16px;margin-bottom:20px;">
+      <div style="font-size:13px;font-weight:600;color:#856404;margin-bottom:6px;">Fee notice</div>
+      <div style="font-size:13px;font-weight:500;color:rgba(133,100,4,0.85);line-height:1.5;">A 2% early payout fee will be applied. Funds are normally held for 7 days after project completion. Early Payout releases them immediately.</div>
+    </div>
+    <div style="background:#f8f9fb;border-radius:12px;padding:16px;margin-bottom:20px;">
+      <div class="fee-row">
+        <span style="font-size:14px;font-weight:500;color:rgba(13,33,69,0.58);">Withdrawal amount</span>
+        <span id="ep-amount" style="font-size:14px;font-weight:700;color:#0d2145;">$0.00</span>
+      </div>
+      <div class="fee-row">
+        <span style="font-size:14px;font-weight:500;color:rgba(13,33,69,0.58);">Early payout fee (2%)</span>
+        <span id="ep-fee" style="font-size:14px;font-weight:700;color:#856404;">-$0.00</span>
+      </div>
+      <div style="height:1px;background:#e2e8f0;margin:8px 0;"></div>
+      <div class="fee-row">
+        <span style="font-size:14px;font-weight:700;color:#0d2145;">You will receive</span>
+        <span id="ep-final" style="font-size:16px;font-weight:800;color:#2d8a5e;">$0.00</span>
+      </div>
+    </div>
+    <button class="btn-green" onclick="confirmEarlyPayout()" style="width:100%;padding:13px 24px;">
+      <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"/></svg>
+      Confirm Early Payout
+    </button>
+  </div>
+</div>
+
+<!-- ===================== MORE CURRENCIES MODAL ===================== -->
+<div id="modal-more" class="modal" onclick="if(event.target===this)closeMoreModal()">
+  <div class="modal-box" style="max-height:85vh;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <div style="font-size:18px;font-weight:800;color:#0d2145;">All Currencies</div>
+      <button onclick="closeMoreModal()" style="width:32px;height:32px;background:rgba(13,33,69,0.06);border:none;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#0d2145" stroke-width="2.5"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+    <div style="position:relative;margin-bottom:16px;">
+      <input type="text" id="currency-search" class="inp" placeholder="Search currencies..." oninput="filterCurrencies()" style="padding-left:38px;">
+      <svg style="position:absolute;left:12px;top:50%;transform:translateY(-50%);" width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="rgba(13,33,69,0.4)" stroke-width="2"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+    </div>
+    <div id="currency-list" style="display:flex;flex-direction:column;gap:8px;max-height:55vh;overflow-y:auto;"></div>
+  </div>
+</div>
+
+<!-- PTR INDICATOR -->
+<div id="ptr-indicator" class="ptr-indicator" aria-live="polite">
+  <div class="ptr-spinner"></div>
+  <span id="ptr-label">Refreshing</span>
+</div>
+
+<!-- SWIPE HINT -->
+<div id="swipe-hint" class="swipe-hint"></div>
+
+<!-- TOAST -->
+<div id="toast" class="toast"></div>
+
+<script>
+// ======= DEMO DATA =======
+const DEMO_USER = {
+  displayName:      'Marco Rossi',
+  availableBalance: 1240.00,   // crypto balance
+  fiatBalance:      380.00,    // fiat / bank balance
+  walletAddress:    'TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE',
+  premiumStatus:    'active',
+  kycName:          'Marco Rossi'
+};
+
+const PLATFORM_FEE_PCT     = 1.5;
+const NOWPAYMENTS_FEE_PCT  = 0.5;
+const EARLY_PAYOUT_FEE_PCT = 2;
+const MIN_WITHDRAWAL_CRYPTO = 5;
+const MIN_WITHDRAWAL_BANK   = 10;
+
+// ─── Bank fee config per region ───
+// processor: 'paystack' | 'stripe'
+// feeType:   'flat' | 'percent'
+// fee:        number (USD flat or percent)
+// etaDays:    estimated arrival text
+const PAYSTACK_COUNTRIES = new Set(['NG','GH','KE','ZA','TZ','UG','RW','CI','SN','CM']);
+
+const BANK_FEE_CONFIG = {
+  paystack: { processor:'paystack', feeLabel:'Paystack fee (1% + $0.30)', feeType:'percent_plus_flat', pct:1, flat:0.30, etaDays:'1 to 3 business days', badge:'PAYSTACK', badgeColor:'#2d8a5e', acctLabel:'Account Number', showRouting:false, showSwift:false },
+  stripe:   { processor:'stripe',   feeLabel:'Stripe payout fee (0.25%)', feeType:'percent',          pct:0.25, flat:0, etaDays:'2 to 5 business days', badge:'STRIPE',   badgeColor:'#635BFF', acctLabel:'IBAN / Account Number', showRouting:true,  showSwift:true  },
+};
+
+// Special overrides per country
+const COUNTRY_CONFIG = {
+  US: { ...BANK_FEE_CONFIG.stripe, feeLabel:'Stripe payout fee (0.25%)',           acctLabel:'Account Number',       showRouting:true,  showSwift:false, routingLabel:'Routing Number',     etaDays:'1 to 2 business days' },
+  GB: { ...BANK_FEE_CONFIG.stripe, feeLabel:'Stripe payout fee (0.25%)',           acctLabel:'Account Number',       showRouting:true,  showSwift:false, routingLabel:'Sort Code',           etaDays:'1 to 2 business days' },
+};
+
+// ======= STATE =======
+let currentMethod      = 'bank';
+let selectedCurrency   = 'USDT';
+let selectedCoinId     = 'usdt';
+let rateCountdown      = 60;
+let selectedCountry    = '';
+let currentBankConfig  = null;
+
+const DEMO_RATES_PER_USD = {
+  usdt: 1,
+  bitcoin: 0.00001524,
+  ethereum: 0.00041820,
+  binancecoin: 0.00167,
+  'usd-coin': 1
+};
+
+// ======= NAV =======
+const NAV_LINKS = [
+  { label:'Dashboard', href:'dashboard.html', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>' },
+  { label:'Projects',  href:'dashboard-projects.html', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>' },
+  { label:'Earnings',  href:'dashboard-earnings.html', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' },
+  { label:'Withdraw',  href:'dashboard-withdraw.html', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' },
+  { label:'Contracts', href:'dashboard-contracts.html', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg>' },
+  { label:'Settings',  href:'dashboard-settings.html', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>' },
+];
+
+function buildNav() {
+  const cur  = 'dashboard-withdraw.html';
+  const html = NAV_LINKS.map(l => {
+    const active = l.href === cur;
+    return `<a href="${l.href}" class="nav-link${active?' active':''}">
+      ${l.icon}<span>${l.label}</span>
+    </a>`;
+  }).join('');
+  document.getElementById('desktop-nav').innerHTML = html;
+  document.getElementById('mobile-nav').innerHTML  = html;
+}
+
+function openMobileMenu(){
+  document.getElementById('mobile-menu').classList.add('open');
+  document.getElementById('mobile-dim').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeMobileMenu(){
+  document.getElementById('mobile-menu').classList.remove('open');
+  document.getElementById('mobile-dim').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function handleLogout(){ window.location.href = 'login.html'; }
+
+// ======= TOAST =======
+function showToast(msg, duration=3500){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), duration);
+}
+
+// ======= METHOD TOGGLE =======
+function switchMethod(method){
+  currentMethod = method;
+  const tabBank   = document.getElementById('tab-bank');
+  const tabCrypto = document.getElementById('tab-crypto');
+  const panelBank   = document.getElementById('panel-bank');
+  const panelCrypto = document.getElementById('panel-crypto');
+
+  if(method === 'bank'){
+    tabBank.classList.add('active');   tabBank.setAttribute('aria-selected','true');
+    tabCrypto.classList.remove('active'); tabCrypto.setAttribute('aria-selected','false');
+    panelBank.classList.add('visible');
+    panelCrypto.classList.remove('visible');
+  } else {
+    tabCrypto.classList.add('active');   tabCrypto.setAttribute('aria-selected','true');
+    tabBank.classList.remove('active');  tabBank.setAttribute('aria-selected','false');
+    panelCrypto.classList.add('visible');
+    panelBank.classList.remove('visible');
+  }
+  // Dismiss any open errors when switching
+  document.getElementById('bank-error').style.display    = 'none';
+  document.getElementById('withdraw-error').style.display = 'none';
+}
+
+// ======= COUNTRY CHANGE — updates bank config ======
+function onCountryChange(){
+  selectedCountry = document.getElementById('bank-country').value;
+  if(!selectedCountry){ currentBankConfig = null; resetBankFeeDisplay(); return; }
+
+  // Pick config: check specific overrides first, then region
+  if(COUNTRY_CONFIG[selectedCountry]){
+    currentBankConfig = COUNTRY_CONFIG[selectedCountry];
+  } else if(PAYSTACK_COUNTRIES.has(selectedCountry)){
+    currentBankConfig = BANK_FEE_CONFIG.paystack;
+  } else {
+    currentBankConfig = BANK_FEE_CONFIG.stripe;
+  }
+
+  const cfg = currentBankConfig;
+
+  // Update provider badge
+  const badge = document.getElementById('bank-provider-badge');
+  badge.textContent = cfg.badge;
+  badge.style.background = cfg.badgeColor;
+
+  // Update account number label
+  document.getElementById('bank-acct-label').textContent = cfg.acctLabel;
+
+  // Routing row
+  const routingRow = document.getElementById('routing-row');
+  if(cfg.showRouting){
+    routingRow.style.display = 'block';
+    document.getElementById('routing-label').textContent = cfg.routingLabel || 'Routing Number';
+    document.getElementById('bank-routing').placeholder  = cfg.routingLabel === 'Sort Code' ? '00-00-00' : '9-digit routing number';
+  } else {
+    routingRow.style.display = 'none';
+  }
+
+  // SWIFT row
+  document.getElementById('swift-row').style.display = cfg.showSwift ? 'block' : 'none';
+
+  // Provider banner
+  const providerName = cfg.processor === 'paystack' ? 'Paystack' : 'Stripe';
+  document.getElementById('bank-provider-text').textContent =
+    `Withdrawals to this country are processed via ${providerName}. Estimated arrival: ${cfg.etaDays}.`;
+  document.getElementById('bank-provider-banner').style.background = cfg.processor === 'paystack' ? '#e8f5ef' : '#f0edff';
+  document.getElementById('bank-provider-banner').querySelector('svg').setAttribute('stroke', cfg.badgeColor);
+  document.getElementById('bank-provider-text').style.color = cfg.badgeColor;
+
+  calcBankFees();
+}
+
+function resetBankFeeDisplay(){
+  document.getElementById('bank-fee-1').textContent       = '-';
+  document.getElementById('bank-fee-platform').textContent = '-';
+  document.getElementById('bank-fee-final').textContent   = '-';
+  document.getElementById('bank-eta').textContent         = '';
+  document.getElementById('bank-fee-label-1').textContent = 'Processing fee';
+}
+
+// ======= BANK FEE CALCULATION =======
+function calcBankFees(){
+  const amt = parseFloat(document.getElementById('bank-amount').value) || 0;
+  if(!currentBankConfig || amt <= 0){ resetBankFeeDisplay(); return; }
+
+  const cfg       = currentBankConfig;
+  const platFee   = amt * (PLATFORM_FEE_PCT / 100);
+
+  let processingFee = 0;
+  if(cfg.feeType === 'percent'){
+    processingFee = amt * (cfg.pct / 100);
+  } else if(cfg.feeType === 'percent_plus_flat'){
+    processingFee = amt * (cfg.pct / 100) + cfg.flat;
+  } else if(cfg.feeType === 'flat'){
+    processingFee = cfg.flat;
+  }
+
+  const afterFees = Math.max(0, amt - platFee - processingFee);
+
+  document.getElementById('bank-fee-label-1').textContent = cfg.feeLabel;
+  document.getElementById('bank-fee-1').textContent        = amt > 0 ? `-$${processingFee.toFixed(2)}` : '-';
+  document.getElementById('bank-fee-platform').textContent  = amt > 0 ? `-$${platFee.toFixed(2)}` : '-';
+  document.getElementById('bank-fee-final').textContent    = amt > 0 ? `$${afterFees.toFixed(2)}` : '-';
+  document.getElementById('bank-eta').textContent          = amt > 0 ? `Est. arrival: ${cfg.etaDays}` : '';
+}
+
+// ======= BANK WITHDRAW HANDLER =======
+function handleBankWithdraw(){
+  const errEl       = document.getElementById('bank-error');
+  const amt         = parseFloat(document.getElementById('bank-amount').value);
+  const country     = document.getElementById('bank-country').value;
+  const bankName    = document.getElementById('bank-name').value.trim();
+  const acctNumber  = document.getElementById('bank-account-number').value.trim();
+  const acctName    = document.getElementById('bank-account-name').value.trim();
+
+  errEl.style.display = 'none';
+
+  if(!country){
+    errEl.textContent = 'Please select your country.';
+    errEl.style.display = 'block'; return;
+  }
+  if(!bankName){
+    errEl.textContent = 'Please enter your bank name.';
+    errEl.style.display = 'block'; return;
+  }
+  if(!acctNumber){
+    errEl.textContent = 'Please enter your account number.';
+    errEl.style.display = 'block'; return;
+  }
+  if(!acctName){
+    errEl.textContent = 'Please enter the account holder name.';
+    errEl.style.display = 'block'; return;
+  }
+  if(!amt || amt < MIN_WITHDRAWAL_BANK){
+    errEl.textContent = `Minimum bank withdrawal is $${MIN_WITHDRAWAL_BANK}.00.`;
+    errEl.style.display = 'block'; return;
+  }
+  if(amt > DEMO_USER.fiatBalance){
+    errEl.textContent = `Amount exceeds your available fiat balance of $${DEMO_USER.fiatBalance.toFixed(2)}.`;
+    errEl.style.display = 'block'; return;
+  }
+
+  const btn = document.getElementById('btn-bank-withdraw');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Processing...';
+
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Send to Bank Account';
+    showToast('Bank withdrawal initiated. Funds are on their way.');
+  }, 2200);
+}
+
+// ======= CRYPTO RATES =======
+function updateRateDisplay(){
+  document.getElementById('rate-val-usdt').textContent = `${DEMO_RATES_PER_USD.usdt.toFixed(4)} USDT`;
+  document.getElementById('rate-val-btc').textContent  = `${DEMO_RATES_PER_USD.bitcoin.toFixed(8)} BTC`;
+  document.getElementById('rate-val-eth').textContent  = `${DEMO_RATES_PER_USD.ethereum.toFixed(8)} ETH`;
+  calcFees();
+}
+
+function startRateCountdown(){
+  setInterval(() => {
+    rateCountdown--;
+    if(rateCountdown <= 0){ rateCountdown = 60; updateRateDisplay(); }
+    const el = document.getElementById('rate-countdown');
+    if(el) el.textContent = rateCountdown;
+  }, 1000);
+}
+
+function selectRateCard(coinId){
+  const map = { usdt:'USDT', bitcoin:'BTC', ethereum:'ETH' };
+  if(map[coinId]) selectCurrency(map[coinId], coinId);
+}
+
+// ======= CURRENCY SELECTION =======
+function selectCurrency(symbol, coinId){
+  selectedCurrency = symbol;
+  selectedCoinId   = coinId;
+
+  document.querySelectorAll('.curr-btn').forEach(b => b.classList.remove('selected'));
+  const cb = document.getElementById('curr-'+symbol);
+  if(cb) cb.classList.add('selected');
+
+  document.querySelectorAll('.rate-card').forEach(c => c.classList.remove('selected'));
+  const cardMap = { usdt:'rate-usdt', bitcoin:'rate-bitcoin', ethereum:'rate-ethereum' };
+  if(cardMap[coinId]) document.getElementById(cardMap[coinId]).classList.add('selected');
+
+  document.getElementById('wallet-label').textContent = `${symbol} Wallet Address`;
+  calcFees();
+}
+
+// ======= CRYPTO FEE CALC =======
+function calcFees(){
+  const amt     = parseFloat(document.getElementById('input-withdraw-amount').value) || 0;
+  const nowFee  = amt * (NOWPAYMENTS_FEE_PCT / 100);
+  const platFee = amt * (PLATFORM_FEE_PCT / 100);
+  const after   = amt - nowFee - platFee;
+  const rate    = DEMO_RATES_PER_USD[selectedCoinId] || 1;
+  const crypto  = after * rate;
+
+  document.getElementById('fee-network').textContent  = amt > 0 ? `-$${nowFee.toFixed(2)}`  : '-';
+  document.getElementById('fee-platform').textContent = amt > 0 ? `-$${platFee.toFixed(2)}` : '-';
+
+  if(amt > 0 && after > 0){
+    if(selectedCoinId === 'usdt' || selectedCoinId === 'usd-coin'){
+      document.getElementById('fee-final').textContent = `${after.toFixed(2)} ${selectedCurrency}`;
+    } else {
+      document.getElementById('fee-final').textContent = `${crypto.toFixed(8)} ${selectedCurrency}`;
+    }
+    document.getElementById('fee-final-usd').textContent = `≈ $${after.toFixed(2)} USD`;
+  } else {
+    document.getElementById('fee-final').textContent     = '-';
+    document.getElementById('fee-final-usd').textContent = '';
+  }
+}
+
+// ======= CRYPTO WITHDRAW HANDLER =======
+function handleWithdraw(){
+  const errEl  = document.getElementById('withdraw-error');
+  const amt    = parseFloat(document.getElementById('input-withdraw-amount').value);
+  const wallet = document.getElementById('input-wallet-address').value.trim();
+  errEl.style.display = 'none';
+
+  if(!amt || amt < MIN_WITHDRAWAL_CRYPTO){
+    errEl.textContent = `Minimum withdrawal is $${MIN_WITHDRAWAL_CRYPTO}.00.`;
+    errEl.style.display = 'block'; return;
+  }
+  if(amt > DEMO_USER.availableBalance){
+    errEl.textContent = `Amount exceeds your crypto balance of $${DEMO_USER.availableBalance.toFixed(2)}.`;
+    errEl.style.display = 'block'; return;
+  }
+  if(!wallet){
+    errEl.textContent = 'Please enter a wallet address.';
+    errEl.style.display = 'block'; return;
+  }
+
+  const btn = document.getElementById('btn-withdraw');
+  btn.disabled = true;
+  btn.innerHTML = '<div class="spinner"></div> Processing...';
+
+  setTimeout(() => {
+    btn.disabled = false;
+    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Confirm Withdrawal';
+    showToast('Withdrawal initiated. Funds are on their way.');
+  }, 2200);
+}
+
+// ======= EARLY PAYOUT MODAL =======
+function openEarlyPayoutModal(){
+  const amtEl = currentMethod === 'bank'
+    ? document.getElementById('bank-amount')
+    : document.getElementById('input-withdraw-amount');
+  const amt   = parseFloat(amtEl?.value) || 0;
+  const fee   = amt * (EARLY_PAYOUT_FEE_PCT / 100);
+  const final = amt - fee;
+  document.getElementById('ep-amount').textContent = `$${amt.toFixed(2)}`;
+  document.getElementById('ep-fee').textContent    = `-$${fee.toFixed(2)}`;
+  document.getElementById('ep-final').textContent  = `$${final.toFixed(2)}`;
+  document.getElementById('modal-early').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+function closeEarlyModal(){
+  document.getElementById('modal-early').classList.remove('open');
+  document.body.style.overflow = '';
+}
+function confirmEarlyPayout(){
+  closeEarlyModal();
+  showToast('Early payout requested. Funds will arrive shortly.');
+}
+
+// ======= MORE CURRENCIES =======
+const ALL_CURRENCIES = [
+  { symbol:'USDT', name:'Tether',    color:'#26a17b', abbr:'T', coinId:'usdt' },
+  { symbol:'BTC',  name:'Bitcoin',   color:'#F7931A', abbr:'B', coinId:'bitcoin' },
+  { symbol:'ETH',  name:'Ethereum',  color:'#627EEA', abbr:'E', coinId:'ethereum' },
+  { symbol:'BNB',  name:'BNB',       color:'#F3BA2F', abbr:'B', coinId:'binancecoin' },
+  { symbol:'USDC', name:'USD Coin',  color:'#2775CA', abbr:'U', coinId:'usd-coin' },
+  { symbol:'LTC',  name:'Litecoin',  color:'#345D9D', abbr:'L', coinId:'litecoin' },
+  { symbol:'XRP',  name:'Ripple',    color:'#006097', abbr:'X', coinId:'ripple' },
+  { symbol:'DOGE', name:'Dogecoin',  color:'#C2A633', abbr:'D', coinId:'dogecoin' },
+  { symbol:'SOL',  name:'Solana',    color:'#9945FF', abbr:'S', coinId:'solana' },
+  { symbol:'ADA',  name:'Cardano',   color:'#0033AD', abbr:'A', coinId:'cardano' },
+  { symbol:'TRX',  name:'TRON',      color:'#FF0013', abbr:'T', coinId:'tron' },
+  { symbol:'MATIC',name:'Polygon',   color:'#8247E5', abbr:'M', coinId:'matic-network' },
+];
+
+function renderCurrencyList(filter=''){
+  const list     = document.getElementById('currency-list');
+  const filtered = ALL_CURRENCIES.filter(c =>
+    c.name.toLowerCase().includes(filter.toLowerCase()) ||
+    c.symbol.toLowerCase().includes(filter.toLowerCase())
+  );
+  list.innerHTML = filtered.map(c => `
+    <button onclick="selectFromModal('${c.symbol}','${c.coinId}')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1.5px solid #e2e8f0;background:#fff;cursor:pointer;transition:all .2s;text-align:left;width:100%;" onmouseover="this.style.borderColor='#2d8a5e';this.style.background='#e8f5ef'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
+      <div style="width:36px;height:36px;background:${c.color};border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="font-size:11px;font-weight:800;color:#fff;">${c.abbr}</span></div>
+      <div>
+        <div style="font-size:14px;font-weight:700;color:#0d2145;">${c.name}</div>
+        <div style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.45);">${c.symbol}</div>
+      </div>
+    </button>
+  `).join('');
+}
+
+function filterCurrencies(){ renderCurrencyList(document.getElementById('currency-search').value); }
+function openMoreModal(){ renderCurrencyList(''); document.getElementById('modal-more').classList.add('open'); document.body.style.overflow='hidden'; }
+function closeMoreModal(){ document.getElementById('modal-more').classList.remove('open'); document.body.style.overflow=''; }
+function selectFromModal(symbol, coinId){ closeMoreModal(); selectCurrency(symbol, coinId); }
+
+// ======= RESPONSIVE BALANCE GRID =======
+function applyBalanceGridLayout(){
+  const grid = document.getElementById('balance-grid');
+  const sep  = document.getElementById('bal-sep');
+  if(window.innerWidth >= 640){
+    grid.style.gridTemplateColumns = '1fr auto 1fr';
+    sep.style.height  = '100%';
+    sep.style.width   = '1px';
+    sep.style.minHeight = '60px';
+  } else {
+    grid.style.gridTemplateColumns = '1fr';
+    sep.style.height = '1px';
+    sep.style.width  = '100%';
+    sep.style.minHeight = '';
+  }
+}
+
+// ======= PULL TO REFRESH =======
+function refreshPageData(){
+  updateRateDisplay();
+  document.getElementById('balance-crypto').textContent = `$${DEMO_USER.availableBalance.toFixed(2)}`;
+  document.getElementById('balance-fiat').textContent   = `$${DEMO_USER.fiatBalance.toFixed(2)}`;
+  document.getElementById('max-display').textContent    = `$${DEMO_USER.availableBalance.toFixed(2)}`;
+  document.getElementById('bank-max-display').textContent = `$${DEMO_USER.fiatBalance.toFixed(2)}`;
+  calcFees();
+  calcBankFees();
+}
+
+(function initPullToRefresh(){
+  let ty = 0, tx = 0, pulling = false;
+  const PTR = 80;
+  const ind = document.getElementById('ptr-indicator');
+  const lbl = document.getElementById('ptr-label');
+  let cool  = false;
+
+  document.addEventListener('touchstart', e => { ty = e.touches[0].clientY; tx = e.touches[0].clientX; pulling = false; }, { passive:true });
+  document.addEventListener('touchmove', e => {
+    if(cool) return;
+    const dy = e.touches[0].clientY - ty;
+    const dx = Math.abs(e.touches[0].clientX - tx);
+    const anyModal = document.getElementById('modal-early').classList.contains('open') || document.getElementById('modal-more').classList.contains('open');
+    if(window.scrollY < 10 && dy > 30 && dx < 60 && !anyModal){
+      pulling = true;
+      lbl.textContent = dy > PTR ? 'Release to refresh' : 'Pull to refresh';
+      ind.classList.add('ptr-pulling');
+    }
+  }, { passive:true });
+  document.addEventListener('touchend', e => {
+    if(!pulling) return;
+    pulling = false;
+    const dy = e.changedTouches[0].clientY - ty;
+    if(window.scrollY < 10 && dy > PTR){
+      cool = true;
+      lbl.textContent = 'Refreshing';
+      ind.classList.remove('ptr-pulling');
+      ind.classList.add('ptr-loading');
+      try { navigator.vibrate && navigator.vibrate([30,40,30]); } catch(e){}
+      refreshPageData();
+      setTimeout(() => { ind.classList.remove('ptr-loading'); setTimeout(()=>{ cool=false; showToast('Rates and balance refreshed'); },300); }, 800);
+    } else {
+      ind.classList.remove('ptr-pulling');
+    }
+  }, { passive:true });
+})();
+
+// ======= HAPTIC =======
+(function initHaptic(){
+  document.addEventListener('click', e => {
+    const btn = e.target.closest('button,[role="button"]');
+    if(!btn) return;
+    const txt = (btn.textContent||'').trim().toLowerCase();
+    if(/^(confirm|approve|send to)/.test(txt)){
+      try { navigator.vibrate && navigator.vibrate(50); } catch(e){}
+    }
+  }, { passive:true });
+})();
+
+// ======= SWIPE BACK =======
+(function initSwipeBack(){
+  let sx=0, sy=0, edge=false;
+  const ZONE=30, MIN=60;
+  const hint=document.getElementById('swipe-hint');
+  document.addEventListener('touchstart', e => { sx=e.touches[0].clientX; sy=e.touches[0].clientY; edge=sx<ZONE; if(edge) hint.classList.add('active'); }, { passive:true });
+  document.addEventListener('touchend', e => {
+    if(!edge) return;
+    hint.classList.remove('active');
+    const dx=e.changedTouches[0].clientX-sx;
+    const dy=Math.abs(e.changedTouches[0].clientY-sy);
+    if(dx>MIN && dy<dx*0.6){
+      const menuOpen  = document.getElementById('mobile-menu').classList.contains('open');
+      const earlyOpen = document.getElementById('modal-early').classList.contains('open');
+      const moreOpen  = document.getElementById('modal-more').classList.contains('open');
+      if(menuOpen)  { closeMobileMenu();  edge=false; return; }
+      if(earlyOpen) { closeEarlyModal();  edge=false; return; }
+      if(moreOpen)  { closeMoreModal();   edge=false; return; }
+      try { navigator.vibrate && navigator.vibrate(30); } catch(e){}
+      window.history.back();
+    }
+    edge=false;
+  }, { passive:true });
+  document.addEventListener('touchcancel', () => { hint.classList.remove('active'); edge=false; }, { passive:true });
+})();
+
+// ======= ESC KEY =======
+document.addEventListener('keydown', e => {
+  if(e.key !== 'Escape') return;
+  closeEarlyModal(); closeMoreModal(); closeMobileMenu();
+});
+
+// ======= BOOT =======
+document.addEventListener('DOMContentLoaded', () => {
+  buildNav();
+
+  // Avatar initials
+  const initials = DEMO_USER.displayName.split(' ').map(n=>n[0]).join('').toUpperCase();
+  document.getElementById('user-avatar').textContent = initials;
+
+  // Balances
+  document.getElementById('balance-crypto').textContent     = `$${DEMO_USER.availableBalance.toFixed(2)}`;
+  document.getElementById('balance-fiat').textContent       = `$${DEMO_USER.fiatBalance.toFixed(2)}`;
+  document.getElementById('max-display').textContent        = `$${DEMO_USER.availableBalance.toFixed(2)}`;
+  document.getElementById('bank-max-display').textContent   = `$${DEMO_USER.fiatBalance.toFixed(2)}`;
+  document.getElementById('input-withdraw-amount').max      = DEMO_USER.availableBalance;
+  document.getElementById('bank-amount').max                = DEMO_USER.fiatBalance;
+
+  // Prefill wallet
+  if(DEMO_USER.walletAddress){
+    document.getElementById('input-wallet-address').value = DEMO_USER.walletAddress;
+  }
+
+  // Prefill KYC name in bank account name
+  if(DEMO_USER.kycName){
+    document.getElementById('bank-account-name').value = DEMO_USER.kycName;
+  }
+
+  // Hide early payout if not premium
+  if(DEMO_USER.premiumStatus !== 'active'){
+    document.getElementById('early-payout-section').style.display    = 'none';
+    document.getElementById('bank-early-payout-section').style.display = 'none';
+  }
+
+  // Rates
+  updateRateDisplay();
+  selectRateCard('usdt');
+  startRateCountdown();
+
+  // Responsive balance grid
+  applyBalanceGridLayout();
+  window.addEventListener('resize', applyBalanceGridLayout);
+
+  // Default to bank tab (already set in HTML via 'active' class)
+  switchMethod('bank');
+
+  // Hide loading overlay
+  setTimeout(() => {
+    const ol = document.getElementById('loading-overlay');
+    ol.style.transition = 'opacity .4s';
+    ol.style.opacity    = '0';
+    setTimeout(() => ol.style.display='none', 400);
+  }, 600);
+});
+</script>
+</body>
+</html>
