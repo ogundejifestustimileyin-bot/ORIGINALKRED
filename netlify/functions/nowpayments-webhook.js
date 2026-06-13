@@ -245,6 +245,7 @@ async function handleFundedPayment(data) {
     escrowStatus:    'funded',
     status:          'in_progress',
     paymentMethod:   'crypto',
+    paymentSource:   'crypto',
     paymentId:       payment_id,
     paymentStatus:   payment_status,
     payCurrency:     pay_currency      || null,

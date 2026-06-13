@@ -518,23 +518,18 @@ select.input-field{appearance:none;-webkit-appearance:none;background-image:url(
 <div id="toast" class="toast"></div>
 
 <script>
-// ============ DEMO DATA ============
-var DEMO = { name: 'Marco Ricci', role: 'freelancer' };
+// ============ LIVE STATE ============
+var CURRENT_USER  = null;
+var USER_DATA     = null;
 
-var SKILLS = ['React', 'Node.js', 'Figma', 'Tailwind CSS'];
+var SKILLS = [];
 
 var TWO_FA_ENABLED = false;
 
-var WALLET_ADDRESS = 'TXh9k3mP2qR7vL4nW8zY1aB6cD5eF0gH3i';
+var WALLET_ADDRESS = '';
 
-// Bank details — mirrors Firestore users/{uid}.bankDetails map
-// Set to null to preview the empty state
-var BANK_DETAILS = {
-  bankName:    'Guaranty Trust Bank',
-  accountNumber: '0123456789',
-  accountName: 'Marco Ricci',
-  country:     'Nigeria'
-};
+// Bank details — live from Firestore users/{uid}.bankDetails
+var BANK_DETAILS = null;
 
 var NOTIF_PREFS = {
   paymentReceived: true,
@@ -719,6 +714,13 @@ function saveWallet() {
   document.getElementById('wallet-address-display').textContent = WALLET_ADDRESS;
   document.getElementById('wallet-edit-view').style.display = 'none';
   document.getElementById('wallet-display-view').style.display = 'block';
+  // Persist to Firestore
+  if(CURRENT_USER){
+    window.firestore.updateDoc(
+      window.firestore.doc(window.db, 'users', CURRENT_USER.uid),
+      { walletAddress: val, updatedAt: new Date() }
+    ).catch(function(e){ console.error('Wallet save failed:', e); });
+  }
   showToast('Wallet address updated');
 }
 
@@ -787,13 +789,26 @@ function saveBank() {
   if (!bAcctName){ errEl.textContent = 'Account name is required.';    errEl.classList.add('show'); return; }
   if (!bCountry) { errEl.textContent = 'Please select a country.';     errEl.classList.add('show'); return; }
 
-  // Save to local state (production: setDoc with merge to users/{uid}.bankDetails)
-  BANK_DETAILS = {
+  // Save to Firestore users/{uid}.bankDetails (preserve existing recipientCode if bank unchanged)
+  var prevDetails  = BANK_DETAILS || {};
+  var sameAccount  = prevDetails.accountNumber === bAccount && prevDetails.bankName === bName;
+  var newDetails   = {
     bankName:      bName,
     accountNumber: bAccount,
     accountName:   bAcctName,
-    country:       bCountry
+    country:       bCountry,
+    // Clear cached recipientCode when the account changes so create-payout registers a fresh one
+    recipientCode: sameAccount ? (prevDetails.recipientCode || null) : null,
   };
+
+  BANK_DETAILS = newDetails;
+
+  if(CURRENT_USER){
+    window.firestore.updateDoc(
+      window.firestore.doc(window.db, 'users', CURRENT_USER.uid),
+      { bankDetails: newDetails, updatedAt: new Date() }
+    ).catch(function(e){ console.error('Bank details save failed:', e); });
+  }
 
   document.getElementById('bank-edit-view').style.display = 'none';
   renderBankDisplay();
@@ -850,22 +865,57 @@ document.addEventListener('keydown', function(e) {
 
 // ============ BOOT ============
 (function boot() {
-  var parts = DEMO.name.trim().split(' ');
-  var initials = parts.length >= 2 ? parts[0][0]+parts[parts.length-1][0] : DEMO.name.slice(0,2).toUpperCase();
-  document.getElementById('user-avatar').textContent = initials;
-  document.getElementById('photo-initials').textContent = initials;
-
   buildNav();
-  renderSkills();
-  updateCharCount();
   renderNotifPrefs();
-  document.getElementById('wallet-address-display').textContent = WALLET_ADDRESS;
-  renderBankDisplay();
 
-  document.getElementById('bell-dot').style.display = 'block';
+  // Placeholder avatar until auth resolves
+  document.getElementById('user-avatar').textContent = '..';
+  document.getElementById('photo-initials').textContent = '..';
+  document.getElementById('wallet-address-display').textContent = '-';
 
-  var ov = document.getElementById('loading-overlay');
-  ov.style.display = 'none';
+  window.onAuthStateChanged(window.auth, async function(user) {
+    if(!user){ window.location.href = 'login.html'; return; }
+    CURRENT_USER = user;
+
+    try {
+      var snap = await window.firestore.getDoc(
+        window.firestore.doc(window.db, 'users', user.uid)
+      );
+      USER_DATA = snap.exists() ? snap.data() : {};
+    } catch(e) {
+      console.error('Firestore load failed:', e);
+      USER_DATA = {};
+    }
+
+    // Avatar initials
+    var name     = USER_DATA.name || user.displayName || user.email || 'U';
+    var parts    = name.trim().split(' ');
+    var initials = parts.length >= 2 ? parts[0][0]+parts[parts.length-1][0] : name.slice(0,2).toUpperCase();
+    document.getElementById('user-avatar').textContent     = initials;
+    document.getElementById('photo-initials').textContent  = initials;
+
+    // Skills
+    SKILLS = USER_DATA.skills || [];
+    renderSkills();
+    updateCharCount();
+
+    // Wallet
+    WALLET_ADDRESS = USER_DATA.walletAddress || '';
+    document.getElementById('wallet-address-display').textContent = WALLET_ADDRESS || 'Not set';
+
+    // Bank details
+    BANK_DETAILS = USER_DATA.bankDetails || null;
+    renderBankDisplay();
+
+    // Notification prefs
+    if(USER_DATA.notifPrefs){
+      Object.assign(NOTIF_PREFS, USER_DATA.notifPrefs);
+      renderNotifPrefs();
+    }
+
+    var ov = document.getElementById('loading-overlay');
+    if(ov) ov.style.display = 'none';
+  });
 })();
 </script>
 </body>

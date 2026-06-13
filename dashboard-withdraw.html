@@ -754,15 +754,18 @@ select.inp{-webkit-appearance:none;appearance:none;background-image:url("data:im
 <div id="toast" class="toast"></div>
 
 <script>
-// ======= DEMO DATA =======
-const DEMO_USER = {
-  displayName:      'Marco Rossi',
-  availableBalance: 1240.00,   // crypto balance
-  fiatBalance:      380.00,    // fiat / bank balance
-  walletAddress:    'TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE',
-  premiumStatus:    'active',
-  kycName:          'Marco Rossi'
-};
+// ======= LIVE USER STATE (populated from Firestore on auth) =======
+let CURRENT_USER = null;   // Firebase auth user object
+let USER_DATA    = null;   // Firestore users/{uid} document data
+
+// Convenience accessors — safe to call before data loads (return 0 / '')
+function getCryptoBalance(){ return Number(USER_DATA?.cryptoBalance ?? 0); }
+function getFiatBalance()  { return Number(USER_DATA?.fiatBalance   ?? 0); }
+function getWalletAddress(){ return USER_DATA?.walletAddress || ''; }
+function getKycName()      { return USER_DATA?.kycName || USER_DATA?.name || ''; }
+function getPremiumStatus(){ return USER_DATA?.premiumStatus || 'inactive'; }
+function getBankDetails()  { return USER_DATA?.bankDetails  || {}; }
+function getCachedRecipientCode(){ return USER_DATA?.bankDetails?.recipientCode || null; }
 
 const PLATFORM_FEE_PCT     = 1.5;
 const NOWPAYMENTS_FEE_PCT  = 0.5;
@@ -796,13 +799,38 @@ let rateCountdown      = 60;
 let selectedCountry    = '';
 let currentBankConfig  = null;
 
-const DEMO_RATES_PER_USD = {
+// Live rates fetched from CoinGecko — fallback values used until fetch completes
+let LIVE_RATES_PER_USD = {
   usdt: 1,
   bitcoin: 0.00001524,
   ethereum: 0.00041820,
   binancecoin: 0.00167,
-  'usd-coin': 1
+  'usd-coin': 1,
+  litecoin: 0.013,
+  ripple: 1.8,
+  dogecoin: 6.5,
+  solana: 0.007,
+  cardano: 1.1,
+  tron: 8.5,
+  'matic-network': 1.3,
 };
+
+async function fetchLiveRates(){
+  try {
+    const ids = 'tether,bitcoin,ethereum,binancecoin,usd-coin,litecoin,ripple,dogecoin,solana,cardano,tron,matic-network';
+    const res  = await fetch(`https://api.coingecko.com/api/v3/simple/price?ids=${ids}&vs_currencies=usd`);
+    if(!res.ok) return;
+    const data = await res.json();
+    // CoinGecko returns price per coin in USD — we need coins per USD (invert)
+    Object.entries(data).forEach(([coinId, val]) => {
+      if(val.usd && val.usd > 0) LIVE_RATES_PER_USD[coinId] = 1 / val.usd;
+    });
+    updateRateDisplay();
+    calcFees();
+  } catch(e){
+    console.warn('Rate fetch failed, using fallback rates:', e.message);
+  }
+}
 
 // ======= NAV =======
 const NAV_LINKS = [
@@ -953,16 +981,19 @@ function calcBankFees(){
 }
 
 // ======= BANK WITHDRAW HANDLER =======
-function handleBankWithdraw(){
+async function handleBankWithdraw(){
   const errEl       = document.getElementById('bank-error');
   const amt         = parseFloat(document.getElementById('bank-amount').value);
   const country     = document.getElementById('bank-country').value;
   const bankName    = document.getElementById('bank-name').value.trim();
   const acctNumber  = document.getElementById('bank-account-number').value.trim();
   const acctName    = document.getElementById('bank-account-name').value.trim();
+  const bankCode    = document.getElementById('bank-code')    ? document.getElementById('bank-code').value.trim()    : '';
+  const routingNum  = document.getElementById('bank-routing') ? document.getElementById('bank-routing').value.trim() : '';
 
   errEl.style.display = 'none';
 
+  if(!CURRENT_USER){ errEl.textContent = 'Not signed in.'; errEl.style.display='block'; return; }
   if(!country){
     errEl.textContent = 'Please select your country.';
     errEl.style.display = 'block'; return;
@@ -983,27 +1014,59 @@ function handleBankWithdraw(){
     errEl.textContent = `Minimum bank withdrawal is $${MIN_WITHDRAWAL_BANK}.00.`;
     errEl.style.display = 'block'; return;
   }
-  if(amt > DEMO_USER.fiatBalance){
-    errEl.textContent = `Amount exceeds your available fiat balance of $${DEMO_USER.fiatBalance.toFixed(2)}.`;
+  if(amt > getFiatBalance()){
+    errEl.textContent = `Amount exceeds your available fiat balance of $${getFiatBalance().toFixed(2)}.`;
     errEl.style.display = 'block'; return;
   }
+
+  const cfg          = currentBankConfig;
+  const bankProvider = cfg ? cfg.processor : 'paystack';
+  const currency     = PAYSTACK_COUNTRIES.has(country) ? (country === 'NG' ? 'NGN' : country === 'GH' ? 'GHS' : country === 'KE' ? 'KES' : 'NGN') : 'USD';
 
   const btn = document.getElementById('btn-bank-withdraw');
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner"></div> Processing...';
 
-  setTimeout(() => {
+  try {
+    const res = await fetch('/.netlify/functions/create-payout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        method:         'bank',
+        uid:            CURRENT_USER.uid,
+        amount:         amt,
+        accountNumber:  acctNumber,
+        accountName:    acctName,
+        bankName,
+        bankCode,
+        routingNumber:  routingNum,
+        country,
+        currency,
+        bankProvider,
+        recipientCode:  getCachedRecipientCode(),
+      }),
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Withdrawal failed.');
+
+    // Update local balance so UI reflects immediately
+    if(USER_DATA) USER_DATA.fiatBalance = data.newBalance ?? Math.max(0, getFiatBalance() - amt);
+    refreshBalanceUI();
+    showToast('Bank withdrawal initiated. Funds are on their way.');
+  } catch(err) {
+    errEl.textContent = err.message || 'Something went wrong. Please try again.';
+    errEl.style.display = 'block';
+  } finally {
     btn.disabled = false;
     btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Send to Bank Account';
-    showToast('Bank withdrawal initiated. Funds are on their way.');
-  }, 2200);
+  }
 }
 
 // ======= CRYPTO RATES =======
 function updateRateDisplay(){
-  document.getElementById('rate-val-usdt').textContent = `${DEMO_RATES_PER_USD.usdt.toFixed(4)} USDT`;
-  document.getElementById('rate-val-btc').textContent  = `${DEMO_RATES_PER_USD.bitcoin.toFixed(8)} BTC`;
-  document.getElementById('rate-val-eth').textContent  = `${DEMO_RATES_PER_USD.ethereum.toFixed(8)} ETH`;
+  document.getElementById('rate-val-usdt').textContent = `${LIVE_RATES_PER_USD.usdt.toFixed(4)} USDT`;
+  document.getElementById('rate-val-btc').textContent  = `${LIVE_RATES_PER_USD.bitcoin.toFixed(8)} BTC`;
+  document.getElementById('rate-val-eth').textContent  = `${LIVE_RATES_PER_USD.ethereum.toFixed(8)} ETH`;
   calcFees();
 }
 
@@ -1044,7 +1107,7 @@ function calcFees(){
   const nowFee  = amt * (NOWPAYMENTS_FEE_PCT / 100);
   const platFee = amt * (PLATFORM_FEE_PCT / 100);
   const after   = amt - nowFee - platFee;
-  const rate    = DEMO_RATES_PER_USD[selectedCoinId] || 1;
+  const rate    = LIVE_RATES_PER_USD[selectedCoinId] || 1;
   const crypto  = after * rate;
 
   document.getElementById('fee-network').textContent  = amt > 0 ? `-$${nowFee.toFixed(2)}`  : '-';
@@ -1064,18 +1127,19 @@ function calcFees(){
 }
 
 // ======= CRYPTO WITHDRAW HANDLER =======
-function handleWithdraw(){
+async function handleWithdraw(){
   const errEl  = document.getElementById('withdraw-error');
   const amt    = parseFloat(document.getElementById('input-withdraw-amount').value);
   const wallet = document.getElementById('input-wallet-address').value.trim();
   errEl.style.display = 'none';
 
+  if(!CURRENT_USER){ errEl.textContent = 'Not signed in.'; errEl.style.display='block'; return; }
   if(!amt || amt < MIN_WITHDRAWAL_CRYPTO){
     errEl.textContent = `Minimum withdrawal is $${MIN_WITHDRAWAL_CRYPTO}.00.`;
     errEl.style.display = 'block'; return;
   }
-  if(amt > DEMO_USER.availableBalance){
-    errEl.textContent = `Amount exceeds your crypto balance of $${DEMO_USER.availableBalance.toFixed(2)}.`;
+  if(amt > getCryptoBalance()){
+    errEl.textContent = `Amount exceeds your crypto balance of $${getCryptoBalance().toFixed(2)}.`;
     errEl.style.display = 'block'; return;
   }
   if(!wallet){
@@ -1083,15 +1147,51 @@ function handleWithdraw(){
     errEl.style.display = 'block'; return;
   }
 
+  // Compute coin amount from live rate
+  const rate       = LIVE_RATES_PER_USD[selectedCoinId] || 1;
+  const nowFee     = amt * (NOWPAYMENTS_FEE_PCT  / 100);
+  const platFee    = amt * (PLATFORM_FEE_PCT      / 100);
+  const afterFees  = Math.max(0, amt - nowFee - platFee);
+  const amountCoin = afterFees * rate;
+
   const btn = document.getElementById('btn-withdraw');
   btn.disabled = true;
   btn.innerHTML = '<div class="spinner"></div> Processing...';
 
-  setTimeout(() => {
+  try {
+    const res = await fetch('/.netlify/functions/create-payout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        method:       'crypto',
+        uid:          CURRENT_USER.uid,
+        amount:       amt,
+        currency:     selectedCurrency,
+        coinId:       selectedCoinId,
+        walletAddress: wallet,
+        amountCoin,
+        amountUsdt:   afterFees,
+        exchangeRate: rate,
+        usdtRate:     LIVE_RATES_PER_USD['usdt'] || 1,
+        fees: {
+          nowpaymentsFee: nowFee,
+          platformFee:    platFee,
+        },
+      }),
+    });
+    const data = await res.json();
+    if(!res.ok) throw new Error(data.error || 'Withdrawal failed.');
+
+    if(USER_DATA) USER_DATA.cryptoBalance = data.newBalance ?? Math.max(0, getCryptoBalance() - amt);
+    refreshBalanceUI();
+    showToast('Withdrawal initiated. Funds are on their way.');
+  } catch(err) {
+    errEl.textContent = err.message || 'Something went wrong. Please try again.';
+    errEl.style.display = 'block';
+  } finally {
     btn.disabled = false;
     btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Confirm Withdrawal';
-    showToast('Withdrawal initiated. Funds are on their way.');
-  }, 2200);
+  }
 }
 
 // ======= EARLY PAYOUT MODAL =======
@@ -1172,13 +1272,22 @@ function applyBalanceGridLayout(){
   }
 }
 
+// ======= REFRESH BALANCE UI =======
+function refreshBalanceUI(){
+  const crypto = getCryptoBalance();
+  const fiat   = getFiatBalance();
+  document.getElementById('balance-crypto').textContent     = `$${crypto.toFixed(2)}`;
+  document.getElementById('balance-fiat').textContent       = `$${fiat.toFixed(2)}`;
+  document.getElementById('max-display').textContent        = `$${crypto.toFixed(2)}`;
+  document.getElementById('bank-max-display').textContent   = `$${fiat.toFixed(2)}`;
+  document.getElementById('input-withdraw-amount').max      = crypto;
+  document.getElementById('bank-amount').max                = fiat;
+}
+
 // ======= PULL TO REFRESH =======
 function refreshPageData(){
-  updateRateDisplay();
-  document.getElementById('balance-crypto').textContent = `$${DEMO_USER.availableBalance.toFixed(2)}`;
-  document.getElementById('balance-fiat').textContent   = `$${DEMO_USER.fiatBalance.toFixed(2)}`;
-  document.getElementById('max-display').textContent    = `$${DEMO_USER.availableBalance.toFixed(2)}`;
-  document.getElementById('bank-max-display').textContent = `$${DEMO_USER.fiatBalance.toFixed(2)}`;
+  fetchLiveRates();
+  refreshBalanceUI();
   calcFees();
   calcBankFees();
 }
@@ -1267,54 +1376,84 @@ document.addEventListener('keydown', e => {
 // ======= BOOT =======
 document.addEventListener('DOMContentLoaded', () => {
   buildNav();
-
-  // Avatar initials
-  const initials = DEMO_USER.displayName.split(' ').map(n=>n[0]).join('').toUpperCase();
-  document.getElementById('user-avatar').textContent = initials;
-
-  // Balances
-  document.getElementById('balance-crypto').textContent     = `$${DEMO_USER.availableBalance.toFixed(2)}`;
-  document.getElementById('balance-fiat').textContent       = `$${DEMO_USER.fiatBalance.toFixed(2)}`;
-  document.getElementById('max-display').textContent        = `$${DEMO_USER.availableBalance.toFixed(2)}`;
-  document.getElementById('bank-max-display').textContent   = `$${DEMO_USER.fiatBalance.toFixed(2)}`;
-  document.getElementById('input-withdraw-amount').max      = DEMO_USER.availableBalance;
-  document.getElementById('bank-amount').max                = DEMO_USER.fiatBalance;
-
-  // Prefill wallet
-  if(DEMO_USER.walletAddress){
-    document.getElementById('input-wallet-address').value = DEMO_USER.walletAddress;
-  }
-
-  // Prefill KYC name in bank account name
-  if(DEMO_USER.kycName){
-    document.getElementById('bank-account-name').value = DEMO_USER.kycName;
-  }
-
-  // Hide early payout if not premium
-  if(DEMO_USER.premiumStatus !== 'active'){
-    document.getElementById('early-payout-section').style.display    = 'none';
-    document.getElementById('bank-early-payout-section').style.display = 'none';
-  }
-
-  // Rates
   updateRateDisplay();
   selectRateCard('usdt');
   startRateCountdown();
-
-  // Responsive balance grid
   applyBalanceGridLayout();
   window.addEventListener('resize', applyBalanceGridLayout);
-
-  // Default to bank tab (already set in HTML via 'active' class)
   switchMethod('bank');
 
-  // Hide loading overlay
-  setTimeout(() => {
+  // Fetch live crypto rates immediately
+  fetchLiveRates();
+
+  // Auth guard + Firestore data load
+  window.onAuthStateChanged(window.auth, async (user) => {
+    if(!user){ window.location.href = 'login.html'; return; }
+    CURRENT_USER = user;
+
+    try {
+      const snap = await window.firestore.getDoc(
+        window.firestore.doc(window.db, 'users', user.uid)
+      );
+      if(snap.exists()){
+        USER_DATA = snap.data();
+      } else {
+        USER_DATA = {};
+      }
+    } catch(e){
+      console.error('Firestore load failed:', e);
+      USER_DATA = {};
+    }
+
+    // Avatar initials
+    const name     = USER_DATA.name || user.displayName || user.email || 'U';
+    const initials = name.split(' ').map(n=>n[0]).join('').slice(0,2).toUpperCase();
+    document.getElementById('user-avatar').textContent = initials;
+
+    // Populate balances
+    refreshBalanceUI();
+
+    // Prefill wallet address if saved
+    const walletEl = document.getElementById('input-wallet-address');
+    if(walletEl && getWalletAddress()) walletEl.value = getWalletAddress();
+
+    // Prefill account name from KYC name
+    const acctNameEl = document.getElementById('bank-account-name');
+    if(acctNameEl && getKycName()) acctNameEl.value = getKycName();
+
+    // Prefill saved bank details if present
+    const bd = getBankDetails();
+    if(bd.bankName){
+      const bnEl = document.getElementById('bank-name');
+      if(bnEl) bnEl.value = bd.bankName;
+    }
+    if(bd.accountNumber){
+      const anEl = document.getElementById('bank-account-number');
+      if(anEl) anEl.value = bd.accountNumber;
+    }
+    if(bd.accountName && acctNameEl && !acctNameEl.value){
+      acctNameEl.value = bd.accountName;
+    }
+
+    // Hide early payout if not premium
+    if(getPremiumStatus() !== 'active'){
+      const ep1 = document.getElementById('early-payout-section');
+      const ep2 = document.getElementById('bank-early-payout-section');
+      if(ep1) ep1.style.display = 'none';
+      if(ep2) ep2.style.display = 'none';
+    }
+
+    calcFees();
+    calcBankFees();
+
+    // Hide loading overlay
     const ol = document.getElementById('loading-overlay');
-    ol.style.transition = 'opacity .4s';
-    ol.style.opacity    = '0';
-    setTimeout(() => ol.style.display='none', 400);
-  }, 600);
+    if(ol){
+      ol.style.transition = 'opacity .4s';
+      ol.style.opacity    = '0';
+      setTimeout(() => ol.style.display='none', 400);
+    }
+  });
 });
 </script>
 </body>
