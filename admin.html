@@ -949,8 +949,15 @@ function closeMobileMenu() {
 }
 
 function handleLogout() {
-  // In production: signOut(window.auth).then(() => window.location.href = '/login.html');
-  window.location.href = '/login.html';
+  if (window._signOut && window.auth) {
+    window._signOut(window.auth).then(function() {
+      window.location.href = '/login.html';
+    }).catch(function() {
+      window.location.href = '/login.html';
+    });
+  } else {
+    window.location.href = '/login.html';
+  }
 }
 
 /* ============ OVERVIEW STATS ============ */
@@ -2242,5 +2249,39 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <script>Â// Safety: force-hide loading overlay after 10s if auth/boot stallsÂ(function() {Â  var _safetyTimer = setTimeout(function() {Â    var ov = document.getElementById("loading-overlay");Â    if (ov) { ov.style.display = "none"; }Â  }, 10000);Â  window._clearSafetyTimer = function() { clearTimeout(_safetyTimer); };Â})();Â</script>Â
+
+<script type="module">
+  import { initializeApp }                                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, onAuthStateChanged, signOut }                   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getFirestore, doc, getDoc, collection, query, where,
+           orderBy, limit, getDocs, setDoc, updateDoc, onSnapshot } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  var app = initializeApp({
+    apiKey:            'AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk',
+    authDomain:        'kreddlo.firebaseapp.com',
+    projectId:         'kreddlo',
+    storageBucket:     'kreddlo.firebasestorage.app',
+    messagingSenderId: '764500458567',
+    appId:             '1:764500458567:web:2389d5cf8c688caafd0562',
+  });
+
+  window.db       = getFirestore(app);
+  window.auth     = getAuth(app);
+  window.authFn   = { onAuthStateChanged: function(a, cb) { return onAuthStateChanged(a, cb); } };
+  window.firestore = {
+    getDoc:     function() { return getDoc.apply(null, arguments); },
+    doc:        function() { return doc.apply(null, arguments); },
+    collection: function() { return collection.apply(null, arguments); },
+    query:      function() { return query.apply(null, arguments); },
+    where:      function() { return where.apply(null, arguments); },
+    orderBy:    function() { return orderBy.apply(null, arguments); },
+    limit:      function() { return limit.apply(null, arguments); },
+    getDocs:    function() { return getDocs.apply(null, arguments); },
+    setDoc:     function() { return setDoc.apply(null, arguments); },
+    updateDoc:  function() { return updateDoc.apply(null, arguments); },
+    onSnapshot: function() { return onSnapshot.apply(null, arguments); },
+  };
+  window._signOut = signOut;
+</script>
 </body>
 </html>

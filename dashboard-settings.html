@@ -148,31 +148,6 @@ textarea.input-field{resize:vertical;font-family:'Plus Jakarta Sans',sans-serif;
 </style>
 
 <!-- Firebase CDN -->
-<script type="module">
-  import { initializeApp }                                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getAuth, onAuthStateChanged }                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs }
-                                                                    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-
-  const FIREBASE_CONFIG = {
-    apiKey:            'AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk',
-    authDomain:        'kreddlo.firebaseapp.com',
-    projectId:         'kreddlo',
-    storageBucket:     'kreddlo.firebasestorage.app',
-    messagingSenderId: '764500458567',
-    appId:             '1:764500458567:web:2389d5cf8c688caafd0562',
-  };
-
-  const app = initializeApp(FIREBASE_CONFIG);
-  const auth = getAuth(app);
-  window.db = getFirestore(app);
-  window._fsSettings = { doc, getDoc, setDoc, collection, query, where, getDocs };
-
-  onAuthStateChanged(auth, function(user) {
-    if (!user) { window.location.href = '/login.html'; return; }
-    if (typeof window._boot === 'function') window._boot(user);
-  });
-</script>
 </head>
 <body>
 
@@ -989,5 +964,31 @@ if ('serviceWorker' in navigator) {
 }
 </script>
 <script>Â// Safety: force-hide loading overlay after 10s if auth/boot stallsÂ(function() {Â  var _safetyTimer = setTimeout(function() {Â    var ov = document.getElementById("loading-overlay");Â    if (ov) { ov.style.display = "none"; }Â  }, 10000);Â  window._clearSafetyTimer = function() { clearTimeout(_safetyTimer); };Â})();Â</script>Â
+
+<script type="module">
+  import { initializeApp }                                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, onAuthStateChanged }                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getFirestore, doc, getDoc, setDoc, collection, query, where, getDocs }
+                                                                    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+
+  const FIREBASE_CONFIG = {
+    apiKey:            'AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk',
+    authDomain:        'kreddlo.firebaseapp.com',
+    projectId:         'kreddlo',
+    storageBucket:     'kreddlo.firebasestorage.app',
+    messagingSenderId: '764500458567',
+    appId:             '1:764500458567:web:2389d5cf8c688caafd0562',
+  };
+
+  const app = initializeApp(FIREBASE_CONFIG);
+  const auth = getAuth(app);
+  window.db = getFirestore(app);
+  window._fsSettings = { doc, getDoc, setDoc, collection, query, where, getDocs };
+
+  onAuthStateChanged(auth, function(user) {
+    if (!user) { window.location.href = '/login.html'; return; }
+    if (typeof window._boot === 'function') window._boot(user);
+  });
+</script>
 </body>
 </html>
