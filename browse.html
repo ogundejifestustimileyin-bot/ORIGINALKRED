@@ -770,207 +770,9 @@
        SCRIPTS
   ══════════════════════════════════ -->
   <script>
-    /* ────────────────────────────────────
-       DEMO DATA
-       Remove / comment out the DEMO_FREELANCERS
-       array once real Firebase data is flowing.
-    ──────────────────────────────────── */
-    const DEMO_FREELANCERS = [
-      {
-        id: 'demo-1',
-        name: 'Amara Osei',
-        title: 'Brand Identity Designer',
-        description: 'I craft memorable brand identities for startups and established businesses. Specializing in logo systems, typography, and visual language that stands out.',
-        skills: ['Branding', 'Logo Design', 'Figma'],
-        startingPrice: 80,
-        premiumStatus: 'active',
-        kycStatus: 'verified',
-        profileComplete: true,
-        role: 'freelancer',
-        username: 'amara-osei',
-        boostedUntil: { toMillis: () => Date.now() + 7 * 24 * 60 * 60 * 1000 },
-        profilePhoto: null,
-        createdAt: { toMillis: () => Date.now() - 10000 },
-      },
-      {
-        id: 'demo-2',
-        name: 'Chidi Nwosu',
-        title: 'Full-Stack Web Developer',
-        description: 'Building fast, scalable web apps with React, Node.js and Firebase. From landing pages to complex SaaS products.',
-        skills: ['React', 'Node.js', 'Firebase'],
-        startingPrice: 120,
-        premiumStatus: 'active',
-        kycStatus: 'verified',
-        profileComplete: true,
-        role: 'freelancer',
-        username: 'chidi-nwosu',
-        boostedUntil: { toMillis: () => Date.now() + 3 * 24 * 60 * 60 * 1000 },
-        profilePhoto: null,
-        createdAt: { toMillis: () => Date.now() - 20000 },
-      },
-      {
-        id: 'demo-3',
-        name: 'Sofia Mensah',
-        title: 'UI/UX Designer',
-        description: 'Designing user experiences that convert. I work with SaaS, fintech and e-commerce teams to create clean, intuitive interfaces.',
-        skills: ['UI Design', 'UX Research', 'Figma'],
-        startingPrice: 95,
-        premiumStatus: 'inactive',
-        kycStatus: 'verified',
-        profileComplete: true,
-        role: 'freelancer',
-        username: 'sofia-mensah',
-        boostedUntil: null,
-        profilePhoto: null,
-        createdAt: { toMillis: () => Date.now() - 50000 },
-      },
-      {
-        id: 'demo-4',
-        name: 'Tunde Adeyemi',
-        title: 'SEO Content Writer',
-        description: 'Long-form articles, landing page copy and SEO strategies that bring organic traffic. 3+ years writing for US and UK publications.',
-        skills: ['SEO Writing', 'Content Strategy', 'Copywriting'],
-        startingPrice: 45,
-        premiumStatus: 'inactive',
-        kycStatus: 'verified',
-        profileComplete: true,
-        role: 'freelancer',
-        username: 'tunde-adeyemi',
-        boostedUntil: null,
-        profilePhoto: null,
-        createdAt: { toMillis: () => Date.now() - 80000 },
-      },
-      {
-        id: 'demo-5',
-        name: 'Kelechi Eze',
-        title: 'Motion Graphics Artist',
-        description: 'YouTube intros, social media reels, product explainers and animated ads. After Effects and Premiere Pro are my daily tools.',
-        skills: ['Motion Design', 'After Effects', 'Video Editing'],
-        startingPrice: 60,
-        premiumStatus: 'active',
-        kycStatus: 'verified',
-        profileComplete: true,
-        role: 'freelancer',
-        username: 'kelechi-eze',
-        boostedUntil: null,
-        profilePhoto: null,
-        createdAt: { toMillis: () => Date.now() - 30000 },
-      },
-      {
-        id: 'demo-6',
-        name: 'Ifeoma Obi',
-        title: 'Social Media Marketer',
-        description: 'Growing audiences and driving conversions through Instagram, TikTok and LinkedIn. Worked with brands in fashion, food and tech.',
-        skills: ['Social Media', 'Content Creation', 'Ads Management'],
-        startingPrice: 55,
-        premiumStatus: 'inactive',
-        kycStatus: 'verified',
-        profileComplete: true,
-        role: 'freelancer',
-        username: 'ifeoma-obi',
-        boostedUntil: null,
-        profilePhoto: null,
-        createdAt: { toMillis: () => Date.now() - 90000 },
-      },
-      {
-        id: 'demo-7',
-        name: 'Bashir Aliyu',
-        title: 'Flutter Mobile Developer',
-        description: 'Cross-platform mobile apps for iOS and Android. Clean architecture, smooth animations and Firebase integration.',
-        skills: ['Flutter', 'Dart', 'Firebase'],
-        startingPrice: 100,
-        premiumStatus: 'active',
-        kycStatus: 'verified',
-        profileComplete: true,
-        role: 'freelancer',
-        username: 'bashir-aliyu',
-        boostedUntil: null,
-        profilePhoto: null,
-        createdAt: { toMillis: () => Date.now() - 15000 },
-      },
-      {
-        id: 'demo-8',
-        name: 'Ngozi Ude',
-        title: 'Music Producer',
-        description: 'Afrobeats, R&B and hip-hop producer. Beats, mixing, mastering and full production for independent artists worldwide.',
-        skills: ['Music Production', 'Mixing', 'Mastering'],
-        startingPrice: 70,
-        premiumStatus: 'inactive',
-        kycStatus: 'verified',
-        profileComplete: true,
-        role: 'freelancer',
-        username: 'ngozi-ude',
-        boostedUntil: null,
-        profilePhoto: null,
-        createdAt: { toMillis: () => Date.now() - 60000 },
-      },
-    ];
 
-    /* ────────────────────────────────────
-       DEMO PRODUCTS
-    ──────────────────────────────────── */
-    const DEMO_PRODUCTS = [
-      {
-        id: 'pdemo-1',
-        title: 'Notion Freelance Invoice Template Pack',
-        slug: 'notion-freelance-invoice-template-pack',
-        price: 15,
-        coverUrl: null,
-        productType: 'templates',
-        salesCount: 134,
-        active: true,
-      },
-      {
-        id: 'pdemo-2',
-        title: 'Complete Figma to React Course',
-        slug: 'complete-figma-to-react-course',
-        price: 49,
-        coverUrl: null,
-        productType: 'courses',
-        salesCount: 98,
-        active: true,
-      },
-      {
-        id: 'pdemo-3',
-        title: '1:1 Career Coaching Session (60 min)',
-        slug: '1-1-career-coaching-session',
-        price: 60,
-        coverUrl: null,
-        productType: 'coaching',
-        salesCount: 71,
-        active: true,
-      },
-      {
-        id: 'pdemo-4',
-        title: 'Social Media Content Calendar (Digital Download)',
-        slug: 'social-media-content-calendar',
-        price: 12,
-        coverUrl: null,
-        productType: 'digital-download',
-        salesCount: 215,
-        active: true,
-      },
-      {
-        id: 'pdemo-5',
-        title: 'Premium Stock Photo Bundle — Lifestyle Pack',
-        slug: 'premium-stock-photo-bundle',
-        price: 25,
-        coverUrl: null,
-        productType: 'digital-download',
-        salesCount: 58,
-        active: true,
-      },
-      {
-        id: 'pdemo-6',
-        title: 'Logo Design Masterclass (External Course)',
-        slug: 'logo-design-masterclass',
-        price: 35,
-        coverUrl: null,
-        productType: 'external',
-        salesCount: 42,
-        active: true,
-      },
-    ];
+
+
 
     /* ────────────────────────────────────
        CATEGORY KEYWORD MAP
@@ -1103,21 +905,16 @@
     }
 
     /* ────────────────────────────────────
-       FIRESTORE FETCH (with demo fallback)
+       FIRESTORE FETCH
     ──────────────────────────────────── */
     function waitForFirebase(cb, attempts = 0) {
       if (window.db && window._fsQuery) { cb(); return; }
       if (attempts > 40) {
-        // Firebase didn't load — use demo data for preview
-        loadDemoData();
+        // Firebase didn't load — show empty state
+        renderCards([]);
         return;
       }
       setTimeout(() => waitForFirebase(cb, attempts + 1), 150);
-    }
-
-    function loadDemoData() {
-      allFreelancers = sortFreelancers(DEMO_FREELANCERS);
-      renderCards(filterFreelancers());
     }
 
     waitForFirebase(async () => {
@@ -1136,8 +933,7 @@
         const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
         if (docs.length === 0) {
-          // No real data yet — use demo data so page is not empty
-          loadDemoData();
+          renderCards([]);
           return;
         }
 
@@ -1146,20 +942,13 @@
 
       } catch (err) {
         console.error('Firestore fetch error:', err);
-        // Fall back to demo data on error
-        loadDemoData();
+        renderCards([]);
       }
     });
 
     /* ────────────────────────────────────
-       PRODUCTS FETCH (with demo fallback)
+       PRODUCTS FETCH
     ──────────────────────────────────── */
-    function loadDemoProducts() {
-      allProducts    = DEMO_PRODUCTS.slice();
-      productsLoaded = true;
-      renderProductCards(filterProducts());
-    }
-
     function loadProducts() {
       waitForFirebase(async () => {
         try {
@@ -1177,7 +966,7 @@
           const docs = snap.docs.map(d => ({ id: d.id, ...d.data() }));
 
           if (docs.length === 0) {
-            loadDemoProducts();
+            renderProductCards([]);
             return;
           }
 
@@ -1187,7 +976,7 @@
 
         } catch (err) {
           console.error('Firestore products fetch error:', err);
-          loadDemoProducts();
+          renderProductCards([]);
         }
       });
     }

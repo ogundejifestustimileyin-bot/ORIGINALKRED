@@ -4,7 +4,7 @@
  * Handles install, fetch (cache strategy), activate (cleanup), and push events.
  */
 
-const CACHE_NAME = 'kreddlo-v1';
+const CACHE_NAME = 'kreddlo-v2';
 
 const PRECACHE_URLS = [
   '/',
@@ -50,12 +50,13 @@ self.addEventListener('fetch', (event) => {
   const { request } = event;
   const url = new URL(request.url);
 
-  // Network-first: Netlify functions, Firestore, Firebase
+  // Network-first: Netlify functions, Firestore, Firebase auth/API calls
   const isApiCall = (
     url.pathname.startsWith('/.netlify/functions/') ||
     url.hostname.includes('firestore.googleapis.com') ||
     url.hostname.includes('firebase') ||
-    url.hostname.includes('googleapis.com')
+    url.hostname.includes('identitytoolkit.googleapis.com') ||
+    url.hostname.includes('securetoken.googleapis.com')
   );
 
   if (isApiCall) {
@@ -63,7 +64,18 @@ self.addEventListener('fetch', (event) => {
     return;
   }
 
-  // Cache-first: everything else (HTML, CSS, JS, images, fonts)
+  // Network-first: HTML page navigations — must always be fresh so
+  // auth redirects and post-login pages are never served stale from cache.
+  const acceptHeader = request.headers.get('accept') || '';
+  const isNavigation = request.mode === 'navigate' ||
+    (request.method === 'GET' && acceptHeader.includes('text/html'));
+
+  if (isNavigation) {
+    event.respondWith(networkFirst(request));
+    return;
+  }
+
+  // Cache-first: static assets (images, fonts, CDN JS/CSS)
   event.respondWith(cacheFirst(request));
 });
 
