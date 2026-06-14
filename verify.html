@@ -782,6 +782,9 @@
           <span>By submitting, you confirm these documents belong to you and the information is accurate. Submitting fraudulent documents results in permanent account suspension.</span>
         </div>
 
+        <!-- Step-3 error notice (submit errors shown here) -->
+        <div id="form-error-step3" class="notice-error mb-5" role="alert"></div>
+
         <div class="flex flex-col sm:flex-row gap-3">
           <button id="back-btn" class="btn-outline" onclick="goToStep(2)">
             <svg class="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#0d2145" stroke-width="2.5">
@@ -933,11 +936,20 @@
     el.textContent = msg;
     el.classList.add('visible');
     el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    // Also show in step-3 error div if we're on step 3
+    const el3 = document.getElementById('form-error-step3');
+    if (el3) {
+      el3.textContent = msg;
+      el3.classList.add('visible');
+      el3.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+    }
   }
   function clearError() {
     const el = document.getElementById('form-error');
     el.textContent = '';
     el.classList.remove('visible');
+    const el3 = document.getElementById('form-error-step3');
+    if (el3) { el3.textContent = ''; el3.classList.remove('visible'); }
   }
 
   function setLoading(loading, progressPct) {
@@ -1009,9 +1021,19 @@
   async function submitVerification() {
     clearError();
 
+    // Show errors in step-3's own error div
+    function showSubmitError(msg) {
+      const el3 = document.getElementById('form-error-step3');
+      if (el3) {
+        el3.textContent = msg;
+        el3.classList.add('visible');
+        el3.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+      }
+    }
+
     const ready = await waitForFirebase();
     if (!ready) {
-      showError('Authentication error. Please refresh the page and try again.');
+      showSubmitError('Authentication error. Please refresh the page and try again.');
       return;
     }
 
@@ -1061,7 +1083,7 @@
 
     } catch (err) {
       setLoading(false);
-      showError(err.message || 'Upload failed. Please check your connection and try again.');
+      showSubmitError(err.message || 'Upload failed. Please check your connection and try again.');
       console.error('KYC submit error:', err);
     }
   }

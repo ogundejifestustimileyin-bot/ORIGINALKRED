@@ -1741,15 +1741,15 @@ function confirmKycReject(uid) {
 
 /* ============ SETTINGS ============ */
 var SETTINGS_FIELDS = [
-  { id: 'set-platform-fee',    min: 0, max: 100, key: 'platformFee',    parse: parseFloat },
-  { id: 'set-protection-fee',  min: 0, max: 100, key: 'protectionFee',  parse: parseFloat },
-  { id: 'set-withdrawal-fee',  min: 0, max: 100, key: 'withdrawalFee',  parse: parseFloat },
-  { id: 'set-early-payout-fee',min: 0, max: 100, key: 'earlyPayoutFee', parse: parseFloat },
-  { id: 'set-boost-24h',       min: 0, max: null, key: 'boost24h',      parse: parseFloat },
-  { id: 'set-boost-3d',        min: 0, max: null, key: 'boost3d',       parse: parseFloat },
-  { id: 'set-boost-7d',        min: 0, max: null, key: 'boost7d',       parse: parseFloat },
-  { id: 'set-holding-days',    min: 0, max: 30,   key: 'holdingDays',   parse: parseInt   },
-  { id: 'set-referral-credit', min: 0, max: null, key: 'referralCredit',parse: parseFloat }
+  { id: 'set-platform-fee',    min: 0, max: 100, key: 'platformFeePercent',       parse: parseFloat },
+  { id: 'set-protection-fee',  min: 0, max: 100, key: 'projectProtectionPercent', parse: parseFloat },
+  { id: 'set-withdrawal-fee',  min: 0, max: 100, key: 'withdrawalFeePercent',     parse: parseFloat },
+  { id: 'set-early-payout-fee',min: 0, max: 100, key: 'earlyPayoutFeePercent',    parse: parseFloat },
+  { id: 'set-boost-24h',       min: 0, max: null, key: 'boostPrice24h',           parse: parseFloat },
+  { id: 'set-boost-3d',        min: 0, max: null, key: 'boostPrice3d',            parse: parseFloat },
+  { id: 'set-boost-7d',        min: 0, max: null, key: 'boostPrice7d',            parse: parseFloat },
+  { id: 'set-holding-days',    min: 0, max: 30,   key: 'holdingPeriodDays',       parse: parseInt   },
+  { id: 'set-referral-credit', min: 0, max: null, key: 'referralCreditAmount',    parse: parseFloat }
 ];
 
 /* -- Toggle visual helper -- */
