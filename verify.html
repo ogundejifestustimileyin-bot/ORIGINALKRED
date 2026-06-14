@@ -3,6 +3,12 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <link rel="manifest" href="/manifest.json" />
+  <meta name="theme-color" content="#0d2145" />
+  <meta name="apple-mobile-web-app-capable" content="yes" />
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+  <meta name="apple-mobile-web-app-title" content="Kreddlo" />
+  <link rel="apple-touch-icon" href="/assets/kreddlo-192.png" />
   <title>Verify Your Identity — Kreddlo</title>
 
   <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -145,11 +151,7 @@
     }
     .step-connector.done { background: #2d8a5e; }
 
-    /* ── Upload box ──
-       FIX: The box is a label wrapping a hidden input.
-       No onclick handlers needed — clicking the label natively
-       opens the file picker without the double-trigger bug.
-    ── */
+    /* ── Upload box ── */
     .upload-label {
       display: flex;
       flex-direction: column;
@@ -166,8 +168,11 @@
       text-align: center;
       gap: 10px;
       padding: 28px 16px;
+      /* Large tap target on mobile */
+      -webkit-tap-highlight-color: rgba(45,138,94,0.1);
     }
-    .upload-label:hover {
+    .upload-label:hover,
+    .upload-label:focus-within {
       border-color: #2d8a5e;
       background: rgba(45,138,94,0.04);
     }
@@ -200,7 +205,7 @@
     .upload-label.has-file .upload-preview   { display: block; }
     .upload-label.has-file .upload-placeholder { display: none; }
 
-    /* Re-upload overlay */
+    /* Re-upload overlay on hover */
     .reupload-overlay {
       position: absolute; inset: 0;
       background: rgba(13,33,69,0.45);
@@ -215,44 +220,58 @@
     }
     .upload-label.has-file:hover .reupload-overlay { display: flex; }
 
+    /* ── Upload icon bg ── */
+    .upload-icon-bg {
+      width: 48px; height: 48px;
+      border-radius: 14px;
+      background: rgba(45,138,94,0.10);
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+
     /* ── Buttons ── */
     .btn-green {
       display: flex; align-items: center; justify-content: center;
       width: 100%;
       background: #2d8a5e; color: #fff;
-      border-radius: 50px; padding: 14px 28px;
+      border-radius: 50px; padding: 15px 28px;
       font-weight: 600; font-size: 15px;
       border: 2px solid #2d8a5e; cursor: pointer;
       transition: background .2s, transform .15s;
       letter-spacing: -0.1px;
+      /* Comfortable tap target */
+      min-height: 52px;
     }
     .btn-green:hover     { background: #236b49; border-color: #236b49; transform: translateY(-1px); }
+    .btn-green:active    { transform: translateY(0); }
     .btn-green:disabled  { opacity: 0.65; cursor: not-allowed; transform: none; }
 
     .btn-outline {
       display: flex; align-items: center; justify-content: center;
       background: transparent; color: #0d2145;
-      border-radius: 50px; padding: 14px 28px;
+      border-radius: 50px; padding: 15px 28px;
       font-weight: 600; font-size: 15px;
       border: 1.5px solid #e2e8f0; cursor: pointer;
       transition: background .2s, border-color .2s, transform .15s;
       letter-spacing: -0.1px;
+      min-height: 52px;
     }
     .btn-outline:hover    { background: rgba(13,33,69,0.05); border-color: #c8d3e0; transform: translateY(-1px); }
+    .btn-outline:active   { transform: translateY(0); }
     .btn-outline:disabled { opacity: 0.65; cursor: not-allowed; transform: none; }
 
     /* ── Notice boxes ── */
     .notice-info {
       background: rgba(13,33,69,0.05);
       border: 1px solid rgba(13,33,69,0.10);
-      border-radius: 10px; padding: 10px 14px;
+      border-radius: 12px; padding: 12px 14px;
       font-size: 13px; font-weight: 400; color: rgba(13,33,69,0.65);
-      line-height: 1.5;
+      line-height: 1.55;
     }
     .notice-error {
       background: rgba(229,62,62,0.08);
       border: 1px solid rgba(229,62,62,0.22);
-      border-radius: 10px; padding: 10px 14px;
+      border-radius: 12px; padding: 12px 14px;
       font-size: 13px; font-weight: 500; color: #c53030;
       display: none;
     }
@@ -274,6 +293,25 @@
     }
     .notice-success.visible { display: block; }
 
+    /* ── Upload progress bar ── */
+    .upload-progress-wrap {
+      display: none;
+      width: 100%;
+      background: rgba(13,33,69,0.08);
+      border-radius: 50px;
+      height: 6px;
+      overflow: hidden;
+      margin-top: 4px;
+    }
+    .upload-progress-wrap.visible { display: block; }
+    .upload-progress-bar {
+      height: 6px;
+      border-radius: 50px;
+      background: #2d8a5e;
+      width: 0%;
+      transition: width .3s ease;
+    }
+
     /* ── Spinner ── */
     .spinner {
       display: inline-block;
@@ -283,7 +321,6 @@
       border-radius: 50%;
       animation: spin .65s linear infinite;
       flex-shrink: 0;
-      vertical-align: middle;
       margin-right: 8px;
     }
     @keyframes spin { to { transform: rotate(360deg); } }
@@ -298,26 +335,48 @@
     .step-section        { display: none; }
     .step-section.active { display: block; }
 
-    /* ── Accepted file hint ── */
+    /* ── File hint text ── */
     .upload-hint {
       font-size: 11px;
       color: rgba(13,33,69,0.35);
       font-weight: 500;
     }
+
+    /* ── Review thumbnail strip (step 3) ── */
+    .thumb-strip {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 10px;
+    }
+    .thumb-item {
+      border-radius: 12px;
+      overflow: hidden;
+      background: rgba(13,33,69,0.05);
+      border: 1px solid #e2e8f0;
+      aspect-ratio: 4/3;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .thumb-item img {
+      width: 100%; height: 100%; object-fit: cover;
+    }
+    .thumb-label {
+      font-size: 11px; font-weight: 600;
+      color: rgba(13,33,69,0.45);
+      text-align: center;
+      margin-top: 5px;
+    }
+
+    /* ── Already-submitted state ── */
+    #submitted-state { display: none; }
+    #submit-form-state { display: block; }
   </style>
 
-  <!--
-    FIREBASE CDN
-    Replace the placeholder values below with your real Firebase project config.
-    These public keys are safe to include in HTML — Firebase security rules
-    in the Firebase console control who can read and write data.
-  -->
+  <!-- Firebase — Auth + Firestore only (no Storage; files go through Netlify function) -->
   <script type="module">
     import { initializeApp }                from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import { getFirestore, doc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    import { getFirestore, doc, getDoc, updateDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
     import { getAuth, onAuthStateChanged }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
-    /* ── Replace with your real Firebase config ── */
     const firebaseConfig = {
       apiKey:            "AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk",
       authDomain:        "kreddlo.firebaseapp.com",
@@ -328,24 +387,53 @@
     };
 
     try {
-      const app   = initializeApp(firebaseConfig);
+      const app = initializeApp(firebaseConfig);
       window.db   = getFirestore(app);
       window.auth = getAuth(app);
-      window._fbModules = { doc, updateDoc };
+      window._fbModules = { doc, getDoc, updateDoc };
 
-      onAuthStateChanged(window.auth, user => {
+      onAuthStateChanged(window.auth, async user => {
         if (!user) {
           window.location.href = 'login.html';
-        } else {
-          window._currentUid = user.uid;
-          window._fbReady    = true;
+          return;
+        }
+        window._currentUid  = user.uid;
+        window._currentUser = user;
+        window._fbReady     = true;
+
+        // Check if user already submitted — show correct state
+        try {
+          const snap = await getDoc(doc(window.db, 'users', user.uid));
+          if (snap.exists()) {
+            const status = snap.data().kycStatus;
+            if (status === 'under-review') {
+              showAlreadySubmitted('review');
+            } else if (status === 'verified') {
+              showAlreadySubmitted('verified');
+            }
+            // 'declined' or empty → let them submit / resubmit normally
+          }
+        } catch (e) {
+          // Non-fatal — continue to form
         }
       });
     } catch (e) {
-      /* Firebase not configured yet — page still opens for development */
       console.warn('Firebase not configured:', e.message);
       window._fbReady = false;
     }
+
+    function showAlreadySubmitted(state) {
+      document.getElementById('submit-form-state').style.display = 'none';
+      document.getElementById('submitted-state').style.display   = 'block';
+      if (state === 'verified') {
+        document.getElementById('submitted-verified').style.display = 'block';
+        document.getElementById('submitted-review').style.display   = 'none';
+      } else {
+        document.getElementById('submitted-review').style.display   = 'block';
+        document.getElementById('submitted-verified').style.display = 'none';
+      }
+    }
+    window._showAlreadySubmitted = showAlreadySubmitted;
   </script>
 </head>
 
@@ -366,297 +454,349 @@
   <!-- Glass card -->
   <div class="glass relative z-10 px-6 py-8 sm:px-8 sm:py-10">
 
-    <!-- Heading -->
-    <div class="text-center mb-7">
-      <h1 class="text-[22px] sm:text-[26px] font-extrabold text-navy tracking-[-0.6px] mb-1.5">
-        Verify Your Identity
-      </h1>
-      <p class="text-[14px] text-navy/50 font-normal leading-relaxed max-w-xs mx-auto">
-        All freelancers must complete ID verification before accepting work and payments.
-      </p>
-    </div>
+    <!-- ══════════════════════════════════
+         ALREADY-SUBMITTED STATE
+         Shown when kycStatus is under-review or verified
+    ══════════════════════════════════ -->
+    <div id="submitted-state">
 
-    <!-- Progress indicator -->
-    <div class="step-track mb-7" id="step-track">
-
-      <div class="step-item active" id="item-1">
-        <div class="step-circle active" id="circle-1">1</div>
-        <span class="step-label">Upload ID</span>
-      </div>
-
-      <div class="step-connector" id="conn-1"></div>
-
-      <div class="step-item" id="item-2">
-        <div class="step-circle" id="circle-2">2</div>
-        <span class="step-label">Selfie</span>
-      </div>
-
-      <div class="step-connector" id="conn-2"></div>
-
-      <div class="step-item" id="item-3">
-        <div class="step-circle" id="circle-3">3</div>
-        <span class="step-label">Submit</span>
-      </div>
-
-    </div>
-
-    <div class="divider mb-6"></div>
-
-    <!-- Error banner -->
-    <div id="form-error" class="notice-error mb-5" role="alert"></div>
-
-
-    <!-- ════════════════════════════════
-         STEP 1: Upload ID
-    ════════════════════════════════ -->
-    <div class="step-section active" id="step-1">
-
-      <div class="mb-5">
-        <p class="text-[15px] font-bold text-navy tracking-[-0.3px] mb-1">Government-Issued ID</p>
-        <p class="text-[13px] text-navy/50 leading-relaxed">
-          Upload both sides of a valid national ID, passport, or driver's license. Files must be JPG, PNG or PDF under 10 MB.
-        </p>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-6">
-
-        <!-- ID Front -->
-        <div>
-          <p class="text-[12px] font-bold text-navy/55 uppercase tracking-widest mb-2">Front</p>
-          <label class="upload-label" id="box-front">
-            <input type="file" id="input-front" accept="image/jpeg,image/png,application/pdf"
-                   onchange="handleFile(this,'front')" />
-            <img id="preview-front" class="upload-preview" alt="ID front preview" />
-            <div class="upload-placeholder flex flex-col items-center gap-2">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center"
-                   style="background:rgba(45,138,94,0.10);">
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#2d8a5e" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                  <polyline points="17 8 12 3 7 8"/>
-                  <line x1="12" y1="3" x2="12" y2="15"/>
-                </svg>
-              </div>
-              <span class="text-[13px] font-semibold text-navy/60">Upload front</span>
-              <span class="upload-hint">JPG, PNG or PDF</span>
-            </div>
-            <div class="reupload-overlay">
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
-              </svg>
-              <span>Replace</span>
-            </div>
-          </label>
-          <p id="name-front" class="text-[11px] text-navy/40 mt-1.5 truncate"></p>
-        </div>
-
-        <!-- ID Back -->
-        <div>
-          <p class="text-[12px] font-bold text-navy/55 uppercase tracking-widest mb-2">Back</p>
-          <label class="upload-label" id="box-back">
-            <input type="file" id="input-back" accept="image/jpeg,image/png,application/pdf"
-                   onchange="handleFile(this,'back')" />
-            <img id="preview-back" class="upload-preview" alt="ID back preview" />
-            <div class="upload-placeholder flex flex-col items-center gap-2">
-              <div class="w-10 h-10 rounded-xl flex items-center justify-center"
-                   style="background:rgba(45,138,94,0.10);">
-                <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#2d8a5e" stroke-width="2">
-                  <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                  <polyline points="17 8 12 3 7 8"/>
-                  <line x1="12" y1="3" x2="12" y2="15"/>
-                </svg>
-              </div>
-              <span class="text-[13px] font-semibold text-navy/60">Upload back</span>
-              <span class="upload-hint">JPG, PNG or PDF</span>
-            </div>
-            <div class="reupload-overlay">
-              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2">
-                <path d="M21 15v4a2 2 0 01-2 2H5a2 2 0 01-2-2v-4"/>
-                <polyline points="17 8 12 3 7 8"/>
-                <line x1="12" y1="3" x2="12" y2="15"/>
-              </svg>
-              <span>Replace</span>
-            </div>
-          </label>
-          <p id="name-back" class="text-[11px] text-navy/40 mt-1.5 truncate"></p>
-        </div>
-
-      </div>
-
-      <button class="btn-green" onclick="goToStep(2)">
-        Continue to Selfie
-        <svg class="ml-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5">
-          <path d="M5 12h14M12 5l7 7-7 7"/>
-        </svg>
-      </button>
-
-    </div><!-- /step-1 -->
-
-
-    <!-- ════════════════════════════════
-         STEP 2: Upload Selfie
-    ════════════════════════════════ -->
-    <div class="step-section" id="step-2">
-
-      <div class="mb-5">
-        <p class="text-[15px] font-bold text-navy tracking-[-0.3px] mb-1">Take a Selfie</p>
-        <p class="text-[13px] text-navy/50 leading-relaxed">
-          Upload a clear photo of your face. Look straight at the camera in good lighting. Remove glasses or hats.
-        </p>
-      </div>
-
-      <div class="max-w-[280px] mx-auto mb-4">
-        <label class="upload-label" id="box-selfie">
-          <input type="file" id="input-selfie" accept="image/jpeg,image/png"
-                 onchange="handleFile(this,'selfie')" />
-          <img id="preview-selfie" class="upload-preview" alt="Selfie preview" />
-          <div class="upload-placeholder flex flex-col items-center gap-2">
-            <div class="w-12 h-12 rounded-2xl flex items-center justify-center"
-                 style="background:rgba(45,138,94,0.10);">
-              <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="#2d8a5e" stroke-width="2">
-                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-                <circle cx="12" cy="13" r="4"/>
-              </svg>
-            </div>
-            <span class="text-[13px] font-semibold text-navy/60">Upload selfie</span>
-            <span class="upload-hint">JPG or PNG only</span>
-          </div>
-          <div class="reupload-overlay">
-            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2">
-              <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
-              <circle cx="12" cy="13" r="4"/>
+      <!-- Under review -->
+      <div id="submitted-review">
+        <div class="flex flex-col items-center text-center gap-4 py-4">
+          <div style="width:60px;height:60px;border-radius:50%;background:rgba(214,158,46,0.12);display:flex;align-items:center;justify-content:center;">
+            <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#d69e2e" stroke-width="2">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 8v4m0 4h.01"/>
             </svg>
-            <span>Replace</span>
           </div>
-        </label>
-        <p id="name-selfie" class="text-[11px] text-navy/40 mt-1.5 truncate text-center"></p>
+          <div>
+            <p class="text-[20px] font-extrabold text-navy tracking-[-0.5px] mb-1">Submission Under Review</p>
+            <p class="text-[14px] text-navy/50 leading-relaxed max-w-xs mx-auto">Your NIN card photos have been received and are being reviewed by our team. This usually takes 1–2 business days.</p>
+          </div>
+          <a href="dashboard.html" class="btn-green mt-2" style="text-decoration:none;max-width:260px;">
+            Go to Dashboard
+          </a>
+        </div>
       </div>
 
-      <div class="notice-info mb-6 flex items-start gap-3">
-        <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#2d8a5e" stroke-width="2" class="flex-shrink-0 mt-0.5">
-          <circle cx="12" cy="12" r="10"/>
-          <path d="M12 8v4m0 4h.01"/>
-        </svg>
-        <span>Liveness detection is performed automatically on your selfie. You do not need to record a video.</span>
+      <!-- Verified -->
+      <div id="submitted-verified" style="display:none;">
+        <div class="flex flex-col items-center text-center gap-4 py-4">
+          <div style="width:60px;height:60px;border-radius:50%;background:rgba(45,138,94,0.12);display:flex;align-items:center;justify-content:center;">
+            <svg width="26" height="26" fill="none" viewBox="0 0 24 24">
+              <circle cx="12" cy="12" r="10" fill="rgba(45,138,94,0.15)"/>
+              <path d="M7 12.5l3.5 3.5 6-7" stroke="#2d8a5e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+          </div>
+          <div>
+            <p class="text-[20px] font-extrabold text-navy tracking-[-0.5px] mb-1">Identity Verified</p>
+            <p class="text-[14px] text-navy/50 leading-relaxed max-w-xs mx-auto">Your identity has already been verified. Your profile is live and visible to clients.</p>
+          </div>
+          <a href="dashboard.html" class="btn-green mt-2" style="text-decoration:none;max-width:260px;">
+            Go to Dashboard
+          </a>
+        </div>
       </div>
 
-      <div class="flex flex-col sm:flex-row gap-3">
-        <button class="btn-outline" onclick="goToStep(1)">
-          <svg class="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#0d2145" stroke-width="2.5">
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
+    </div><!-- /submitted-state -->
+
+
+    <!-- ══════════════════════════════════
+         SUBMISSION FORM
+    ══════════════════════════════════ -->
+    <div id="submit-form-state">
+
+      <!-- Heading -->
+      <div class="text-center mb-7">
+        <h1 class="text-[22px] sm:text-[26px] font-extrabold text-navy tracking-[-0.6px] mb-1.5">
+          Verify Your Identity
+        </h1>
+        <p class="text-[14px] text-navy/50 font-normal leading-relaxed max-w-xs mx-auto">
+          Upload photos of your NIN card to unlock payments and your public profile.
+        </p>
+      </div>
+
+      <!-- Progress indicator -->
+      <div class="step-track mb-7" id="step-track">
+
+        <div class="step-item active" id="item-1">
+          <div class="step-circle active" id="circle-1">1</div>
+          <span class="step-label">NIN Card</span>
+        </div>
+
+        <div class="step-connector" id="conn-1"></div>
+
+        <div class="step-item" id="item-2">
+          <div class="step-circle" id="circle-2">2</div>
+          <span class="step-label">Selfie</span>
+        </div>
+
+        <div class="step-connector" id="conn-2"></div>
+
+        <div class="step-item" id="item-3">
+          <div class="step-circle" id="circle-3">3</div>
+          <span class="step-label">Submit</span>
+        </div>
+
+      </div>
+
+      <div class="divider mb-6"></div>
+
+      <!-- Error banner -->
+      <div id="form-error" class="notice-error mb-5" role="alert"></div>
+
+
+      <!-- ════════════════════════════════
+           STEP 1: NIN Card Front + Back
+      ════════════════════════════════ -->
+      <div class="step-section active" id="step-1">
+
+        <div class="mb-5">
+          <p class="text-[15px] font-bold text-navy tracking-[-0.3px] mb-1">NIN Card — Front &amp; Back</p>
+          <p class="text-[13px] text-navy/50 leading-relaxed">
+            Take clear photos of both sides of your National Identity Number (NIN) card. Make sure all text is readable and there is no glare.
+          </p>
+        </div>
+
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4 mb-5">
+
+          <!-- NIN Front -->
+          <div>
+            <p class="text-[12px] font-bold text-navy/55 uppercase tracking-widest mb-2">Front</p>
+            <label class="upload-label" id="box-front">
+              <!-- capture="environment" opens the rear camera on mobile -->
+              <input type="file" id="input-front" accept="image/jpeg,image/png,image/webp"
+                     capture="environment"
+                     onchange="handleFile(this,'front')" />
+              <img id="preview-front" class="upload-preview" alt="NIN card front" />
+              <div class="upload-placeholder flex flex-col items-center gap-2">
+                <div class="upload-icon-bg">
+                  <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#2d8a5e" stroke-width="2">
+                    <rect x="2" y="5" width="20" height="14" rx="3"/>
+                    <circle cx="8" cy="12" r="2.5"/>
+                    <path d="M14 10h4M14 14h3"/>
+                  </svg>
+                </div>
+                <span class="text-[13px] font-semibold text-navy/60">Tap to photograph front</span>
+                <span class="upload-hint">JPG or PNG · max 10 MB</span>
+              </div>
+              <div class="reupload-overlay">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2">
+                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span>Replace</span>
+              </div>
+            </label>
+            <p id="name-front" class="text-[11px] text-navy/40 mt-1.5 truncate"></p>
+          </div>
+
+          <!-- NIN Back -->
+          <div>
+            <p class="text-[12px] font-bold text-navy/55 uppercase tracking-widest mb-2">Back</p>
+            <label class="upload-label" id="box-back">
+              <input type="file" id="input-back" accept="image/jpeg,image/png,image/webp"
+                     capture="environment"
+                     onchange="handleFile(this,'back')" />
+              <img id="preview-back" class="upload-preview" alt="NIN card back" />
+              <div class="upload-placeholder flex flex-col items-center gap-2">
+                <div class="upload-icon-bg">
+                  <svg width="22" height="22" fill="none" viewBox="0 0 24 24" stroke="#2d8a5e" stroke-width="2">
+                    <rect x="2" y="5" width="20" height="14" rx="3"/>
+                    <path d="M6 10h12M6 14h8"/>
+                  </svg>
+                </div>
+                <span class="text-[13px] font-semibold text-navy/60">Tap to photograph back</span>
+                <span class="upload-hint">JPG or PNG · max 10 MB</span>
+              </div>
+              <div class="reupload-overlay">
+                <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2">
+                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+                <span>Replace</span>
+              </div>
+            </label>
+            <p id="name-back" class="text-[11px] text-navy/40 mt-1.5 truncate"></p>
+          </div>
+
+        </div>
+
+        <!-- Tips -->
+        <div class="notice-info mb-6 flex items-start gap-3">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#2d8a5e" stroke-width="2" class="flex-shrink-0 mt-0.5">
+            <circle cx="12" cy="12" r="10"/>
+            <path d="M12 8v4m0 4h.01"/>
           </svg>
-          Back
-        </button>
-        <button class="btn-green flex-1" onclick="goToStep(3)">
-          Review and Submit
+          <span>Place your card on a flat dark surface in good light. Avoid glare, shadows and blurred edges. All four corners must be visible.</span>
+        </div>
+
+        <button class="btn-green" onclick="goToStep(2)">
+          Continue to Selfie
           <svg class="ml-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5">
             <path d="M5 12h14M12 5l7 7-7 7"/>
           </svg>
         </button>
-      </div>
 
-    </div><!-- /step-2 -->
+      </div><!-- /step-1 -->
 
 
-    <!-- ════════════════════════════════
-         STEP 3: Submit
-    ════════════════════════════════ -->
-    <div class="step-section" id="step-3">
+      <!-- ════════════════════════════════
+           STEP 2: Selfie
+      ════════════════════════════════ -->
+      <div class="step-section" id="step-2">
 
-      <div class="mb-6">
-        <p class="text-[15px] font-bold text-navy tracking-[-0.3px] mb-1">Ready to verify</p>
-        <p class="text-[13px] text-navy/50 leading-relaxed">
-          You will be taken to our secure identity verification partner to complete the process.
-          Have your ID document and phone camera ready. The guided flow takes about 2 minutes.
-        </p>
-      </div>
-
-      <!-- What to expect checklist -->
-      <div class="mb-6 flex flex-col gap-3">
-        <div class="flex items-start gap-3">
-          <div class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-               style="background:rgba(45,138,94,0.12);">
-            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#2d8a5e" stroke-width="3">
-              <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <p class="text-[13px] text-navy/65 leading-relaxed">
-            Photo of the front and back of your government-issued ID
+        <div class="mb-5">
+          <p class="text-[15px] font-bold text-navy tracking-[-0.3px] mb-1">Take a Selfie</p>
+          <p class="text-[13px] text-navy/50 leading-relaxed">
+            A photo of your face is required to match you to your NIN card. Use the front-facing camera in good light.
           </p>
         </div>
-        <div class="flex items-start gap-3">
-          <div class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-               style="background:rgba(45,138,94,0.12);">
-            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#2d8a5e" stroke-width="3">
-              <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <p class="text-[13px] text-navy/65 leading-relaxed">
-            A short selfie with automatic liveness detection — no video needed
-          </p>
-        </div>
-        <div class="flex items-start gap-3">
-          <div class="w-6 h-6 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5"
-               style="background:rgba(45,138,94,0.12);">
-            <svg width="12" height="12" fill="none" viewBox="0 0 24 24" stroke="#2d8a5e" stroke-width="3">
-              <path d="M5 13l4 4L19 7" stroke-linecap="round" stroke-linejoin="round"/>
-            </svg>
-          </div>
-          <p class="text-[13px] text-navy/65 leading-relaxed">
-            Results are usually instant. You will receive an email with your outcome.
-          </p>
-        </div>
-      </div>
 
-      <!-- Result messages — hidden until API responds -->
-      <div id="notice-review" class="notice-review mb-5">
-        <div class="flex items-start gap-3">
-          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#b7791f" stroke-width="2" class="flex-shrink-0 mt-0.5">
+        <div class="max-w-[280px] mx-auto mb-4">
+          <label class="upload-label" id="box-selfie" style="min-height:200px;">
+            <!-- user-facing camera for selfie -->
+            <input type="file" id="input-selfie" accept="image/jpeg,image/png,image/webp"
+                   capture="user"
+                   onchange="handleFile(this,'selfie')" />
+            <img id="preview-selfie" class="upload-preview" alt="Selfie preview" style="min-height:198px;" />
+            <div class="upload-placeholder flex flex-col items-center gap-2">
+              <div class="upload-icon-bg" style="width:52px;height:52px;border-radius:16px;">
+                <svg width="26" height="26" fill="none" viewBox="0 0 24 24" stroke="#2d8a5e" stroke-width="2">
+                  <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                  <circle cx="12" cy="13" r="4"/>
+                </svg>
+              </div>
+              <span class="text-[13px] font-semibold text-navy/60">Tap to take selfie</span>
+              <span class="upload-hint">JPG or PNG · max 10 MB</span>
+            </div>
+            <div class="reupload-overlay">
+              <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2">
+                <path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/>
+                <circle cx="12" cy="13" r="4"/>
+              </svg>
+              <span>Replace</span>
+            </div>
+          </label>
+          <p id="name-selfie" class="text-[11px] text-navy/40 mt-1.5 truncate text-center"></p>
+        </div>
+
+        <div class="notice-info mb-6 flex items-start gap-3">
+          <svg width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#2d8a5e" stroke-width="2" class="flex-shrink-0 mt-0.5">
             <circle cx="12" cy="12" r="10"/>
             <path d="M12 8v4m0 4h.01"/>
           </svg>
+          <span>Look straight at the camera with a neutral expression. Remove sunglasses and hats. Make sure your full face is clearly visible.</span>
+        </div>
+
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button class="btn-outline" onclick="goToStep(1)">
+            <svg class="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#0d2145" stroke-width="2.5">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back
+          </button>
+          <button class="btn-green flex-1" onclick="goToStep(3)">
+            Review &amp; Submit
+            <svg class="ml-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#fff" stroke-width="2.5">
+              <path d="M5 12h14M12 5l7 7-7 7"/>
+            </svg>
+          </button>
+        </div>
+
+      </div><!-- /step-2 -->
+
+
+      <!-- ════════════════════════════════
+           STEP 3: Review & Submit
+      ════════════════════════════════ -->
+      <div class="step-section" id="step-3">
+
+        <div class="mb-5">
+          <p class="text-[15px] font-bold text-navy tracking-[-0.3px] mb-1.5">Review your photos</p>
+          <p class="text-[13px] text-navy/50 leading-relaxed">
+            Make sure all images are clear and readable before submitting. You cannot change them after submission.
+          </p>
+        </div>
+
+        <!-- Thumbnail strip -->
+        <div class="thumb-strip mb-6">
           <div>
-            <p class="font-bold text-[14px] text-navy mb-1">Submission Under Review</p>
-            <p class="text-[13px] text-navy/60">Your documents have been submitted and are being reviewed by our team. You will receive an email notification once the review is complete. This usually takes 1 to 2 business days.</p>
+            <div class="thumb-item" id="thumb-front">
+              <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="rgba(13,33,69,0.25)" stroke-width="1.5"><rect x="2" y="5" width="20" height="14" rx="3"/></svg>
+            </div>
+            <p class="thumb-label">NIN Front</p>
+          </div>
+          <div>
+            <div class="thumb-item" id="thumb-back">
+              <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="rgba(13,33,69,0.25)" stroke-width="1.5"><rect x="2" y="5" width="20" height="14" rx="3"/></svg>
+            </div>
+            <p class="thumb-label">NIN Back</p>
+          </div>
+          <div>
+            <div class="thumb-item" id="thumb-selfie">
+              <svg width="24" height="24" fill="none" viewBox="0 0 24 24" stroke="rgba(13,33,69,0.25)" stroke-width="1.5"><path d="M23 19a2 2 0 01-2 2H3a2 2 0 01-2-2V8a2 2 0 012-2h4l2-3h6l2 3h4a2 2 0 012 2z"/><circle cx="12" cy="13" r="4"/></svg>
+            </div>
+            <p class="thumb-label">Selfie</p>
           </div>
         </div>
-      </div>
 
-      <div id="notice-success" class="notice-success mb-5">
-        <div class="flex items-start gap-3">
-          <svg width="18" height="18" fill="none" viewBox="0 0 24 24" class="flex-shrink-0 mt-0.5">
-            <circle cx="12" cy="12" r="10" fill="rgba(45,138,94,0.15)"/>
-            <path d="M7 12.5l3.5 3.5 6-7" stroke="#2d8a5e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-          </svg>
-          <div>
-            <p class="font-bold text-[14px] text-green mb-1">Verification Approved</p>
-            <p class="text-[13px] text-navy/60">Your identity has been verified. Redirecting you to your dashboard now.</p>
+        <!-- Upload progress -->
+        <div id="upload-progress-wrap" class="upload-progress-wrap mb-4">
+          <div id="upload-progress-bar" class="upload-progress-bar"></div>
+        </div>
+        <p id="upload-status-text" class="text-[12px] text-navy/45 text-center mb-4" style="display:none;"></p>
+
+        <!-- Result notices (shown after submit) -->
+        <div id="notice-review" class="notice-review mb-5">
+          <div class="flex items-start gap-3">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" stroke="#b7791f" stroke-width="2" class="flex-shrink-0 mt-0.5">
+              <circle cx="12" cy="12" r="10"/>
+              <path d="M12 8v4m0 4h.01"/>
+            </svg>
+            <div>
+              <p class="font-bold text-[14px] text-navy mb-1">Submission Received</p>
+              <p class="text-[13px] text-navy/60">Your NIN card photos and selfie have been uploaded. Our team will review them and notify you by email within 1–2 business days.</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Terms note -->
-      <div class="notice-info mb-5 flex items-start gap-3 text-[12px]">
-        <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="rgba(13,33,69,0.45)" stroke-width="2" class="flex-shrink-0 mt-0.5">
-          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-        </svg>
-        <span>By submitting, you confirm that all documents belong to you and that the information is accurate. Submitting fraudulent documents will result in permanent account suspension.</span>
-      </div>
+        <div id="notice-success" class="notice-success mb-5">
+          <div class="flex items-start gap-3">
+            <svg width="18" height="18" fill="none" viewBox="0 0 24 24" class="flex-shrink-0 mt-0.5">
+              <circle cx="12" cy="12" r="10" fill="rgba(45,138,94,0.15)"/>
+              <path d="M7 12.5l3.5 3.5 6-7" stroke="#2d8a5e" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+            </svg>
+            <div>
+              <p class="font-bold text-[14px] text-green mb-1">Verification Approved</p>
+              <p class="text-[13px] text-navy/60">Your identity has been verified. Redirecting you to your dashboard now.</p>
+            </div>
+          </div>
+        </div>
 
-      <div class="flex flex-col sm:flex-row gap-3">
-        <button id="back-btn" class="btn-outline" onclick="goToStep(2)">
-          <svg class="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#0d2145" stroke-width="2.5">
-            <path d="M19 12H5M12 19l-7-7 7-7"/>
+        <!-- Terms note -->
+        <div class="notice-info mb-5 flex items-start gap-3 text-[12px]">
+          <svg width="14" height="14" fill="none" viewBox="0 0 24 24" stroke="rgba(13,33,69,0.45)" stroke-width="2" class="flex-shrink-0 mt-0.5">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
           </svg>
-          Back
-        </button>
-        <button id="submit-btn" class="btn-green flex-1" onclick="submitVerification()">
-          <span id="submit-label">Submit for Verification</span>
-        </button>
-      </div>
+          <span>By submitting, you confirm these documents belong to you and the information is accurate. Submitting fraudulent documents results in permanent account suspension.</span>
+        </div>
 
-    </div><!-- /step-3 -->
+        <div class="flex flex-col sm:flex-row gap-3">
+          <button id="back-btn" class="btn-outline" onclick="goToStep(2)">
+            <svg class="mr-2" width="16" height="16" fill="none" viewBox="0 0 24 24" stroke="#0d2145" stroke-width="2.5">
+              <path d="M19 12H5M12 19l-7-7 7-7"/>
+            </svg>
+            Back
+          </button>
+          <button id="submit-btn" class="btn-green flex-1" onclick="submitVerification()">
+            <span id="submit-label">Submit for Review</span>
+          </button>
+        </div>
+
+      </div><!-- /step-3 -->
+
+    </div><!-- /submit-form-state -->
 
   </div><!-- /glass card -->
 
@@ -675,16 +815,21 @@
 
   /* ══════════════════════════════════════
      FILE HANDLING
-     Simplified: one function, keyed by slot name.
-     Uses <label> pattern so no onclick conflicts.
   ══════════════════════════════════════ */
   function handleFile(input, slot) {
     const file = input.files[0];
     if (!file) return;
 
-    /* Size guard: 10 MB */
-    if (file.size > 10 * 1024 * 1024) {
-      showError('File is too large. Maximum size is 10 MB.');
+    const MAX_MB = 10;
+    if (file.size > MAX_MB * 1024 * 1024) {
+      showError('File is too large. Maximum size is ' + MAX_MB + ' MB.');
+      input.value = '';
+      return;
+    }
+
+    // Only accept images
+    if (!file.type.startsWith('image/')) {
+      showError('Only image files (JPG, PNG, WEBP) are accepted.');
       input.value = '';
       return;
     }
@@ -695,35 +840,15 @@
     const preview = document.getElementById('preview-' + slot);
     const nameEl  = document.getElementById('name-' + slot);
 
-    /* Remove error state */
     box.classList.remove('error');
-
-    /* Show filename */
     if (nameEl) nameEl.textContent = file.name;
 
-    if (file.type.startsWith('image/')) {
-      const reader = new FileReader();
-      reader.onload = e => {
-        preview.src = e.target.result;
-        box.classList.add('has-file');
-      };
-      reader.readAsDataURL(file);
-    } else {
-      /* PDF: show a badge inside the placeholder */
-      preview.style.display = 'none';
-      box.querySelector('.upload-placeholder').innerHTML =
-        `<div class="flex flex-col items-center gap-2 p-6">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background:rgba(45,138,94,0.12);">
-            <svg width="20" height="20" fill="none" viewBox="0 0 24 24" stroke="#2d8a5e" stroke-width="2">
-              <path d="M14 2H6a2 2 0 00-2 2v16a2 2 0 002 2h12a2 2 0 002-2V8z"/>
-              <polyline points="14 2 14 8 20 8"/>
-            </svg>
-          </div>
-          <span class="text-[12px] font-semibold" style="color:#2d8a5e;">PDF attached</span>
-        </div>`;
-      box.querySelector('.upload-placeholder').style.display = 'flex';
+    const reader = new FileReader();
+    reader.onload = e => {
+      preview.src = e.target.result;
       box.classList.add('has-file');
-    }
+    };
+    reader.readAsDataURL(file);
   }
 
 
@@ -733,21 +858,24 @@
   function goToStep(n) {
     clearError();
 
-    /* Validate before advancing */
     if (n === 2 && currentStep === 1) {
       if (!files.front || !files.back) {
         if (!files.front) document.getElementById('box-front').classList.add('error');
         if (!files.back)  document.getElementById('box-back').classList.add('error');
-        showError('Please upload both sides of your ID before continuing.');
+        showError('Please upload both the front and back of your NIN card before continuing.');
         return;
       }
     }
 
     if (n === 3 && currentStep === 2) {
-      /* No local file validation needed — Didit handles the full capture flow */
+      if (!files.selfie) {
+        document.getElementById('box-selfie').classList.add('error');
+        showError('Please upload your selfie before continuing.');
+        return;
+      }
+      buildReviewThumbs();
     }
 
-    /* Hide all sections */
     document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
     document.getElementById('step-' + n).classList.add('active');
 
@@ -788,16 +916,11 @@
       const container = document.getElementById('thumb-' + key);
       const file = files[key];
       if (!file) return;
-
-      if (file.type.startsWith('image/')) {
-        const reader = new FileReader();
-        reader.onload = e => {
-          container.innerHTML = `<img src="${e.target.result}" alt="${key}" style="width:100%;height:100%;object-fit:cover;" />`;
-        };
-        reader.readAsDataURL(file);
-      } else {
-        container.innerHTML = `<span class="text-[11px] font-semibold" style="color:#2d8a5e;">PDF</span>`;
-      }
+      const reader = new FileReader();
+      reader.onload = e => {
+        container.innerHTML = `<img src="${e.target.result}" alt="${key}" />`;
+      };
+      reader.readAsDataURL(file);
     });
   }
 
@@ -817,20 +940,42 @@
     el.classList.remove('visible');
   }
 
-  function setLoading(loading) {
+  function setLoading(loading, progressPct) {
     const btn   = document.getElementById('submit-btn');
     const label = document.getElementById('submit-label');
     const back  = document.getElementById('back-btn');
+    const wrap  = document.getElementById('upload-progress-wrap');
+    const bar   = document.getElementById('upload-progress-bar');
+    const txt   = document.getElementById('upload-status-text');
+
     btn.disabled  = loading;
     back.disabled = loading;
-    label.innerHTML = loading
-      ? '<span class="spinner"></span> Submitting...'
-      : 'Submit for Verification';
+
+    if (loading) {
+      label.innerHTML = '<span class="spinner"></span> Uploading…';
+      wrap.classList.add('visible');
+      txt.style.display = 'block';
+      if (progressPct !== undefined) {
+        bar.style.width = progressPct + '%';
+        txt.textContent = 'Uploading… ' + progressPct + '%';
+      }
+    } else {
+      label.innerHTML = 'Submit for Review';
+      wrap.classList.remove('visible');
+      txt.style.display = 'none';
+      bar.style.width = '0%';
+    }
+  }
+
+  function setProgressPct(pct, msg) {
+    document.getElementById('upload-progress-bar').style.width = pct + '%';
+    const txt = document.getElementById('upload-status-text');
+    if (msg) txt.textContent = msg;
   }
 
 
   /* ══════════════════════════════════════
-     FIREBASE HELPER
+     FIREBASE READY WAIT
   ══════════════════════════════════════ */
   async function waitForFirebase(timeoutMs = 10000) {
     const start = Date.now();
@@ -843,40 +988,23 @@
 
 
   /* ══════════════════════════════════════
-     HANDLE RETURN FROM DIDIT
-     When Didit redirects back with ?kyc=complete, show the
-     "under review" notice. The kyc-webhook Netlify function
-     will update Firestore and email the final decision.
+     FILE → BASE64 HELPER
   ══════════════════════════════════════ */
-  (function handleKycReturn() {
-    const params = new URLSearchParams(window.location.search);
-    if (params.get('kyc') === 'complete') {
-      document.querySelectorAll('.step-section').forEach(s => s.classList.remove('active'));
-      const step3 = document.getElementById('step-3');
-      if (step3) step3.classList.add('active');
-      updateProgress(3);
-      currentStep = 3;
-
-      const noticeReview = document.getElementById('notice-review');
-      if (noticeReview) noticeReview.classList.add('visible');
-
-      const submitBtn = document.getElementById('submit-btn');
-      const backBtn   = document.getElementById('back-btn');
-      if (submitBtn) submitBtn.style.display = 'none';
-      if (backBtn)   backBtn.style.display   = 'none';
-
-      /* Clean up the URL so a page refresh doesn't re-trigger this */
-      window.history.replaceState({}, '', window.location.pathname);
-    }
-  })();
+  function fileToBase64(file) {
+    return new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload  = e => resolve(e.target.result.split(',')[1]);
+      reader.onerror = () => reject(new Error('Failed to read file'));
+      reader.readAsDataURL(file);
+    });
+  }
 
 
   /* ══════════════════════════════════════
      SUBMIT
-     Calls kyc-verify.js which creates a Didit v3 session and
-     returns a hosted verification URL. We redirect the user
-     there — Didit handles the guided ID + liveness capture.
-     The result arrives via kyc-webhook.js asynchronously.
+     Encodes each image as base64 and POSTs to the Netlify
+     function kyc-submit.js, which uploads to Firebase Storage
+     and writes kycStatus:'under-review' to Firestore.
   ══════════════════════════════════════ */
   async function submitVerification() {
     clearError();
@@ -888,13 +1016,34 @@
     }
 
     setLoading(true);
+    setProgressPct(5, 'Preparing images…');
 
     try {
-      const response = await fetch('/.netlify/functions/kyc-verify', {
+      // Encode all three images concurrently
+      setProgressPct(15, 'Encoding images…');
+      const [frontB64, backB64, selfieB64] = await Promise.all([
+        fileToBase64(files.front),
+        fileToBase64(files.back),
+        fileToBase64(files.selfie),
+      ]);
+
+      setProgressPct(40, 'Uploading to server…');
+
+      const response = await fetch('/.netlify/functions/kyc-submit', {
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({ uid: window._currentUid }),
+        body: JSON.stringify({
+          uid:          window._currentUid,
+          frontImage:   frontB64,
+          frontType:    files.front.type,
+          backImage:    backB64,
+          backType:     files.back.type,
+          selfieImage:  selfieB64,
+          selfieType:   files.selfie.type,
+        }),
       });
+
+      setProgressPct(85, 'Saving submission…');
 
       const result = await response.json();
 
@@ -902,21 +1051,30 @@
         throw new Error(result.error || 'Server returned ' + response.status);
       }
 
-      if (!result.sessionUrl) {
-        throw new Error('No verification URL returned. Please try again.');
-      }
+      setProgressPct(100, 'Done!');
 
-      /* Redirect the user to Didit's hosted verification flow.
-         After completing it, Didit redirects back to verify.html?kyc=complete */
-      window.location.href = result.sessionUrl;
+      // Hide buttons, show success notice
+      document.getElementById('submit-btn').style.display = 'none';
+      document.getElementById('back-btn').style.display   = 'none';
+      document.getElementById('notice-review').classList.add('visible');
+      setLoading(false);
 
     } catch (err) {
       setLoading(false);
-      showError(err.message || 'Submission failed. Please check your connection and try again.');
+      showError(err.message || 'Upload failed. Please check your connection and try again.');
       console.error('KYC submit error:', err);
     }
   }
 </script>
 
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/service-worker.js').catch(function(err) {
+      console.warn('SW registration failed:', err);
+    });
+  });
+}
+</script>
 </body>
 </html>

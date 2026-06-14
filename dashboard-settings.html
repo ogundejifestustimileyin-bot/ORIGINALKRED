@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#0d2145" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Kreddlo" />
+<link rel="apple-touch-icon" href="/assets/kreddlo-192.png" />
 <title>Settings — Kreddlo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -943,27 +949,45 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ============ BOOT ============
-(function boot() {
-  var parts = DEMO.name.trim().split(' ');
-  var initials = parts.length >= 2 ? parts[0][0]+parts[parts.length-1][0] : DEMO.name.slice(0,2).toUpperCase();
-  document.getElementById('user-avatar').textContent = initials;
-  document.getElementById('photo-initials').textContent = initials;
+(function waitForAuth() {
+  if (typeof window.db === 'undefined') { return setTimeout(waitForAuth, 50); }
 
-  buildNav();
-  renderSkills();
-  updateCharCount();
-  renderNotifPrefs();
-  renderBannerColors();
-  updateStoreBioCount();
-  document.getElementById('wallet-address-display').textContent = WALLET_ADDRESS;
+  import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js').then(function(authMod) {
+    authMod.onAuthStateChanged(authMod.getAuth(), function(user) {
+      if (!user) { window.location.href = '/login.html'; return; }
 
-  document.getElementById('bell-dot').style.display = 'block';
+      DEMO.uid  = user.uid;
+      DEMO.name = user.displayName || user.email || 'User';
 
-  var ov = document.getElementById('loading-overlay');
-  ov.style.display = 'none';
+      var parts    = DEMO.name.trim().split(' ');
+      var initials = parts.length >= 2 ? parts[0][0]+parts[parts.length-1][0] : DEMO.name.slice(0,2).toUpperCase();
+      document.getElementById('user-avatar').textContent    = initials;
+      document.getElementById('photo-initials').textContent = initials;
 
-  loadStoreAndIntegrationSettings();
+      buildNav();
+      renderSkills();
+      updateCharCount();
+      renderNotifPrefs();
+      renderBannerColors();
+      updateStoreBioCount();
+      document.getElementById('wallet-address-display').textContent = WALLET_ADDRESS;
+      document.getElementById('bell-dot').style.display = 'block';
+
+      document.getElementById('loading-overlay').style.display = 'none';
+
+      loadStoreAndIntegrationSettings();
+    });
+  });
 })();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/service-worker.js').catch(function(err) {
+      console.warn('Service worker registration failed:', err);
+    });
+  });
+}
 </script>
 </body>
 </html>

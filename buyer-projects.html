@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#0d2145" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Kreddlo" />
+<link rel="apple-touch-icon" href="/assets/kreddlo-192.png" />
 <title>My Projects — Kreddlo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -142,6 +148,20 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
   .proj-card{padding:24px!important}
 }
 </style>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  const FIREBASE_CONFIG = {
+    apiKey:            'AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk',
+    authDomain:        'kreddlo.firebaseapp.com',
+    projectId:         'kreddlo',
+    storageBucket:     'kreddlo.firebasestorage.app',
+    messagingSenderId: '764500458567',
+    appId:             '1:764500458567:web:2389d5cf8c688caafd0562',
+  };
+  const app = initializeApp(FIREBASE_CONFIG);
+  window.db = getFirestore(app);
+</script>
 </head>
 <body>
 
@@ -648,34 +668,54 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// ============ AUTH CHECK (demo placeholder) ============
-// In production: onAuthStateChanged(window.auth, function(user){
-//   if (!user) { window.location.href = '/login.html'; return; }
-//   getDoc(doc(window.db,'users',user.uid)).then(function(snap){
-//     if (!snap.exists() || snap.data().role !== 'buyer') { window.location.href = '/login.html'; }
-//   });
-// });
-// Then query: query(collection(window.db,'projects'), where('buyerUid','==',user.uid))
+// ============ AUTH CHECK ============
+(function waitForAuth() {
+  import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js').then(function(authMod) {
+    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js').then(function(fsMod) {
+      authMod.onAuthStateChanged(authMod.getAuth(), function(user) {
+        if (!user) { window.location.href = '/login.html'; return; }
 
-// ============ BOOT ============
-(function boot() {
-  // Avatar initials
-  var parts = DEMO_USER.name.trim().split(' ');
-  document.getElementById('user-avatar').textContent =
-    parts.length >= 2 ? parts[0][0]+parts[parts.length-1][0] : DEMO_USER.name.slice(0,2).toUpperCase();
+        var db = window.db;
+        if (!db) { window.location.href = '/login.html'; return; }
 
-  // Nav
-  buildNav();
+        fsMod.getDoc(fsMod.doc(db, 'users', user.uid)).then(function(snap) {
+          if (!snap.exists() || snap.data().role !== 'buyer') {
+            window.location.href = '/login.html'; return;
+          }
 
-  // Bell dot
-  document.getElementById('bell-dot').style.display = 'block';
+          DEMO_USER.uid  = user.uid;
+          DEMO_USER.name = user.displayName || snap.data().name || user.email || 'User';
 
-  // Initial render
-  renderProjects();
+          // Avatar initials
+          var parts = DEMO_USER.name.trim().split(' ');
+          document.getElementById('user-avatar').textContent =
+            parts.length >= 2 ? parts[0][0]+parts[parts.length-1][0] : DEMO_USER.name.slice(0,2).toUpperCase();
 
-  // Hide loading overlay
-  document.getElementById('loading-overlay').style.display = 'none';
+          // Nav
+          buildNav();
+
+          // Bell dot
+          document.getElementById('bell-dot').style.display = 'block';
+
+          // Initial render
+          renderProjects();
+
+          // Hide loading overlay
+          document.getElementById('loading-overlay').style.display = 'none';
+        }).catch(function() { window.location.href = '/login.html'; });
+      });
+    });
+  });
 })();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/service-worker.js').catch(function(err) {
+      console.warn('Service worker registration failed:', err);
+    });
+  });
+}
 </script>
 </body>
 </html>

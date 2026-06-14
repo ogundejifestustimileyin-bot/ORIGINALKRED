@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#0d2145" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Kreddlo" />
+<link rel="apple-touch-icon" href="/assets/kreddlo-192.png" />
 <title>Notifications — Kreddlo</title>
 <meta name="robots" content="noindex,nofollow"/>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
@@ -123,6 +129,20 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
   #page-content{padding:32px!important}
 }
 </style>
+<script type="module">
+  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  const FIREBASE_CONFIG = {
+    apiKey:            'AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk',
+    authDomain:        'kreddlo.firebaseapp.com',
+    projectId:         'kreddlo',
+    storageBucket:     'kreddlo.firebasestorage.app',
+    messagingSenderId: '764500458567',
+    appId:             '1:764500458567:web:2389d5cf8c688caafd0562',
+  };
+  const app = initializeApp(FIREBASE_CONFIG);
+  window.db = getFirestore(app);
+</script>
 </head>
 <body>
 
@@ -540,20 +560,34 @@ function filterNotifs(type, btn) {
 
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
 document.addEventListener('DOMContentLoaded', () => {
-  buildNav('freelancer');
+  import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js').then(function(authMod) {
+    authMod.onAuthStateChanged(authMod.getAuth(), function(user) {
+      if (!user) { window.location.href = '/login.html'; return; }
 
-  // Simulate loading delay for realism
-  setTimeout(() => {
-    document.getElementById('notif-skeleton').style.display = 'none';
-    renderNotifications();
+      buildNav('freelancer');
 
-    // Hide loading overlay
-    const overlay = document.getElementById('loading-overlay');
-    overlay.style.transition = 'opacity 0.35s';
-    overlay.style.opacity = '0';
-    setTimeout(() => overlay.style.display = 'none', 360);
-  }, 900);
+      setTimeout(() => {
+        document.getElementById('notif-skeleton').style.display = 'none';
+        renderNotifications();
+
+        // Hide loading overlay
+        const overlay = document.getElementById('loading-overlay');
+        overlay.style.transition = 'opacity 0.35s';
+        overlay.style.opacity = '0';
+        setTimeout(() => overlay.style.display = 'none', 360);
+      }, 900);
+    });
+  });
 });
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/service-worker.js').catch(function(err) {
+      console.warn('Service worker registration failed:', err);
+    });
+  });
+}
 </script>
 </body>
 </html>

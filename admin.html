@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#0d2145" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Kreddlo" />
+<link rel="apple-touch-icon" href="/assets/kreddlo-192.png" />
 <title>Admin Panel - Kreddlo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -1673,10 +1679,8 @@ function renderPayoutsTable(list) {
 
 /* ============ KYC DATA ============ */
 var KYC_PENDING = [
-  { uid:'u004', name:'Yemi Adeyemi', email:'yemi@example.com', submittedDate:'10 Apr 2026', sessionId:'b7e1c2a4-3f9d-4e2a-9c1b-7a8f0d23e561', documentType:'National ID', kycStatus:'pending' },
-  { uid:'u009', name:'Ngozi Eze', email:'ngozi.eze@example.com', submittedDate:'12 Apr 2026', sessionId:'f3a92d18-6c4b-4a77-8e0f-1d3c5b6a9072', documentType:'Passport', kycStatus:'pending' },
-  { uid:'u013', name:'Aisha Bello', email:'aisha.bello@example.com', submittedDate:'14 Apr 2026', sessionId:'9d4e7f12-2a8b-4c3d-bf61-5e0a8c2d4f93', documentType:'Passport', kycStatus:'pending' },
-  { uid:'u014', name:'Wei Zhang', email:'wei.zhang@example.com', submittedDate:'15 Apr 2026', sessionId:'a1c5b9e3-7d2f-4f88-93a1-2b6c8e4d1f05', documentType:'National ID', kycStatus:'pending' }
+  { uid:'u004', name:'Yemi Adeyemi', email:'yemi@example.com', submittedDate:'10 Apr 2026', documentType:'NIN Card', kycImages:{ frontUrl:'', backUrl:'', selfieUrl:'' }, kycStatus:'pending' },
+  { uid:'u009', name:'Ngozi Eze', email:'ngozi.eze@example.com', submittedDate:'12 Apr 2026', documentType:'NIN Card', kycImages:{ frontUrl:'', backUrl:'', selfieUrl:'' }, kycStatus:'pending' }
 ];
 
 function renderKycCards() {
@@ -1695,6 +1699,11 @@ function renderKycCards() {
   empty.style.display = 'none';
 
   grid.innerHTML = KYC_PENDING.map(function(k) {
+    var imgs = k.kycImages || {};
+    function imgCell(url, label) {
+      if (!url) return '<div style="flex:1;min-width:0;"><div class="lbl" style="margin-bottom:6px;">' + label + '</div><div style="background:#f0f2f6;border-radius:10px;height:90px;display:flex;align-items:center;justify-content:center;font-size:11px;color:rgba(13,33,69,0.4);">No image</div></div>';
+      return '<div style="flex:1;min-width:0;"><div class="lbl" style="margin-bottom:6px;">' + label + '</div><a href="' + url + '" target="_blank" rel="noopener"><img src="' + url + '" alt="' + label + '" style="width:100%;height:90px;object-fit:cover;border-radius:10px;border:1px solid #e2e8f0;display:block;" onerror="this.parentElement.innerHTML=\'<div style=&quot;background:#f0f2f6;border-radius:10px;height:90px;display:flex;align-items:center;justify-content:center;font-size:11px;color:rgba(13,33,69,0.4);&quot;>Load failed</div>\'"/></a></div>';
+    }
     return '<div class="glass" style="padding:24px;" id="kyc-card-' + k.uid + '">' +
       '<div style="display:flex;align-items:flex-start;justify-content:space-between;gap:12px;">' +
         '<div style="display:flex;align-items:center;gap:12px;">' +
@@ -1704,19 +1713,23 @@ function renderKycCards() {
             '<div style="font-size:12px;color:rgba(13,33,69,0.48);margin-top:2px;">' + k.email + '</div>' +
           '</div>' +
         '</div>' +
-        '<span class="badge badge-amber">Pending</span>' +
+        '<span class="badge badge-amber">Under Review</span>' +
       '</div>' +
       '<div class="kyc-info-row">' +
         '<div><div class="lbl">Submitted</div><div style="font-weight:700;font-size:13px;margin-top:4px;">' + k.submittedDate + '</div></div>' +
-        '<div><div class="lbl">Session ID</div><div style="font-size:11px;font-family:monospace;margin-top:4px;color:#0d2145;">' + k.sessionId + '</div></div>' +
-        '<div><div class="lbl">Document Type</div><div style="font-weight:700;font-size:13px;margin-top:4px;">' + k.documentType + '</div></div>' +
+        '<div><div class="lbl">Document</div><div style="font-weight:700;font-size:13px;margin-top:4px;">' + k.documentType + '</div></div>' +
+      '</div>' +
+      '<div style="display:flex;gap:10px;margin-top:16px;">' +
+        imgCell(imgs.frontUrl, 'NIN Front') +
+        imgCell(imgs.backUrl,  'NIN Back') +
+        imgCell(imgs.selfieUrl,'Selfie') +
       '</div>' +
       '<div style="display:flex;gap:10px;margin-top:18px;">' +
         '<button class="btn-green" style="flex:1;" onclick="approveKyc(\'' + k.uid + '\')">Approve</button>' +
         '<button class="btn-secondary" style="flex:1;" onclick="toggleKycReject(\'' + k.uid + '\')">Reject</button>' +
       '</div>' +
       '<div class="kyc-reject-area" id="kyc-reject-' + k.uid + '">' +
-        '<textarea class="input-field" id="kyc-reject-reason-' + k.uid + '" rows="3" placeholder="Enter rejection reason (sent to user in email)" style="resize:vertical;"></textarea>' +
+        '<textarea class="input-field" id="kyc-reject-reason-' + k.uid + '" rows="3" placeholder="Enter rejection reason (sent to user in email)" style="resize:vertical;margin-top:12px;"></textarea>' +
         '<button style="width:100%;margin-top:10px;background:#c81e1e;color:#fff;border:none;border-radius:50px;padding:11px 24px;font-family:\'Plus Jakarta Sans\',sans-serif;font-size:14px;font-weight:600;cursor:pointer;transition:transform .15s;" onmouseover="this.style.transform=\'translateY(-1px)\'" onmouseout="this.style.transform=\'translateY(0)\'" onclick="confirmKycReject(\'' + k.uid + '\')">Confirm Rejection</button>' +
       '</div>' +
       '</div>';
@@ -1731,16 +1744,32 @@ function toggleKycReject(uid) {
 function approveKyc(uid) {
   var k = KYC_PENDING.find(function(x) { return x.uid === uid; });
   if (!k) return;
-
   var ok = confirm('Approve KYC for ' + k.name + '?');
   if (!ok) return;
 
-  // In production: POST to /.netlify/functions/kyc-approve with { uid }
-  // sets kycStatus: 'verified' in Firestore, sends kyc-approved email + push notification.
+  var btn = document.querySelector('#kyc-card-' + uid + ' .btn-green');
+  if (btn) { btn.disabled = true; btn.textContent = 'Approving…'; }
 
-  KYC_PENDING = KYC_PENDING.filter(function(x) { return x.uid !== uid; });
-  renderKycCards();
-  showToast('KYC approved. User notified.');
+  fetch('/.netlify/functions/kyc-approve', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'approve', uid: uid, adminSecret: window.ADMIN_SECRET || '' })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok) {
+      KYC_PENDING = KYC_PENDING.filter(function(x) { return x.uid !== uid; });
+      renderKycCards();
+      showToast('KYC approved. User notified by email.');
+    } else {
+      showToast('Error: ' + (data.error || 'Unknown error'));
+      if (btn) { btn.disabled = false; btn.textContent = 'Approve'; }
+    }
+  })
+  .catch(function(err) {
+    showToast('Network error. Please try again.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Approve'; }
+  });
 }
 
 function confirmKycReject(uid) {
@@ -1749,18 +1778,31 @@ function confirmKycReject(uid) {
 
   var textarea = document.getElementById('kyc-reject-reason-' + uid);
   var reason = textarea.value.trim();
+  if (!reason) { showToast('Please enter a rejection reason.'); return; }
 
-  if (!reason) {
-    showToast('Please enter a reason before rejecting.');
-    return;
-  }
+  var btn = document.querySelector('#kyc-card-' + uid + ' [onclick*="confirmKycReject"]');
+  if (btn) { btn.disabled = true; btn.textContent = 'Rejecting…'; }
 
-  // In production: POST to /.netlify/functions/kyc-reject with { uid, reason }
-  // sets kycStatus: 'declined' in Firestore, sends kyc-declined email.
-
-  KYC_PENDING = KYC_PENDING.filter(function(x) { return x.uid !== uid; });
-  renderKycCards();
-  showToast('KYC declined. User notified.');
+  fetch('/.netlify/functions/kyc-approve', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ action: 'reject', uid: uid, reason: reason, adminSecret: window.ADMIN_SECRET || '' })
+  })
+  .then(function(r) { return r.json(); })
+  .then(function(data) {
+    if (data.ok) {
+      KYC_PENDING = KYC_PENDING.filter(function(x) { return x.uid !== uid; });
+      renderKycCards();
+      showToast('KYC declined. User notified by email.');
+    } else {
+      showToast('Error: ' + (data.error || 'Unknown error'));
+      if (btn) { btn.disabled = false; btn.textContent = 'Confirm Rejection'; }
+    }
+  })
+  .catch(function(err) {
+    showToast('Network error. Please try again.');
+    if (btn) { btn.disabled = false; btn.textContent = 'Confirm Rejection'; }
+  });
 }
 
 /* ============ SETTINGS ============ */
@@ -2136,8 +2178,8 @@ function loadKyc() {
           name: u.name || u.displayName || 'Unknown',
           email: u.email || '',
           submittedDate: date,
-          sessionId: u.kycSessionId || '',
-          documentType: u.kycDocumentType || 'Document',
+          documentType: u.kycDocumentType || 'NIN Card',
+          kycImages: u.kycImages || { frontUrl: '', backUrl: '', selfieUrl: '' },
           kycStatus: 'pending'
         });
       });
@@ -2189,6 +2231,15 @@ function boot() {
     });
   });
 })();
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/service-worker.js').catch(function(err) {
+      console.warn('Service worker registration failed:', err);
+    });
+  });
+}
 </script>
 </body>
 </html>

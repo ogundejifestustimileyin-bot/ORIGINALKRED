@@ -3,6 +3,12 @@
 <head>
 <meta charset="UTF-8"/>
 <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<link rel="manifest" href="/manifest.json" />
+<meta name="theme-color" content="#0d2145" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+<meta name="apple-mobile-web-app-title" content="Kreddlo" />
+<link rel="apple-touch-icon" href="/assets/kreddlo-192.png" />
 <title>Dashboard — Kreddlo</title>
 <link rel="preconnect" href="https://fonts.googleapis.com"/>
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
@@ -244,6 +250,21 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
         <button onclick="document.getElementById('fcm-banner').style.display='none'" style="width:28px;height:28px;background:rgba(13,33,69,0.07);border:none;border-radius:8px;display:flex;align-items:center;justify-content:center;cursor:pointer;flex-shrink:0;" title="Dismiss">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="#0d2145" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
         </button>
+      </div>
+
+      <!-- PWA Install Banner -->
+      <div id="pwa-banner" style="display:none;align-items:center;justify-content:space-between;gap:12px;background:#0d2145;border-radius:16px;padding:14px 16px;margin-bottom:20px;">
+        <div style="display:flex;align-items:center;gap:12px;min-width:0;">
+          <img src="/assets/kreddlo-192.png" style="width:40px;height:40px;border-radius:10px;flex-shrink:0;" alt="Kreddlo" />
+          <div style="min-width:0;">
+            <p style="font-size:13px;font-weight:700;color:#fff;margin:0 0 2px;">Install Kreddlo</p>
+            <p style="font-size:12px;font-weight:500;color:rgba(255,255,255,0.55);margin:0;">Add to home screen for faster access</p>
+          </div>
+        </div>
+        <div style="display:flex;align-items:center;gap:8px;flex-shrink:0;">
+          <button id="pwa-install-btn" onclick="triggerInstall()" style="background:#2d8a5e;color:#fff;border:none;border-radius:50px;padding:8px 16px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:700;cursor:pointer;white-space:nowrap;">Install</button>
+          <button onclick="dismissInstallBanner()" style="background:rgba(255,255,255,0.08);color:rgba(255,255,255,0.55);border:none;border-radius:50px;padding:8px 12px;font-family:'Plus Jakarta Sans',sans-serif;font-size:12px;font-weight:600;cursor:pointer;white-space:nowrap;">Not now</button>
+        </div>
       </div>
 
       <!-- SECTION A: Greeting + actions -->
@@ -1065,12 +1086,82 @@ onAuthStateChanged(auth, function(user) {
 
   // Load real data then hide overlay
   var ov = document.getElementById('loading-overlay');
+
+  // Safety: always hide overlay after 8s even if Firestore is slow/fails
+  var ovTimeout = setTimeout(function() { ov.style.display = 'none'; }, 8000);
+
   loadDashboard(user.uid).then(function() {
+    clearTimeout(ovTimeout);
     ov.style.display = 'none';
   }).catch(function() {
+    clearTimeout(ovTimeout);
     ov.style.display = 'none';
   });
 });
+</script>
+<script>
+// ── PWA Install Prompt ────────────────────────────────────────────────────────
+var _installPrompt = null;
+
+window.addEventListener('beforeinstallprompt', function(e) {
+  e.preventDefault();
+  _installPrompt = e;
+
+  // Only show if user has not dismissed before
+  if (!localStorage.getItem('pwa-dismissed')) {
+    var banner = document.getElementById('pwa-banner');
+    if (banner) banner.style.display = 'flex';
+  }
+});
+
+window.triggerInstall = function() {
+  if (!_installPrompt) return;
+  _installPrompt.prompt();
+  _installPrompt.userChoice.then(function(choice) {
+    if (choice.outcome === 'accepted') {
+      dismissInstallBanner();
+    }
+    _installPrompt = null;
+  });
+};
+
+window.dismissInstallBanner = function() {
+  var banner = document.getElementById('pwa-banner');
+  if (banner) banner.style.display = 'none';
+  localStorage.setItem('pwa-dismissed', '1');
+};
+
+// Hide banner if already installed (running in standalone mode)
+if (window.matchMedia('(display-mode: standalone)').matches) {
+  localStorage.setItem('pwa-dismissed', '1');
+}
+
+// iOS install hint (Safari does not fire beforeinstallprompt)
+var isIOS = /iphone|ipad|ipod/i.test(navigator.userAgent);
+var isStandalone = window.navigator.standalone === true;
+if (isIOS && !isStandalone && !localStorage.getItem('pwa-dismissed')) {
+  var banner = document.getElementById('pwa-banner');
+  if (banner) {
+    // Swap the install button for an instruction label on iOS
+    var btn = document.getElementById('pwa-install-btn');
+    if (btn) {
+      btn.textContent = 'How to install';
+      btn.onclick = function() {
+        showToast('Tap the Share button then "Add to Home Screen"');
+      };
+    }
+    banner.style.display = 'flex';
+  }
+}
+</script>
+<script>
+if ('serviceWorker' in navigator) {
+  window.addEventListener('load', function() {
+    navigator.serviceWorker.register('/service-worker.js').catch(function(err) {
+      console.warn('Service worker registration failed:', err);
+    });
+  });
+}
 </script>
 </body>
 </html>
