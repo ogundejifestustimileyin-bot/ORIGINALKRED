@@ -962,12 +962,12 @@ function handleLogout() {
 
 /* ============ OVERVIEW STATS ============ */
 var STATS = {
-  earnings: 24810.50,
-  transactions: 847,
-  freelancers: 312,
-  buyers: 198,
-  disputes: 7,
-  payouts: 198340.00
+  earnings: 0,
+  transactions: 0,
+  freelancers: 0,
+  buyers: 0,
+  disputes: 0,
+  payouts: 0
 };
 var statsAnimated = false;
 
@@ -1012,20 +1012,7 @@ function animateStats() {
 }
 
 /* ============ USERS DATA ============ */
-var USERS = [
-  { uid:'u001', name:'Marco Ricci', email:'marco@example.com', role:'freelancer', kycStatus:'verified', joined:'3 Jan 2026', totalEarnings:4820, projectCount:12, suspended:false, banned:false },
-  { uid:'u002', name:'Claire Dubois', email:'claire@example.com', role:'buyer', kycStatus:'verified', joined:'15 Jan 2026', totalSpent:3100, projectCount:5, suspended:false, banned:false },
-  { uid:'u003', name:'Amara Okafor', email:'amara@example.com', role:'freelancer', kycStatus:'verified', joined:'22 Jan 2026', totalEarnings:2640, projectCount:8, suspended:false, banned:false },
-  { uid:'u004', name:'Yemi Adeyemi', email:'yemi@example.com', role:'freelancer', kycStatus:'pending', joined:'10 Feb 2026', totalEarnings:0, projectCount:0, suspended:false, banned:false },
-  { uid:'u005', name:'Sofia Andersen', email:'sofia@example.com', role:'freelancer', kycStatus:'verified', joined:'18 Feb 2026', totalEarnings:1890, projectCount:6, suspended:false, banned:false },
-  { uid:'u006', name:'Daniel Kim', email:'daniel.kim@example.com', role:'buyer', kycStatus:'verified', joined:'2 Mar 2026', totalSpent:7650, projectCount:9, suspended:false, banned:false },
-  { uid:'u007', name:'Fatima Al-Sayed', email:'fatima.alsayed@example.com', role:'freelancer', kycStatus:'declined', joined:'9 Mar 2026', totalEarnings:0, projectCount:0, suspended:false, banned:false },
-  { uid:'u008', name:'Lucas Pereira', email:'lucas.pereira@example.com', role:'freelancer', kycStatus:'verified', joined:'14 Mar 2026', totalEarnings:3210, projectCount:10, suspended:true, banned:false },
-  { uid:'u009', name:'Ngozi Eze', email:'ngozi.eze@example.com', role:'buyer', kycStatus:'pending', joined:'20 Mar 2026', totalSpent:540, projectCount:1, suspended:false, banned:false },
-  { uid:'u010', name:'Hiroshi Tanaka', email:'hiroshi.tanaka@example.com', role:'freelancer', kycStatus:'not_started', joined:'28 Mar 2026', totalEarnings:0, projectCount:0, suspended:false, banned:false },
-  { uid:'u011', name:'Elena Petrova', email:'elena.petrova@example.com', role:'buyer', kycStatus:'verified', joined:'4 Apr 2026', totalSpent:1980, projectCount:3, suspended:false, banned:false },
-  { uid:'u012', name:'Tomás García', email:'tomas.garcia@example.com', role:'freelancer', kycStatus:'verified', joined:'11 Apr 2026', totalEarnings:5400, projectCount:14, suspended:false, banned:true }
-];
+var USERS = [];
 
 var activeUserFilter = 'all';
 
@@ -1217,23 +1204,7 @@ function showToast(msg) {
 }
 
 /* ============ TRANSACTIONS DATA ============ */
-var TRANSACTIONS = [
-  { id:'tx-001', project:'E-commerce Website Redesign', buyer:'Claire Dubois', freelancer:'Marco Ricci', gross:1200, fee:30, net:1170, method:'USDT (TRC-20)', date:'2 Apr 2026', escrowStatus:'released' },
-  { id:'tx-002', project:'Mobile App UI Kit for Fitness Tracker', buyer:'Daniel Kim', freelancer:'Amara Okafor', gross:850, fee:21.25, net:828.75, method:'Bitcoin', date:'4 Apr 2026', escrowStatus:'funded' },
-  { id:'tx-003', project:'Brand Identity and Logo Package', buyer:'Elena Petrova', freelancer:'Sofia Andersen', gross:600, fee:15, net:585, method:'USDC (ERC-20)', date:'5 Apr 2026', escrowStatus:'released' },
-  { id:'tx-004', project:'SEO Audit and Content Strategy', buyer:'Ngozi Eze', freelancer:'Lucas Pereira', gross:450, fee:11.25, net:438.75, method:'Ethereum', date:'6 Apr 2026', escrowStatus:'disputed' },
-  { id:'tx-005', project:'WordPress Plugin Development', buyer:'Claire Dubois', freelancer:'Tomás García', gross:980, fee:24.5, net:955.5, method:'USDT (TRC-20)', date:'7 Apr 2026', escrowStatus:'funded' },
-  { id:'tx-006', project:'Product Photography Editing Batch', buyer:'Daniel Kim', freelancer:'Marco Ricci', gross:320, fee:8, net:312, method:'Bitcoin', date:'8 Apr 2026', escrowStatus:'pending' },
-  { id:'tx-007', project:'Landing Page Copywriting', buyer:'Elena Petrova', freelancer:'Amara Okafor', gross:240, fee:6, net:234, method:'USDC (ERC-20)', date:'9 Apr 2026', escrowStatus:'released' },
-  { id:'tx-008', project:'Social Media Management - 1 Month', buyer:'Ngozi Eze', freelancer:'Sofia Andersen', gross:500, fee:12.5, net:487.5, method:'USDT (TRC-20)', date:'10 Apr 2026', escrowStatus:'funded' },
-  { id:'tx-009', project:'Custom CRM Dashboard Development', buyer:'Daniel Kim', freelancer:'Tomás García', gross:2400, fee:60, net:2340, method:'Ethereum', date:'11 Apr 2026', escrowStatus:'funded' },
-  { id:'tx-010', project:'Voiceover Recording for Explainer Video', buyer:'Claire Dubois', freelancer:'Lucas Pereira', gross:180, fee:4.5, net:175.5, method:'Bitcoin', date:'12 Apr 2026', escrowStatus:'released' },
-  { id:'tx-011', project:'API Integration for Payment Gateway', buyer:'Elena Petrova', freelancer:'Marco Ricci', gross:1750, fee:43.75, net:1706.25, method:'USDC (ERC-20)', date:'13 Apr 2026', escrowStatus:'disputed' },
-  { id:'tx-012', project:'Pitch Deck Design for Startup Funding', buyer:'Ngozi Eze', freelancer:'Amara Okafor', gross:700, fee:17.5, net:682.5, method:'USDT (TRC-20)', date:'14 Apr 2026', escrowStatus:'pending' },
-  { id:'tx-013', project:'Video Editing for YouTube Channel', buyer:'Daniel Kim', freelancer:'Sofia Andersen', gross:390, fee:9.75, net:380.25, method:'Ethereum', date:'15 Apr 2026', escrowStatus:'released' },
-  { id:'tx-014', project:'Translation of Legal Documents to French', buyer:'Claire Dubois', freelancer:'Tomás García', gross:260, fee:6.5, net:253.5, method:'Bitcoin', date:'16 Apr 2026', escrowStatus:'funded' },
-  { id:'tx-015', project:'Shopify Store Setup and Theme Customization', buyer:'Elena Petrova', freelancer:'Lucas Pereira', gross:1100, fee:27.5, net:1072.5, method:'USDC (ERC-20)', date:'17 Apr 2026', escrowStatus:'pending' }
-];
+var TRANSACTIONS = [];
 
 var activeTxFilter = 'all';
 
@@ -1319,16 +1290,7 @@ function renderTransactionsTable(list) {
 }
 
 /* ============ CONTRACTS DATA ============ */
-var CONTRACTS = [
-  { id:'c-001', project:'E-commerce Website Redesign', buyer:'Claire Dubois', freelancer:'Marco Ricci', dateSigned:'1 Apr 2026', amount:1200, pdfUrl:'#' },
-  { id:'c-002', project:'Mobile App UI Kit for Fitness Tracker', buyer:'Daniel Kim', freelancer:'Amara Okafor', dateSigned:'3 Apr 2026', amount:850, pdfUrl:'#' },
-  { id:'c-003', project:'Brand Identity and Logo Package', buyer:'Elena Petrova', freelancer:'Sofia Andersen', dateSigned:'4 Apr 2026', amount:600, pdfUrl:'#' },
-  { id:'c-004', project:'SEO Audit and Content Strategy', buyer:'Ngozi Eze', freelancer:'Lucas Pereira', dateSigned:'5 Apr 2026', amount:450, pdfUrl:'#' },
-  { id:'c-005', project:'WordPress Plugin Development', buyer:'Claire Dubois', freelancer:'Tomás García', dateSigned:'6 Apr 2026', amount:980, pdfUrl:'#' },
-  { id:'c-006', project:'Custom CRM Dashboard Development', buyer:'Daniel Kim', freelancer:'Tomás García', dateSigned:'10 Apr 2026', amount:2400, pdfUrl:'#' },
-  { id:'c-007', project:'API Integration for Payment Gateway', buyer:'Elena Petrova', freelancer:'Marco Ricci', dateSigned:'12 Apr 2026', amount:1750, pdfUrl:'#' },
-  { id:'c-008', project:'Shopify Store Setup and Theme Customization', buyer:'Elena Petrova', freelancer:'Lucas Pereira', dateSigned:'16 Apr 2026', amount:1100, pdfUrl:'#' }
-];
+var CONTRACTS = [];
 
 function renderContractsTable() {
   var rowsEl = document.getElementById('contracts-rows');
@@ -1358,26 +1320,7 @@ function renderContractsTable() {
 }
 
 /* ============ DISPUTES DATA ============ */
-var DISPUTES = [
-  { id:'d-001', project:'SEO Audit and Content Strategy', buyer:'Ngozi Eze', freelancer:'Lucas Pereira', dateRaised:'8 Apr 2026', status:'open', amount:438.75, contractPdfUrl:'#',
-    freelancerEvidence:'I delivered the full SEO audit report and content strategy document on time, including keyword research, competitor analysis, and a 3 month content calendar. The buyer has not specified what is missing from the agreed scope.',
-    buyerEvidence:'The report was delivered but does not include the on-page technical audit that was discussed in our initial call. I am requesting either the missing section or a partial refund.' },
-  { id:'d-002', project:'API Integration for Payment Gateway', buyer:'Elena Petrova', freelancer:'Marco Ricci', dateRaised:'14 Apr 2026', status:'under_review', amount:1706.25, contractPdfUrl:'#',
-    freelancerEvidence:'The integration was completed and tested in a staging environment with screen recordings provided. The buyer approved the staging demo before requesting production deployment, which was outside the original scope.',
-    buyerEvidence:'' },
-  { id:'d-003', project:'Mobile App Onboarding Flow Redesign', buyer:'Daniel Kim', freelancer:'Sofia Andersen', dateRaised:'11 Apr 2026', status:'open', amount:540, contractPdfUrl:'#',
-    freelancerEvidence:'',
-    buyerEvidence:'The delivered Figma file uses a different design system than what was approved in the proposal. I asked for revisions twice and the third delivery still does not match the agreed style guide.' },
-  { id:'d-004', project:'Voiceover Recording for Explainer Video', buyer:'Claire Dubois', freelancer:'Lucas Pereira', dateRaised:'13 Apr 2026', status:'resolved', amount:175.5, contractPdfUrl:'#',
-    freelancerEvidence:'Final audio files were delivered in the requested format with two rounds of revisions already completed at no extra charge, as shown in the message history.',
-    buyerEvidence:'The pacing in the final cut still feels rushed in two sections. I accept this is a minor issue and am open to a partial resolution.' },
-  { id:'d-005', project:'Custom CRM Dashboard Development', buyer:'Daniel Kim', freelancer:'Tomás García', dateRaised:'15 Apr 2026', status:'open', amount:2340, contractPdfUrl:'#',
-    freelancerEvidence:'Eighty percent of the dashboard modules were completed and demoed live to the client. The remaining twenty percent depends on API credentials that the client has not yet provided, despite three follow up requests.',
-    buyerEvidence:'I disagree that the missing credentials are blocking the remaining work, since the affected modules could have been built against mock data as agreed in our kickoff call.' },
-  { id:'d-006', project:'Translation of Legal Documents to French', buyer:'Claire Dubois', freelancer:'Tomás García', dateRaised:'17 Apr 2026', status:'under_review', amount:253.5, contractPdfUrl:'#',
-    freelancerEvidence:'All documents were translated and delivered with a certified translator declaration attached, matching the word count and deadline agreed in the contract.',
-    buyerEvidence:'A third party reviewer flagged inconsistent terminology across two of the five documents. I am requesting a revision pass before releasing payment.' }
-];
+var DISPUTES = [];
 
 var activePanelDisputeId = null;
 
@@ -1579,20 +1522,7 @@ document.addEventListener('keydown', function(e) {
 });
 
 /* ============ PAYOUTS DATA ============ */
-var PAYOUTS = [
-  { id:'p-001', freelancer:'Marco Ricci', email:'marco@example.com', amountUsd:1170, currency:'USDT', wallet:'TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE', date:'3 Apr 2026', status:'sent' },
-  { id:'p-002', freelancer:'Amara Okafor', email:'amara@example.com', amountUsd:585, currency:'BTC', wallet:'bc1qxy2kgdygjrsqtzq2n0yrf2493p83kkfjhx0wlh', date:'5 Apr 2026', status:'sent' },
-  { id:'p-003', freelancer:'Sofia Andersen', email:'sofia@example.com', amountUsd:234, currency:'ETH', wallet:'0x71C7656EC7ab88b098defB751B7401B5f6d8976F', date:'9 Apr 2026', status:'sent' },
-  { id:'p-004', freelancer:'Lucas Pereira', email:'lucas.pereira@example.com', amountUsd:175.5, currency:'USDT', wallet:'TVjsyZ7fYF3MhdmzfqGz9rWxz5VkqV3bUv', date:'12 Apr 2026', status:'processing' },
-  { id:'p-005', freelancer:'Tomás García', email:'tomas.garcia@example.com', amountUsd:953.5, currency:'USDT', wallet:'TLa2f6VPqDgRE67v1736s7bJ8Ray5wYjU7', date:'13 Apr 2026', status:'sent' },
-  { id:'p-006', freelancer:'Marco Ricci', email:'marco@example.com', amountUsd:312, currency:'BTC', wallet:'bc1qar0srrr7xfkvy5l643lydnw9re59gtzzwf5mdq', date:'14 Apr 2026', status:'processing' },
-  { id:'p-007', freelancer:'Amara Okafor', email:'amara@example.com', amountUsd:682.5, currency:'ETH', wallet:'0x4e83362442B8d1beC281594ceA3050c8EB01311c', date:'15 Apr 2026', status:'failed' },
-  { id:'p-008', freelancer:'Sofia Andersen', email:'sofia@example.com', amountUsd:380.25, currency:'USDC', wallet:'0x8ba1f109551bD432803012645Hac136c22C501e', date:'16 Apr 2026', status:'sent' },
-  { id:'p-009', freelancer:'Tomás García', email:'tomas.garcia@example.com', amountUsd:2280, currency:'USDT', wallet:'TNPeeaaFB7K9cmo4uQpcU32zGK8G1NYqeL', date:'17 Apr 2026', status:'processing' },
-  { id:'p-010', freelancer:'Lucas Pereira', email:'lucas.pereira@example.com', amountUsd:1045, currency:'BTC', wallet:'bc1q9h6tq3vajq3z6c3lyvxnuq8h3pq0jc77r9d4z2', date:'18 Apr 2026', status:'sent' },
-  { id:'p-011', freelancer:'Marco Ricci', email:'marco@example.com', amountUsd:128, currency:'ETH', wallet:'0x2faf107A8ad2C8C6a1eD5bD2C8B6dD0aF4e9c1234', date:'19 Apr 2026', status:'failed' },
-  { id:'p-012', freelancer:'Amara Okafor', email:'amara@example.com', amountUsd:495, currency:'USDT', wallet:'TWd2nfP6NyHKwSqYdQqJTjQNZkD92qBC9q', date:'20 Apr 2026', status:'sent' }
-];
+var PAYOUTS = [];
 
 PAYOUTS.forEach(function(p) {
   var rate = p.currency === 'BTC' ? 65000 : p.currency === 'ETH' ? 2500 : 1;
@@ -1685,10 +1615,7 @@ function renderPayoutsTable(list) {
 }
 
 /* ============ KYC DATA ============ */
-var KYC_PENDING = [
-  { uid:'u004', name:'Yemi Adeyemi', email:'yemi@example.com', submittedDate:'10 Apr 2026', documentType:'NIN Card', kycImages:{ frontUrl:'', backUrl:'', selfieUrl:'' }, kycStatus:'pending' },
-  { uid:'u009', name:'Ngozi Eze', email:'ngozi.eze@example.com', submittedDate:'12 Apr 2026', documentType:'NIN Card', kycImages:{ frontUrl:'', backUrl:'', selfieUrl:'' }, kycStatus:'pending' }
-];
+var KYC_PENDING = [];
 
 function renderKycCards() {
   var grid = document.getElementById('kyc-grid');
