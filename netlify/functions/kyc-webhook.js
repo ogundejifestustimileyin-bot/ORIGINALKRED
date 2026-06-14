@@ -192,24 +192,27 @@ exports.handler = async (event) => {
     return respond(500, { error: 'Database update failed.' });
   }
 
-  /* ── 9. Send push notification ── */
-  await sendPushNotification({
-    uid,
-    kycStatus,
-    platformUrl: (process.env.PLATFORM_URL || '').replace(/\/$/, ''),
-  });
-
-  /* ── 10. Send notification email via Brevo ── */
-  const emailSent = await sendKycEmail({
-    kycStatus,
-    userEmail: user.email,
-    userName:  user.name || 'there',
-    uid,
-  });
-
-  if (!emailSent) {
-    // Non-fatal — Firestore is updated; log and continue
-    console.warn(`Brevo email not sent for uid ${uid} (status: ${kycStatus}).`);
+  /* ── 9 + 10. Push + email via send-smart-notification ── */
+  const kycMessages = {
+    verified:       { title: 'Identity Verified',       body: 'Your KYC has been approved. Your profile is now live.',                        templateId: 'kyc-approved'     },
+    'under-review': { title: 'Verification Under Review', body: 'Your documents are being reviewed. We will update you within 1 to 2 business days.', templateId: 'kyc-under-review' },
+    declined:       { title: 'Verification Not Approved', body: 'Your identity verification was not approved. You can resubmit from your dashboard.',   templateId: 'kyc-declined'     },
+  };
+  const kycMsg = kycMessages[kycStatus];
+  if (kycMsg) {
+    const platformUrl = (process.env.PLATFORM_URL || '').replace(/\/$/, '');
+    await callFunction('send-smart-notification', {
+      userUid:    uid,
+      to:         user.email || null,
+      title:      kycMsg.title,
+      body:       kycMsg.body,
+      url:        `${platformUrl}/dashboard.html`,
+      templateId: kycMsg.templateId,
+      emailMode:  'always',
+      data: {
+        name: user.name || 'there',
+      },
+    });
   }
 
   return respond(200, { received: true });
@@ -217,35 +220,24 @@ exports.handler = async (event) => {
 
 
 /* ══════════════════════════════════════════════════════════════
-   SEND PUSH NOTIFICATION
-   Calls the send-push-notification Netlify function so the
-   bell dot and in-app notification update in real time.
+   INTERNAL FUNCTION CALLER
+   Calls sibling Netlify functions via HTTP fetch.
+   Non-fatal: errors are logged and execution continues.
 ══════════════════════════════════════════════════════════════ */
-async function sendPushNotification({ uid, kycStatus, platformUrl }) {
-  if (!platformUrl) return;
-
-  const messages = {
-    verified:      { title: 'Identity Verified', body: 'Your KYC has been approved. Your profile is now live.' },
-    'under-review':{ title: 'Verification Under Review', body: 'Your documents are being reviewed. We will update you within 1 to 2 business days.' },
-    declined:      { title: 'Verification Not Approved', body: 'Your identity verification was not approved. You can resubmit from your dashboard.' },
-  };
-
-  const msg = messages[kycStatus];
-  if (!msg) return;
-
+async function callFunction(name, payload) {
+  const platformUrl = (process.env.PLATFORM_URL || '').replace(/\/$/, '');
+  if (!platformUrl) {
+    console.warn(`callFunction: PLATFORM_URL not set, cannot call ${name}.`);
+    return;
+  }
   try {
-    await fetch(`${platformUrl}/.netlify/functions/send-push-notification`, {
+    await fetch(`${platformUrl}/.netlify/functions/${name}`, {
       method:  'POST',
       headers: { 'Content-Type': 'application/json' },
-      body:    JSON.stringify({
-        userUid: uid,
-        title:   msg.title,
-        body:    msg.body,
-        url:     `${platformUrl}/dashboard.html`,
-      }),
+      body:    JSON.stringify(payload),
     });
   } catch (err) {
-    console.warn(`kyc-webhook: push notification failed for uid ${uid}:`, err.message);
+    console.warn(`callFunction(${name}) failed:`, err.message);
   }
 }
 

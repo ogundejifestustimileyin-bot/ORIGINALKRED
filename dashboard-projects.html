@@ -144,6 +144,30 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
   .proj-card{padding:24px!important}
 }
 </style>
+
+<!-- Firebase SDK -->
+<script type="module">
+  import { initializeApp }                                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getFirestore, doc, updateDoc, serverTimestamp }        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getStorage, ref, uploadBytes, getDownloadURL }         from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
+
+  const firebaseConfig = {
+    apiKey:            "REPLACE_WITH_REAL_KEY",
+    authDomain:        "REPLACE_WITH_REAL_DOMAIN",
+    projectId:         "REPLACE_WITH_REAL_PROJECT_ID",
+    storageBucket:     "REPLACE_WITH_REAL_BUCKET",
+    messagingSenderId: "REPLACE_WITH_REAL_SENDER_ID",
+    appId:             "REPLACE_WITH_REAL_APP_ID",
+  };
+
+  const app      = initializeApp(firebaseConfig);
+  window.db      = getFirestore(app);
+  window.storage = getStorage(app);
+
+  // Expose Firestore/Storage helpers for non-module scripts
+  window._fs = { doc, updateDoc, serverTimestamp };
+  window._st = { ref, uploadBytes, getDownloadURL };
+</script>
 </head>
 <body>
 
@@ -260,6 +284,47 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
   </div>
 </div>
 
+<!-- DELIVERY MODAL -->
+<div id="delivery-modal" class="modal" onclick="if(event.target===this)closeDeliveryModal()">
+  <div class="modal-box">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:18px;">
+      <h3 style="font-size:20px;font-weight:800;color:#0d2145;margin:0;">Submit Your Delivery</h3>
+      <button onclick="closeDeliveryModal()" style="background:none;border:none;cursor:pointer;padding:4px;line-height:0;" aria-label="Close">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="rgba(13,33,69,0.45)" stroke-width="2.5" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+      </button>
+    </div>
+
+    <!-- File upload -->
+    <div style="margin-bottom:16px;">
+      <label class="lbl" style="display:block;margin-bottom:8px;">Upload files (optional)</label>
+      <div class="file-drop" id="delivery-file-drop" onclick="document.getElementById('delivery-file-input').click()">
+        <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="rgba(13,33,69,0.40)" stroke-width="2" stroke-linecap="round" style="margin:0 auto 8px;display:block;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
+        <span id="delivery-file-label" style="font-size:13px;font-weight:600;color:rgba(13,33,69,0.55);">Tap to upload files (optional)</span>
+        <div style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.35);margin-top:4px;">Any file type accepted</div>
+      </div>
+      <input type="file" id="delivery-file-input" accept="*/*" style="display:none;" onchange="onDeliveryFileSelected()"/>
+    </div>
+
+    <!-- Delivery link -->
+    <div style="margin-bottom:16px;">
+      <label class="lbl" style="display:block;margin-bottom:8px;">Or paste a delivery link (optional)</label>
+      <input type="url" id="delivery-link" class="input-field" placeholder="https://drive.google.com/..." />
+    </div>
+
+    <!-- Delivery message -->
+    <div style="margin-bottom:24px;">
+      <label class="lbl" style="display:block;margin-bottom:8px;">Delivery message</label>
+      <textarea id="delivery-message" class="input-field" style="min-height:80px;resize:vertical;font-family:'Plus Jakarta Sans',sans-serif;" placeholder="Describe what you have delivered and any instructions for the client"></textarea>
+    </div>
+
+    <button id="submit-delivery-btn" class="btn-green" style="width:100%;" onclick="submitDelivery()">Submit Delivery</button>
+
+    <p style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.42);text-align:center;margin:14px 0 0;line-height:1.6;">
+      If the buyer does not respond within 72 hours the delivery is automatically approved and payment is released.
+    </p>
+  </div>
+</div>
+
 <!-- PULL-TO-REFRESH INDICATOR -->
 <div id="ptr-indicator" class="ptr-indicator" aria-live="polite" aria-label="Refreshing">
   <div class="ptr-spinner"></div>
@@ -300,7 +365,8 @@ var PROJECTS = [
     escrowStatus: 'funded',
     freelancerSigned: true,
     buyerSigned: true,
-    contractPdfUrl: 'https://example.com/contracts/p2.pdf'
+    contractPdfUrl: 'https://example.com/contracts/p2.pdf',
+    deliveredAt: new Date(Date.now() - 18 * 60 * 60 * 1000) // 18 h ago — shows "54h" remaining
   },
   {
     id: 'p3',
@@ -456,6 +522,19 @@ var ICON_PERSON   = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none"
 var ICON_DOLLAR   = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>';
 var ICON_CALENDAR = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>';
 
+// ============ AUTO-APPROVE BADGE HELPER ============
+function autoApproveLabel(p) {
+  if (p.status !== 'delivered' || !p.deliveredAt) return '';
+  // deliveredAt can be a Firestore Timestamp ({toDate()}) or a plain JS Date
+  var deliveredDate = (p.deliveredAt && typeof p.deliveredAt.toDate === 'function')
+    ? p.deliveredAt.toDate()
+    : new Date(p.deliveredAt);
+  var hoursElapsed = (Date.now() - deliveredDate.getTime()) / 3600000;
+  var hoursLeft = Math.ceil(72 - hoursElapsed);
+  if (hoursLeft <= 0) return '';
+  return '<span class="badge badge-amber" style="font-size:10px;padding:2px 9px;">Auto-approves in ' + hoursLeft + 'h</span>';
+}
+
 // ============ ACTION ROW BUILDER ============
 function buildActionRow(p) {
   if (p.status === 'awaiting_signatures') {
@@ -468,6 +547,7 @@ function buildActionRow(p) {
 
   if (p.status === 'in_progress') {
     return '<div style="display:flex;gap:8px;flex-wrap:wrap;">'
+      + '<button class="btn-green" style="flex:1;min-width:140px;" onclick="openDeliveryModal(\''+p.id+'\')">Mark as Delivered</button>'
       + '<button class="btn-secondary" onclick="viewContract(\''+p.id+'\')">View Contract</button>'
       + '<button class="btn-ghost" onclick="openDisputeModal(\''+p.id+'\')">Raise Dispute</button>'
     + '</div>';
@@ -536,6 +616,7 @@ function renderProjects() {
 
   grid.innerHTML = filtered.map(function(p) {
     var cfg = STATUS_CONFIG[p.status] || STATUS_CONFIG.in_progress;
+    var timerBadge = autoApproveLabel(p);
     return '<div class="glass proj-card">'
       + '<div style="display:flex;justify-content:space-between;align-items:flex-start;gap:10px;">'
         + '<div class="proj-card-title">'+p.title+'</div>'
@@ -546,6 +627,7 @@ function renderProjects() {
         + '<div class="meta-item">'+ICON_DOLLAR+'<span>$'+p.amount.toLocaleString()+'</span></div>'
         + '<div class="meta-item">'+ICON_CALENDAR+'<span>'+p.deadline+'</span></div>'
       + '</div>'
+      + (timerBadge ? '<div style="margin-top:10px;">'+timerBadge+'</div>' : '')
       + '<div style="height:1px;background:#e2e8f0;margin:16px 0;"></div>'
       + buildActionRow(p)
     + '</div>';
@@ -568,6 +650,137 @@ function closeDisputeModal() {
   document.body.style.overflow = '';
   activeDisputeProjectId = null;
 }
+
+// ============ DELIVERY MODAL ============
+var activeDeliveryProjectId = null;
+
+function openDeliveryModal(projectId) {
+  activeDeliveryProjectId = projectId || null;
+  document.getElementById('delivery-link').value = '';
+  document.getElementById('delivery-message').value = '';
+  document.getElementById('delivery-file-label').textContent = 'Tap to upload files (optional)';
+  document.getElementById('delivery-file-drop').classList.remove('has-file');
+  document.getElementById('delivery-file-input').value = '';
+  document.getElementById('delivery-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+}
+
+function closeDeliveryModal() {
+  document.getElementById('delivery-modal').classList.remove('open');
+  document.body.style.overflow = '';
+  activeDeliveryProjectId = null;
+}
+
+function onDeliveryFileSelected() {
+  var input = document.getElementById('delivery-file-input');
+  if (input.files && input.files.length > 0) {
+    document.getElementById('delivery-file-label').textContent = input.files[0].name;
+    document.getElementById('delivery-file-drop').classList.add('has-file');
+  }
+}
+
+async function submitDelivery() {
+  var projectId = activeDeliveryProjectId;
+  if (!projectId) { closeDeliveryModal(); return; }
+
+  var message = document.getElementById('delivery-message').value.trim();
+  var link    = document.getElementById('delivery-link').value.trim();
+  var fileInput = document.getElementById('delivery-file-input');
+  var files   = fileInput.files ? Array.from(fileInput.files) : [];
+
+  // Loading state
+  var btn = document.getElementById('submit-delivery-btn');
+  btn.disabled = true;
+  btn.textContent = files.length ? 'Uploading…' : 'Submitting…';
+  btn.style.opacity = '0.75';
+
+  try {
+    // 1. Upload files to Firebase Storage (if any)
+    var downloadURLs = [];
+    if (files.length > 0 && window.storage && window._st) {
+      var stRef = window._st.ref;
+      var upload = window._st.uploadBytes;
+      var getURL = window._st.getDownloadURL;
+
+      for (var i = 0; i < files.length; i++) {
+        var file = files[i];
+        var path = 'deliveries/' + projectId + '/' + Date.now() + '_' + file.name.replace(/[^a-zA-Z0-9._-]/g, '_');
+        var storageRef = stRef(window.storage, path);
+        var snapshot = await upload(storageRef, file);
+        var url = await getURL(snapshot.ref);
+        downloadURLs.push(url);
+      }
+    }
+
+    // 2. Update Firestore project document
+    if (window.db && window._fs) {
+      var fsDoc = window._fs.doc;
+      var updateDoc = window._fs.updateDoc;
+      var serverTimestamp = window._fs.serverTimestamp;
+
+      var projectRef = fsDoc(window.db, 'projects', projectId);
+      await updateDoc(projectRef, {
+        status:        'delivered',
+        deliveryNote:  message,
+        deliveryFiles: downloadURLs,
+        deliveryLinks: link,
+        deliveredAt:   serverTimestamp(),
+      });
+    }
+
+    // 3. Update local demo data so card re-renders immediately
+    var p = PROJECTS.find(function(x) { return x.id === projectId; });
+    if (p) {
+      p.status        = 'delivered';
+      p.deliveryNote  = message;
+      p.deliveryFiles = downloadURLs;
+      p.deliveryLinks = link;
+    }
+
+    // 4. Notify the buyer via send-smart-notification (non-fatal)
+    try {
+      var buyerUid      = (p && p.buyerUid)      || null;
+      var projectTitle  = (p && p.title)          || 'Your project';
+      var freelancerName = DEMO_USER.name          || 'Your freelancer';
+
+      if (buyerUid) {
+        await fetch('/.netlify/functions/send-smart-notification', {
+          method:  'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userUid:    buyerUid,
+            title:      'Work Delivered',
+            body:       '"' + projectTitle + '" has been marked as delivered. Please review and approve.',
+            url:        '/buyer-projects.html',
+            templateId: 'work-delivered',
+            emailMode:  'always',
+            emailData: {
+              name:           p.buyerName || '',
+              projectTitle:   projectTitle,
+              freelancerName: freelancerName,
+              deliveryNote:   message,
+            },
+          }),
+        });
+      }
+    } catch (notifErr) {
+      // Non-fatal — Firestore update already succeeded
+      console.warn('[submitDelivery] Notification failed:', notifErr.message);
+    }
+
+    closeDeliveryModal();
+    renderProjects();
+    showToast('Delivery submitted! The client has been notified.');
+
+  } catch (err) {
+    console.error('[submitDelivery]', err);
+    showToast('Something went wrong. Please try again.');
+    btn.disabled = false;
+    btn.textContent = 'Submit Delivery';
+    btn.style.opacity = '';
+  }
+}
+
 function onFileSelected() {
   var input = document.getElementById('dispute-file');
   if (input.files && input.files.length > 0) {

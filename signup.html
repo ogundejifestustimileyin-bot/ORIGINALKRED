@@ -223,82 +223,13 @@
       height: 1px;
       background: linear-gradient(to right, transparent, rgba(13,33,69,0.10), transparent);
     }
-
-    /* ── Google Sign-In button ── */
-    .btn-google {
-      display: flex; align-items: center; justify-content: center; gap: 10px;
-      width: 100%;
-      background: #fff;
-      color: #0d2145;
-      border: 1.5px solid #e2e8f0;
-      border-radius: 50px;
-      padding: 13px 24px;
-      font-family: 'Plus Jakarta Sans', sans-serif;
-      font-size: 15px; font-weight: 600;
-      cursor: pointer;
-      box-shadow: 0 2px 8px rgba(13,33,69,0.07);
-      transition: background .15s, border-color .15s, box-shadow .15s, transform .15s;
-      letter-spacing: -0.1px;
-      text-decoration: none;
-      position: relative;
-    }
-    .btn-google:hover {
-      background: #f8f9fb;
-      border-color: #c8d0dc;
-      box-shadow: 0 4px 16px rgba(13,33,69,0.11);
-      transform: translateY(-1px);
-    }
-    .btn-google:active { transform: translateY(0); }
-    .btn-google:disabled { opacity: 0.60; cursor: not-allowed; transform: none; }
-    .btn-google:focus-visible { outline: 2px solid #2d8a5e; outline-offset: 3px; }
-
-    /* ── OR divider ── */
-    .or-divider {
-      display: flex; align-items: center; gap: 12px;
-      margin: 20px 0;
-    }
-    .or-divider::before,
-    .or-divider::after {
-      content: '';
-      flex: 1;
-      height: 1px;
-      background: linear-gradient(to right, transparent, rgba(13,33,69,0.12), transparent);
-    }
-    .or-divider span {
-      font-size: 12px; font-weight: 600;
-      color: rgba(13,33,69,0.38);
-      letter-spacing: 1px;
-      text-transform: uppercase;
-      flex-shrink: 0;
-    }
-
-    /* Google loading spinner (dark on white) */
-    .spinner-dark {
-      width: 18px; height: 18px;
-      border: 2px solid rgba(13,33,69,0.18);
-      border-top-color: #0d2145;
-      border-radius: 50%;
-      animation: spin .65s linear infinite;
-      flex-shrink: 0;
-    }
-
-    /* ── Read-only field (pre-filled via Google) ── */
-    .field-input[readonly] {
-      background: rgba(13,33,69,0.04);
-      color: rgba(13,33,69,0.55);
-      cursor: not-allowed;
-    }
-
-    /* ── Hidden helper ── */
-    .is-hidden { display: none !important; }
   </style>
 
   <!-- Firebase CDN -->
   <script type="module">
     import { initializeApp }                           from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
-    import { getAuth, createUserWithEmailAndPassword,
-             GoogleAuthProvider, signInWithPopup }    from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+    import { getFirestore, doc, setDoc, serverTimestamp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    import { getAuth, createUserWithEmailAndPassword } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
 
     const firebaseConfig = {
       apiKey:            "{{FIREBASE_API_KEY}}",
@@ -312,11 +243,7 @@
     const app  = initializeApp(firebaseConfig);
     window.db   = getFirestore(app);
     window.auth = getAuth(app);
-    window._fbReady = {
-      setDoc, doc, getDoc, serverTimestamp,
-      createUserWithEmailAndPassword,
-      GoogleAuthProvider, signInWithPopup
-    };
+    window._fbReady = { setDoc, doc, serverTimestamp, createUserWithEmailAndPassword };
   </script>
 </head>
 
@@ -369,24 +296,6 @@
       <!-- Error banner -->
       <div id="form-error" class="form-error mb-5" role="alert"></div>
 
-      <!-- Google Sign-In -->
-      <button id="google-btn" type="button" class="btn-google" onclick="signInWithGoogle()" aria-label="Continue with Google">
-        <!-- Official Google G SVG mark -->
-        <svg width="20" height="20" viewBox="0 0 48 48" xmlns="http://www.w3.org/2000/svg" aria-hidden="true">
-          <path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/>
-          <path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/>
-          <path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/>
-          <path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/>
-          <path fill="none" d="M0 0h48v48H0z"/>
-        </svg>
-        <span id="google-label">Continue with Google</span>
-      </button>
-
-      <!-- OR divider -->
-      <div id="or-divider" class="or-divider">
-        <span>or</span>
-      </div>
-
       <!-- Form -->
       <form id="signup-form" novalidate autocomplete="off">
 
@@ -419,7 +328,7 @@
         </div>
 
         <!-- Password -->
-        <div class="field-group mb-4" id="password-group">
+        <div class="field-group mb-4">
           <label class="field-label" for="password">Password</label>
           <div class="pw-wrapper">
             <input
@@ -439,7 +348,7 @@
         </div>
 
         <!-- Confirm Password -->
-        <div class="field-group mb-6" id="confirm-password-group">
+        <div class="field-group mb-6">
           <label class="field-label" for="confirm-password">Confirm Password</label>
           <div class="pw-wrapper">
             <input
@@ -487,18 +396,6 @@
   </div><!-- /page-bg -->
 
   <script>
-    /* ── Detect Google sign-up continuation flow ── */
-    /* login.html redirects new Google users here as:
-       signup.html?step=role&name=...&email=...&uid=...
-       In this flow the user is already authenticated via Google —
-       we only need them to pick a role, then we create their
-       Firestore profile directly. */
-    const urlParams    = new URLSearchParams(window.location.search);
-    const isGoogleFlow = urlParams.get('step') === 'role';
-    const googleUid    = urlParams.get('uid')   || '';
-    const googleName   = urlParams.get('name')  || '';
-    const googleEmail  = urlParams.get('email') || '';
-
     /* ── Role state ── */
     let currentRole = 'freelancer';
 
@@ -553,11 +450,9 @@
       const label = document.getElementById('btn-label');
       btn.disabled = loading;
       if (loading) {
-        label.innerHTML = isGoogleFlow
-          ? '<span class="spinner mr-2"></span> Setting Up Account...'
-          : '<span class="spinner mr-2"></span> Creating Account...';
+        label.innerHTML = '<span class="spinner mr-2"></span> Creating Account...';
       } else {
-        label.textContent = isGoogleFlow ? 'Continue' : 'Create Account';
+        label.textContent = 'Create Account';
       }
     }
 
@@ -569,90 +464,8 @@
         'auth/weak-password':         'Password is too weak. Use at least 8 characters.',
         'auth/network-request-failed':'Network error. Check your connection and try again.',
         'auth/too-many-requests':     'Too many attempts. Please wait a moment and try again.',
-        'auth/popup-closed-by-user':  'Sign-up cancelled. The Google window was closed.',
-        'auth/popup-blocked':         'Your browser blocked the sign-up popup. Allow popups for this site and try again.',
-        'auth/cancelled-popup-request': null, // silent — user opened popup twice
-        'auth/account-exists-with-different-credential': 'An account already exists with this email using a different sign-in method. Try logging in with your email and password.',
       };
-      return map[code] !== undefined ? map[code] : 'Something went wrong. Please try again.';
-    }
-
-    /* ── Wait for Firebase to finish initializing ── */
-    async function waitForFirebase() {
-      const start = Date.now();
-      while (!window._fbReady && Date.now() - start < 8000) {
-        await new Promise(r => setTimeout(r, 80));
-      }
-      return !!window._fbReady;
-    }
-
-    /* ── Role-based redirect for returning users ── */
-    function redirect(userData) {
-      if (userData.role === 'admin') {
-        window.location.href = 'admin.html';
-      } else if (userData.kycStatus !== 'verified') {
-        window.location.href = 'verify.html';
-      } else if (userData.role === 'freelancer') {
-        window.location.href = 'dashboard.html';
-      } else {
-        window.location.href = 'buyer-dashboard.html';
-      }
-    }
-
-    /* ── Google Sign-Up ── */
-    function setGoogleLoading(loading) {
-      const btn   = document.getElementById('google-btn');
-      const label = document.getElementById('google-label');
-      btn.disabled = loading;
-      label.innerHTML = loading
-        ? '<span class="spinner-dark"></span>&nbsp;Connecting...'
-        : 'Continue with Google';
-    }
-
-    async function signInWithGoogle() {
-      clearError();
-      const ready = await waitForFirebase();
-      if (!ready) { showError('Firebase failed to load. Please refresh and try again.'); return; }
-
-      const { GoogleAuthProvider, signInWithPopup, getDoc, doc, setDoc, serverTimestamp } = window._fbReady;
-
-      setGoogleLoading(true);
-
-      try {
-        const provider = new GoogleAuthProvider();
-        // Force account picker every time so users can switch accounts
-        provider.setCustomParameters({ prompt: 'select_account' });
-
-        const credential = await signInWithPopup(window.auth, provider);
-        const user       = credential.user;
-        const uid        = user.uid;
-
-        /* Check if this person already has a Kreddlo account */
-        const snap = await getDoc(doc(window.db, 'users', uid));
-
-        if (snap.exists()) {
-          /* They already have an account — log them straight in */
-          redirect(snap.data());
-        } else {
-          /* New user — create their Firestore profile using the role
-             selected on this page plus their Google name and email */
-          await setDoc(doc(window.db, 'users', uid), {
-            name:            user.displayName || '',
-            email:           user.email || '',
-            role:            currentRole,
-            kycStatus:       'pending',
-            profileComplete: false,
-            createdAt:       serverTimestamp(),
-          });
-          window.location.href = 'verify.html';
-        }
-
-      } catch (err) {
-        setGoogleLoading(false);
-        const msg = firebaseMsg(err.code);
-        // Silent errors (e.g. cancelled popup request) — do nothing
-        if (msg !== null) showError(msg);
-      }
+      return map[code] || 'Something went wrong. Please try again.';
     }
 
     /* ── Form submit ── */
@@ -660,47 +473,8 @@
       e.preventDefault();
       clearError();
 
-      const name  = document.getElementById('full-name').value.trim();
-      const email = document.getElementById('email').value.trim();
-
-      /* ── Google continuation flow: only role needs choosing ── */
-      if (isGoogleFlow) {
-        const ready = await waitForFirebase();
-        if (!ready) {
-          showError('Firebase failed to load. Please refresh and try again.');
-          return;
-        }
-
-        const { setDoc, doc, serverTimestamp } = window._fbReady;
-
-        const uid = (window.auth.currentUser && window.auth.currentUser.uid) || googleUid;
-        if (!uid) {
-          showError('Your session has expired. Please sign in with Google again.');
-          return;
-        }
-
-        setLoading(true);
-
-        try {
-          await setDoc(doc(window.db, 'users', uid), {
-            name:            name  || (window.auth.currentUser && window.auth.currentUser.displayName) || '',
-            email:           email || (window.auth.currentUser && window.auth.currentUser.email) || '',
-            role:            currentRole,
-            kycStatus:       'pending',
-            profileComplete: false,
-            createdAt:       serverTimestamp(),
-          });
-
-          window.location.href = 'verify.html';
-
-        } catch (err) {
-          setLoading(false);
-          showError(firebaseMsg(err.code));
-        }
-        return;
-      }
-
-      /* ── Standard email/password sign-up ── */
+      const name     = document.getElementById('full-name').value.trim();
+      const email    = document.getElementById('email').value.trim();
       const password = document.getElementById('password').value;
       const confirm  = document.getElementById('confirm-password').value;
 
@@ -731,8 +505,12 @@
       if (!valid) return;
 
       /* Wait for Firebase to be ready */
-      const ready = await waitForFirebase();
-      if (!ready) {
+      const maxWait = 8000;
+      const start   = Date.now();
+      while (!window._fbReady && Date.now() - start < maxWait) {
+        await new Promise(r => setTimeout(r, 80));
+      }
+      if (!window._fbReady) {
         showError('Firebase failed to load. Please refresh and try again.');
         return;
       }
@@ -753,11 +531,25 @@
           role:            currentRole,
           kycStatus:       'pending',
           profileComplete: false,
+          emailVerified:   false,
           createdAt:       serverTimestamp(),
         });
 
-        /* Redirect */
-        window.location.href = 'verify.html';
+        /* Send verification email via Brevo (6-digit code flow) */
+        try {
+          await fetch('/.netlify/functions/send-verification-email', {
+            method:  'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body:    JSON.stringify({ uid }),
+          });
+        } catch (emailErr) {
+          console.warn('Verification email send failed:', emailErr.message);
+          // Non-fatal — user can request resend from email-confirm page
+        }
+
+        /* Redirect to email confirmation page */
+        window.location.href = 'email-confirm.html?uid=' + encodeURIComponent(uid)
+          + '&email=' + encodeURIComponent(email);
 
       } catch (err) {
         setLoading(false);
@@ -776,35 +568,6 @@
     /* ── Pre-set role from URL param (?role=buyer) ── */
     const urlRole = new URLSearchParams(window.location.search).get('role');
     if (urlRole === 'buyer' || urlRole === 'freelancer') setRole(urlRole);
-
-    /* ── Set up the Google continuation flow ── */
-    if (isGoogleFlow) {
-      const nameInput  = document.getElementById('full-name');
-      const emailInput = document.getElementById('email');
-
-      if (googleName) {
-        nameInput.value = googleName;
-        nameInput.readOnly = true;
-      }
-      if (googleEmail) {
-        emailInput.value = googleEmail;
-        emailInput.readOnly = true;
-      }
-
-      /* Already authenticated via Google — hide the Google button,
-         OR divider, and the password fields entirely */
-      document.getElementById('google-btn').classList.add('is-hidden');
-      document.getElementById('or-divider').classList.add('is-hidden');
-      document.getElementById('password-group').classList.add('is-hidden');
-      document.getElementById('confirm-password-group').classList.add('is-hidden');
-
-      /* Update heading and button copy for this flow */
-      const heading = document.querySelector('.glass h1');
-      const subtext = heading ? heading.nextElementSibling : null;
-      if (heading) heading.textContent = 'Almost There';
-      if (subtext)  subtext.textContent = 'Choose how you\u2019ll use Kreddlo to finish setting up your account.';
-      document.getElementById('btn-label').textContent = 'Continue';
-    }
   </script>
 
 </body>

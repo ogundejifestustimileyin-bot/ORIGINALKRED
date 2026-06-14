@@ -148,6 +148,61 @@ exports.handler = async (event) => {
 
   console.log(`scheduled-subscriptions: complete — processed: ${results.processed}, failed: ${results.failed}`);
 
+  /* ════════════════════════════════════════════════════════════
+     AUTO-APPROVE STALE DELIVERIES
+     Query projects where status == 'delivered' and
+     deliveredAt is more than 72 hours ago, then call
+     approve-delivery for each one.
+  ════════════════════════════════════════════════════════════ */
+
+  const cutoff72h = new Date(now.getTime() - 72 * 60 * 60 * 1000);
+
+  let deliverySnapshot;
+  try {
+    deliverySnapshot = await db.collection('projects')
+      .where('status',      '==', 'delivered')
+      .where('deliveredAt', '<=', cutoff72h)
+      .get();
+  } catch (err) {
+    console.error('scheduled-subscriptions: delivery query failed:', err.message);
+    // Non-fatal — return subscription results already collected above
+    return respond(200, results);
+  }
+
+  if (deliverySnapshot.empty) {
+    console.log('scheduled-subscriptions: no stale deliveries found.');
+  } else {
+    console.log(`scheduled-subscriptions: found ${deliverySnapshot.size} stale delivery/deliveries to auto-approve.`);
+
+    const deliveryResults = { processed: 0, failed: 0 };
+
+    for (const docSnap of deliverySnapshot.docs) {
+      const projectId = docSnap.id;
+      const project   = docSnap.data();
+      const buyerUid  = project.buyerUid || null;
+
+      if (!buyerUid) {
+        console.warn(`scheduled-subscriptions: project ${projectId} has no buyerUid — skipping auto-approve.`);
+        deliveryResults.failed++;
+        continue;
+      }
+
+      try {
+        await callFunction('approve-delivery', { projectId, buyerUid });
+        console.log(`scheduled-subscriptions: auto-approved project ${projectId}.`);
+        deliveryResults.processed++;
+      } catch (err) {
+        console.error(`scheduled-subscriptions: failed to auto-approve project ${projectId}:`, err.message);
+        deliveryResults.failed++;
+      }
+    }
+
+    console.log(`scheduled-subscriptions: auto-approve complete — processed: ${deliveryResults.processed}, failed: ${deliveryResults.failed}`);
+
+    results.autoApproveProcessed = deliveryResults.processed;
+    results.autoApproveFailed    = deliveryResults.failed;
+  }
+
   return respond(200, results);
 };
 

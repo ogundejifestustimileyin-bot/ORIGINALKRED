@@ -218,7 +218,7 @@ async function handleFundedPayment(data) {
 
   const projectRef = db.collection('projects').doc(order_id);
 
-  /* Read the project first so we can get freelancer details for the email */
+  /* ── Try projects collection first ── */
   let projectSnap;
   try {
     projectSnap = await projectRef.get();
@@ -227,9 +227,65 @@ async function handleFundedPayment(data) {
     return;
   }
 
+  /* ── If not a project, try product-orders ── */
   if (!projectSnap.exists) {
-    console.error(`Project document "${order_id}" not found in Firestore.`);
-    return;
+    const orderRef  = db.collection('product-orders').doc(order_id);
+    let   orderSnap;
+    try {
+      orderSnap = await orderRef.get();
+    } catch (err) {
+      console.error(`Firestore read failed for product-order ${order_id}:`, err.message);
+      return;
+    }
+
+    if (!orderSnap.exists) {
+      console.error(`Order "${order_id}" not found in projects or product-orders.`);
+      return; // caller returns 200 — nothing retrying can fix
+    }
+
+    const order = orderSnap.data();
+
+    // Idempotency guard
+    if (order.paymentStatus === 'paid') {
+      console.log(`Product order ${order_id} already paid. Skipping duplicate webhook.`);
+      return;
+    }
+
+    // Mark order paid
+    try {
+      await orderRef.update({
+        paymentStatus:      'paid',
+        paymentMethod:      'crypto',
+        paymentConfirmedAt: FieldValue.serverTimestamp(),
+        updatedAt:          FieldValue.serverTimestamp(),
+      });
+      console.log(`Product order ${order_id} marked as paid.`);
+    } catch (err) {
+      console.error(`Firestore update failed for product-order ${order_id}:`, err.message);
+      return;
+    }
+
+    // Trigger delivery
+    await callFunction('deliver-product', { orderId: order_id });
+
+    // Fire Facebook pixel if product has a pixelId configured
+    try {
+      const productSnap = await db.collection('products').doc(order.productId).get();
+      if (productSnap.exists && productSnap.data().facebookPixelId) {
+        await callFunction('pixel-event', {
+          pixelId:   productSnap.data().facebookPixelId,
+          eventName: 'Purchase',
+          value:     order.amountUsd || 0,
+          currency:  'USD',
+          email:     order.buyerEmail || '',
+          orderId:   order_id,
+        });
+      }
+    } catch (err) {
+      console.warn(`Could not fire pixel for product-order ${order_id}:`, err.message);
+    }
+
+    return; // done with product order path
   }
 
   const project = projectSnap.data();
@@ -245,7 +301,6 @@ async function handleFundedPayment(data) {
     escrowStatus:    'funded',
     status:          'in_progress',
     paymentMethod:   'crypto',
-    paymentSource:   'crypto',
     paymentId:       payment_id,
     paymentStatus:   payment_status,
     payCurrency:     pay_currency      || null,
@@ -268,38 +323,20 @@ async function handleFundedPayment(data) {
     return;
   }
 
-  /* Send push notification to the freelancer */
-  if (project.freelancerUid) {
-    const platformUrl = (process.env.PLATFORM_URL || '').replace(/\/$/, '');
-    if (platformUrl) {
-      try {
-        await fetch(`${platformUrl}/.netlify/functions/send-push-notification`, {
-          method:  'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body:    JSON.stringify({
-            userUid: project.freelancerUid,
-            title:   'Escrow Funded',
-            body:    `Payment has been placed in escrow for "${project.projectTitle || 'Your project'}". You can begin work.`,
-            url:     `${platformUrl}/dashboard-projects.html?projectId=${encodeURIComponent(order_id)}`,
-          }),
-        });
-      } catch (err) {
-        console.warn(`nowpayments-webhook: push notification failed for project ${order_id}:`, err.message);
-      }
-    }
-  }
+  const platformUrl = (process.env.PLATFORM_URL || '').replace(/\/$/, '');
+  const projectUrl  = `${platformUrl}/dashboard-projects.html?projectId=${encodeURIComponent(order_id)}`;
 
-  /* Fetch freelancer's email from the users collection */
+  /* Fetch freelancer and buyer details for the notification */
   let freelancerEmail = null;
-  let freelancerName  = null;
-  let buyerName       = null;
+  let freelancerName  = 'there';
+  let buyerName       = 'A client';
 
   try {
     if (project.freelancerUid) {
       const freelancerSnap = await db.collection('users').doc(project.freelancerUid).get();
       if (freelancerSnap.exists) {
-        freelancerEmail = freelancerSnap.data().email   || null;
-        freelancerName  = freelancerSnap.data().name    || 'there';
+        freelancerEmail = freelancerSnap.data().email || null;
+        freelancerName  = freelancerSnap.data().name  || 'there';
       }
     }
     if (project.buyerUid) {
@@ -309,23 +346,28 @@ async function handleFundedPayment(data) {
       }
     }
   } catch (err) {
-    // Non-fatal — log and continue; email is best-effort
-    console.warn('Could not fetch user details for email:', err.message);
+    console.warn('Could not fetch user details for notification:', err.message);
   }
 
-  /* Trigger the send-email function */
-  if (freelancerEmail) {
-    await notifyFreelancer({
-      to:           freelancerEmail,
+  /* Notify the freelancer: payment received (push + email always) */
+  await callFunction('send-smart-notification', {
+    userUid:    project.freelancerUid || null,
+    to:         freelancerEmail,
+    title:      'Escrow Funded',
+    body:       `Payment has been placed in escrow for "${project.projectTitle || 'Your project'}". You can begin work.`,
+    url:        projectUrl,
+    templateId: 'payment-received',
+    emailMode:  'always',
+    data: {
       name:         freelancerName,
-      buyerName:    buyerName,
+      buyerName,
       projectTitle: project.projectTitle || 'Your project',
-      amount:       project.netAmount    || outcome_amount || pay_amount,
-      orderId:      order_id,
-    });
-  } else {
-    console.warn(`No freelancer email found for project ${order_id}. Email not sent.`);
-  }
+      amount:       project.netAmount || outcome_amount || pay_amount
+                      ? `$${Number(project.netAmount || outcome_amount || pay_amount).toFixed(2)}`
+                      : 'the agreed amount',
+      dashboardUrl: projectUrl,
+    },
+  });
 }
 
 
@@ -358,65 +400,25 @@ async function handleFailedPayment({ order_id, payment_id, payment_status }) {
 
 
 /* ══════════════════════════════════════════════════════════════
-   NOTIFY FREELANCER
-   Calls the send-email Netlify function internally via HTTPS.
-   We call it as a function-to-function HTTP request so email
-   logic stays centralised in one place.
+   INTERNAL FUNCTION CALLER
+   Calls sibling Netlify functions via HTTP fetch.
+   Non-fatal: errors are logged and execution continues.
 ══════════════════════════════════════════════════════════════ */
-async function notifyFreelancer({ to, name, buyerName, projectTitle, amount, orderId }) {
+async function callFunction(name, payload) {
   const platformUrl = (process.env.PLATFORM_URL || '').replace(/\/$/, '');
   if (!platformUrl) {
-    console.warn('PLATFORM_URL not set — cannot call send-email function.');
+    console.warn(`callFunction: PLATFORM_URL not set, cannot call ${name}.`);
     return;
   }
-
-  const emailPayload = {
-    to,
-    templateId: 'payment_received',   // maps to a template in send-email.js
-    data: {
-      name:          name,
-      buyerName:     buyerName,
-      projectTitle:  projectTitle,
-      amount:        amount ? `$${Number(amount).toFixed(2)}` : 'the agreed amount',
-      dashboardUrl:  `${platformUrl}/dashboard-projects.html?projectId=${encodeURIComponent(orderId)}`,
-    },
-  };
-
-  const body = JSON.stringify(emailPayload);
-
-  const options = {
-    hostname: new URL(platformUrl).hostname,
-    path:     '/.netlify/functions/send-email',
-    method:   'POST',
-    headers: {
-      'Content-Type':   'application/json',
-      'Content-Length': Buffer.byteLength(body),
-    },
-  };
-
-  return new Promise((resolve) => {
-    const req = https.request(options, (res) => {
-      let data = '';
-      res.on('data', chunk => { data += chunk; });
-      res.on('end', () => {
-        if (res.statusCode === 200) {
-          console.log(`Payment received email sent to freelancer at ${to}.`);
-        } else {
-          console.warn(`send-email returned ${res.statusCode}: ${data}`);
-        }
-        resolve();
-      });
+  try {
+    await fetch(`${platformUrl}/.netlify/functions/${name}`, {
+      method:  'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body:    JSON.stringify(payload),
     });
-
-    req.on('error', (err) => {
-      // Non-fatal — Firestore is already updated
-      console.warn('Failed to call send-email function:', err.message);
-      resolve();
-    });
-
-    req.write(body);
-    req.end();
-  });
+  } catch (err) {
+    console.warn(`callFunction(${name}) failed:`, err.message);
+  }
 }
 
 

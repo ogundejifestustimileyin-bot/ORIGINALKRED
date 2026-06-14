@@ -5,10 +5,7 @@
  * Called when a buyer approves a delivered project.
  * - Verifies the caller is the project's buyer
  * - Updates the project: status → completed, escrowStatus → releasing
- * - Credits the net amount to the correct freelancer balance field:
- *     project.paymentSource === 'fiat'   → fiatBalance   (Paystack / Stripe earnings)
- *     project.paymentSource === 'crypto' → cryptoBalance (NOWPayments earnings)
- *     fallback (legacy / unknown)        → availableBalance (backward compatible)
+ * - Credits the net amount to the freelancer's availableBalance
  * - Sends push notification to the freelancer
  * - Triggers emails to both parties via send-email
  *
@@ -160,43 +157,14 @@ exports.handler = async (event) => {
     return respond(500, { error: 'Failed to update project status.' });
   }
 
-  /* ── Determine which balance field to credit ──────────────────────────────
-   *
-   * project.paymentSource is written by the payment webhooks:
-   *   paystack-webhook.js  → paymentSource: 'fiat'
-   *   stripe-webhook.js    → paymentSource: 'fiat'
-   *   nowpayments-webhook.js / photonpay-webhook.js → paymentSource: 'crypto'
-   *
-   * This keeps fiat earnings (withdrawable to a bank account) and crypto
-   * earnings (withdrawable to a wallet) in separate balance fields, so the
-   * dashboard and withdrawal page can display and route them independently.
-   *
-   * Legacy projects that pre-date this change will have no paymentSource field.
-   * For those we fall back to incrementing availableBalance so nothing breaks.
-   * ─────────────────────────────────────────────────────────────────────── */
-  const paymentSource = project.paymentSource || 'legacy';
-
-  let balanceField;
-  if (paymentSource === 'fiat') {
-    balanceField = 'fiatBalance';
-  } else if (paymentSource === 'crypto') {
-    balanceField = 'cryptoBalance';
-  } else {
-    // Legacy fallback — preserves backward compatibility with existing projects
-    balanceField = 'availableBalance';
-  }
-
-  /* ── Credit the freelancer's correct balance field ── */
+  /* ── Credit the freelancer's availableBalance ── */
   try {
     await db.collection('users').doc(freelancerUid).update({
-      [balanceField]: FieldValue.increment(netAmount),
-      totalEarned:    FieldValue.increment(netAmount),
-      updatedAt:      FieldValue.serverTimestamp(),
+      availableBalance: FieldValue.increment(netAmount),
+      totalEarned:      FieldValue.increment(netAmount),
+      updatedAt:        FieldValue.serverTimestamp(),
     });
-    console.log(
-      `Credited $${netAmount} to freelancer ${freelancerUid} ` +
-      `via field "${balanceField}" (paymentSource: "${paymentSource}").`
-    );
+    console.log(`Credited $${netAmount} to freelancer ${freelancerUid}.`);
   } catch (err) {
     console.error(`Failed to credit freelancer ${freelancerUid}:`, err.message);
     // We still continue — the project is marked completed. Admin can manually credit.
@@ -228,33 +196,34 @@ exports.handler = async (event) => {
   const platformUrl = (process.env.PLATFORM_URL || '').replace(/\/$/, '');
   const projectUrl  = `${platformUrl}/dashboard-projects.html?projectId=${encodeURIComponent(projectId)}`;
 
-  /* ── Send push notification to the freelancer ── */
-  await callFunction('send-push-notification', {
-    userUid: freelancerUid,
-    title:   'Work Approved',
-    body:    `"${projectTitle}" has been approved. Your payment is on its way.`,
-    url:     projectUrl,
+  /* ── Notify the freelancer: payment received ── */
+  await callFunction('send-smart-notification', {
+    userUid:    freelancerUid,
+    to:         freelancerEmail || null,
+    title:      'Work Approved',
+    body:       `"${projectTitle}" has been approved. Your payment is on its way.`,
+    url:        projectUrl,
+    templateId: 'payment-received',
+    emailMode:  'always',
+    data: {
+      name:         freelancerName,
+      projectTitle,
+      amount:       `$${netAmount.toFixed(2)}`,
+      buyerName,
+    },
   });
 
-  /* ── Email the freelancer ── */
-  if (freelancerEmail) {
-    await callFunction('send-email', {
-      to:   freelancerEmail,
-      type: 'payment-received',
-      data: {
-        name:         freelancerName,
-        projectTitle,
-        amount:       `$${netAmount.toFixed(2)}`,
-        buyerName,
-      },
-    });
-  }
-
-  /* ── Email the buyer ── */
+  /* ── Notify the buyer: work delivered ── */
   if (buyerEmail) {
-    await callFunction('send-email', {
-      to:   buyerEmail,
-      type: 'work-delivered',
+    await callFunction('send-smart-notification', {
+      userUid:      null,
+      to:           buyerEmail,
+      title:        'Work Delivered',
+      body:         `"${projectTitle}" has been marked as delivered. Please review and approve.`,
+      url:          projectUrl,
+      templateId:   'work-delivered',
+      emailMode:    'delayed',
+      delayMinutes: 15,
       data: {
         name:           buyerName,
         projectTitle,

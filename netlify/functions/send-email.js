@@ -468,6 +468,110 @@ function templateReferralCredited({ name = 'there', referredName = 'Someone you 
 
 // ---------------------------------------------------------------------------
 // Template router
+// ---------------------------------------------------------------------------
+// email-verification — 6-digit code for custom email verification flow
+// ---------------------------------------------------------------------------
+function tplEmailVerification({ name = 'there', code = '------' }) {
+  const preheader = `Your Kreddlo verification code is ${code}. It expires in 30 minutes.`;
+  const body = `
+    ${badge('Email Verification')}
+    ${heading('Verify your email address.')}
+    ${bodyText(`Hi ${name}, thanks for joining Kreddlo. Enter the 6-digit code below to verify your email address and continue setting up your account.`)}
+    ${highlightBox(`
+      <p style="margin:0 0 6px;font-size:11px;font-weight:600;letter-spacing:2px;text-transform:uppercase;color:#2d8a5e;font-family:Arial,Helvetica,sans-serif;">Your verification code</p>
+      <p style="margin:0;font-size:44px;font-weight:800;letter-spacing:10px;color:#0d2145;font-family:Arial,Helvetica,sans-serif;line-height:1.1;">${code}</p>
+      <p style="margin:10px 0 0;font-size:12px;color:rgba(13,33,69,0.50);font-family:Arial,Helvetica,sans-serif;">Expires in 30 minutes</p>
+    `)}
+    ${divider()}
+    ${mutedText('If you did not create a Kreddlo account you can safely ignore this email.')}
+  `;
+  return { subject: 'Your Kreddlo verification code', preheader, body };
+}
+
+// ---------------------------------------------------------------------------
+// TEMPLATE: product-delivery
+// Receives: name, productTitle, deliveryType, deliveryContent, sellerName
+// ---------------------------------------------------------------------------
+function templateProductDelivery({ name = 'there', productTitle = 'your product', deliveryType = 'link', deliveryContent = '#', sellerName = 'the seller' }) {
+  const preheader = `Your order for ${productTitle} from ${sellerName} is ready.`;
+
+  let deliveryBlock = '';
+  if (deliveryType === 'download') {
+    deliveryBlock = btn('Download Now', deliveryContent, BRAND.green);
+  } else if (deliveryType === 'link') {
+    deliveryBlock = btn('Access Now', deliveryContent, BRAND.green);
+  } else if (deliveryType === 'coaching') {
+    deliveryBlock = `
+      ${mutedText('Your session link is:')}
+      <div style="background-color:${BRAND.greenPale};border:1px solid ${BRAND.green};border-radius:10px;padding:16px 20px;margin:16px 0;">
+        <a href="${deliveryContent}" style="font-size:14px;color:${BRAND.green};font-weight:600;word-break:break-all;font-family:Arial,Helvetica,sans-serif;">${deliveryContent}</a>
+      </div>`;
+  } else if (deliveryType === 'course' && Array.isArray(deliveryContent)) {
+    deliveryBlock = deliveryContent.map((link, i) =>
+      btn(`Module ${i + 1}`, link, BRAND.green)
+    ).join('');
+  } else {
+    deliveryBlock = btn('Access Now', deliveryContent, BRAND.green);
+  }
+
+  const body = `
+    ${heading('Here is what you purchased.')}
+    ${bodyText(`Hi ${name}, your order for <strong>${productTitle}</strong> from ${sellerName} is ready.`)}
+    ${deliveryBlock}
+    ${divider()}
+    ${mutedText('If you have any issues, reply to this email and we will help you out.')}
+  `;
+  return { subject: 'Your purchase is ready', preheader, body };
+}
+
+// ---------------------------------------------------------------------------
+// TEMPLATE: review-request
+// Receives: name, productTitle, reviewUrl, sellerName
+// ---------------------------------------------------------------------------
+function templateReviewRequest({ name = 'there', productTitle = 'your product', reviewUrl = '#', sellerName = 'the seller' }) {
+  const preheader = `How was your experience with ${productTitle}?`;
+  const body = `
+    ${heading('Leave a quick review.')}
+    ${bodyText(`Hi ${name}, we hope you are enjoying <strong>${productTitle}</strong> from ${sellerName}.`)}
+    ${bodyText('Your honest review helps other buyers make confident decisions.')}
+    ${btn('Leave a Review', reviewUrl, BRAND.green)}
+    ${mutedText('Takes less than 60 seconds.')}
+  `;
+  return { subject: `How was your experience with ${productTitle}`, preheader, body };
+}
+
+// ---------------------------------------------------------------------------
+// TEMPLATE: product-sale
+// Receives: name, buyerName, buyerEmail, productTitle, amount
+// ---------------------------------------------------------------------------
+function templateProductSale({ name = 'there', buyerName = 'A buyer', buyerEmail = '', productTitle = 'your product', amount = '0' }) {
+  const preheader = `${buyerName} just purchased ${productTitle}.`;
+  const body = `
+    ${heading(`New sale on ${productTitle}.`)}
+    ${bodyText(`Hi ${name}, <strong>${buyerName}</strong> (${buyerEmail}) just purchased <strong>${productTitle}</strong> for <strong>$${amount} USD</strong>.`)}
+    ${bodyText('The funds will be available in your dashboard shortly.')}
+    ${btn('View Dashboard', 'https://kreddlo.com/dashboard.html', BRAND.navy)}
+  `;
+  return { subject: 'You made a sale', preheader, body };
+}
+
+// ---------------------------------------------------------------------------
+// TEMPLATE: new-review
+// Receives: name, reviewerName, productTitle, rating, comment
+// ---------------------------------------------------------------------------
+function templateNewReview({ name = 'there', reviewerName = 'Someone', productTitle = 'your product', rating = 5, comment = '' }) {
+  const preheader = `${reviewerName} left you a ${rating}/5 rating on ${productTitle}.`;
+  const body = `
+    ${heading(`${reviewerName} left you a rating of ${rating} out of 5.`)}
+    ${bodyText(`Hi ${name}, you received a new review on <strong>${productTitle}</strong>.`)}
+    <div style="border-left:4px solid ${BRAND.green};background-color:${BRAND.cream};border-radius:0 10px 10px 0;padding:16px 20px;margin:20px 0;">
+      <p style="margin:0;font-size:15px;line-height:1.7;color:${BRAND.textBody};font-style:italic;font-family:Arial,Helvetica,sans-serif;">${comment}</p>
+    </div>
+    ${btn('View Profile', 'https://kreddlo.com/profile.html', BRAND.navy)}
+  `;
+  return { subject: 'New review on your profile', preheader, body };
+}
+
 // Maps the templateId / type string from the POST body to a template function.
 // ---------------------------------------------------------------------------
 function buildEmail(type, data) {
@@ -502,6 +606,16 @@ function buildEmail(type, data) {
       return templateBoostPurchased(data);
     case 'referral-credited':
       return templateReferralCredited(data);
+    case 'email-verification':
+      return tplEmailVerification(data);
+    case 'product-delivery':
+      return templateProductDelivery(data);
+    case 'review-request':
+      return templateReviewRequest(data);
+    case 'product-sale':
+      return templateProductSale(data);
+    case 'new-review':
+      return templateNewReview(data);
     default:
       return null;
   }

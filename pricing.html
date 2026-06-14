@@ -39,8 +39,10 @@
 
     /* ════════════════════════════════════════
        PREMIUM GLASSMORPHISM
+       Multi-layer approach for depth & realism
     ════════════════════════════════════════ */
     .glass {
+      /* Layered background: subtle noise texture + translucent white */
       background:
         linear-gradient(
           135deg,
@@ -49,17 +51,20 @@
         );
       backdrop-filter: blur(20px) saturate(180%);
       -webkit-backdrop-filter: blur(20px) saturate(180%);
+      /* Top highlight edge + subtle inner glow */
       border: 1px solid rgba(255,255,255,0.55);
       border-bottom-color: rgba(255,255,255,0.25);
       border-right-color:  rgba(255,255,255,0.25);
       border-radius: 20px;
+      /* Layered shadows: outer depth + inner light rim */
       box-shadow:
-        0 2px 0   0   rgba(255,255,255,0.80) inset,
-        0 -1px 0  0   rgba(255,255,255,0.20) inset,
-        0 8px 32px    rgba(13,33,69,0.10),
-        0 1px 2px     rgba(13,33,69,0.06);
+        0 2px 0   0   rgba(255,255,255,0.80) inset,   /* top inner highlight */
+        0 -1px 0  0   rgba(255,255,255,0.20) inset,   /* bottom inner edge */
+        0 8px 32px    rgba(13,33,69,0.10),             /* soft outer shadow */
+        0 1px 2px     rgba(13,33,69,0.06);             /* tight base shadow */
       position: relative;
     }
+    /* Subtle frosted sheen overlay */
     .glass::before {
       content: '';
       position: absolute;
@@ -74,6 +79,7 @@
       pointer-events: none;
       z-index: 0;
     }
+    /* Ensure children sit above the sheen */
     .glass > * { position: relative; z-index: 1; }
 
     /* Pro card: green-tinted glass */
@@ -182,25 +188,32 @@
     .delay-1 { animation-delay: .1s; }
     .delay-2 { animation-delay: .2s; }
 
-    /* ── Fee Skeleton (shimmer) ── */
-    .fee-skeleton {
-      display: inline-block;
-      border-radius: 6px;
-      background: linear-gradient(90deg, #e8eaf0 25%, #d8dae8 50%, #e8eaf0 75%);
-      background-size: 200% 100%;
-      animation: feeShimmer 1.4s infinite linear;
-      vertical-align: middle;
-    }
+    /* ── Fee skeleton placeholders ── */
     @keyframes feeShimmer {
-      0%   { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
+      0%   { background-position: -120px 0; }
+      100% { background-position: 120px 0; }
     }
-    /* Skeleton sizes */
-    .fee-sk-sm  { width: 36px;  height: 14px; }
-    .fee-sk-md  { width: 52px;  height: 18px; }
-    .fee-sk-lg  { width: 80px;  height: 40px; }
-    .fee-sk-xl  { width: 110px; height: 48px; }
-    .fee-sk-inline { width: 44px; height: 13px; }
+    .fee-skel {
+      display: inline-block;
+      vertical-align: middle;
+      border-radius: 6px;
+      background: linear-gradient(90deg, rgba(13,33,69,0.08) 25%, rgba(13,33,69,0.15) 37%, rgba(13,33,69,0.08) 63%);
+      background-size: 240px 100%;
+      animation: feeShimmer 1.4s ease-in-out infinite;
+      color: transparent;
+    }
+    .fee-skel-lg { width: 84px; height: 38px; border-radius: 8px; }
+    .fee-skel-sm { width: 46px; height: 14px; }
+
+    /* ── Mobile fee card list ── */
+    .fee-card {
+      padding: 16px 20px;
+    }
+    .fee-card-name { color: #0d2145; font-weight: 700; font-size: 14px; }
+    .fee-card-row  { display: flex; justify-content: space-between; align-items: baseline; margin-top: 6px; }
+    .fee-card-meta { color: rgba(13,33,69,0.55); font-size: 13px; }
+    .fee-card-amount { color: #0d2145; font-weight: 600; font-size: 13px; }
+    .fee-card-list { display: flex; flex-direction: column; gap: 10px; }
   </style>
 
   <script type="module">
@@ -214,115 +227,9 @@
       messagingSenderId:"REPLACE_WITH_REAL_SENDER_ID", appId:"REPLACE_WITH_REAL_APP_ID",
     };
     const app = initializeApp(firebaseConfig);
-    window.db      = getFirestore(app);
-    window.auth    = getAuth(app);
-    window.storage = getStorage(app);
-
-    /* ─── Load platform settings and populate all fee displays ─── */
-    async function loadPricingFees() {
-      try {
-        const snap = await getDoc(doc(window.db, 'config', 'platform'));
-        const data = snap.exists() ? snap.data() : {};
-
-        /* Fall back to sensible defaults if any field is missing */
-        const platformFee      = data.platformFeePercent      ?? 9;    // buyer fee %
-        const protectionFee    = data.projectProtectionPercent ?? 2.5; // protection add-on %
-        const withdrawalFee    = data.withdrawalFeePercent     ?? 5;   // free plan withdrawal %
-        const earlyPayoutFee   = data.earlyPayoutFeePercent    ?? 3;   // pro plan withdrawal %
-
-        /* ── Helper: replace skeleton with a formatted value ── */
-        function fill(id, text) {
-          const el = document.getElementById(id);
-          if (el) el.outerHTML = text;
-        }
-
-        /* ── Freelancer Free Plan — withdrawal fee card ── */
-        fill('fee-withdrawal-free-pct',
-          '<span class="text-[13px] font-600 text-navy">' + withdrawalFee + '%</span>');
-
-        /* ── Freelancer Pro Plan — reduced withdrawal fee label ── */
-        fill('fee-withdrawal-pro-label',
-          '<span class="text-[14px] text-navy/70 font-400">Reduced withdrawal fee (' + earlyPayoutFee + '%)</span>');
-
-        /* ── Freelancer Pro Plan — withdrawal fee card ── */
-        fill('fee-withdrawal-pro-pct',
-          '<span class="text-[13px] font-600 text-green">' + earlyPayoutFee + '%</span>');
-
-        /* ── Buyer Platform Fee — hero big number ── */
-        fill('fee-platform-hero',
-          '<span class="text-[42px] font-800 text-navy tracking-tight leading-none">' + platformFee + '%</span>');
-
-        /* ── Buyer Platform Fee — worked example label ── */
-        const projAmt   = 500;
-        const pfAmt     = (projAmt * platformFee / 100).toFixed(2);
-        const ppAmt     = (projAmt * protectionFee / 100).toFixed(2);
-        const totalPf   = (projAmt + parseFloat(pfAmt)).toFixed(2);
-        const totalPfPp = (projAmt + parseFloat(pfAmt) + parseFloat(ppAmt)).toFixed(2);
-
-        fill('fee-platform-example-label',
-          '<span class="text-[13px] text-navy/60">Platform fee (' + platformFee + '%)</span>');
-        fill('fee-platform-example-value',
-          '<span class="text-[13px] font-600 text-navy">$' + pfAmt + '</span>');
-        fill('fee-platform-example-total',
-          '<span class="text-[13px] font-700 text-green">$' + totalPf + '</span>');
-
-        /* ── Buyer Project Protection — hero big number ── */
-        fill('fee-protection-hero',
-          '<span class="text-[42px] font-800 text-navy tracking-tight leading-none">' + protectionFee + '%</span>');
-
-        /* ── Buyer Project Protection — worked example labels ── */
-        fill('fee-protection-example-pf-label',
-          '<span class="text-[13px] text-navy/60">Platform fee (' + platformFee + '%)</span>');
-        fill('fee-protection-example-pf-value',
-          '<span class="text-[13px] font-600 text-navy">$' + pfAmt + '</span>');
-        fill('fee-protection-example-pp-label',
-          '<span class="text-[13px] text-navy/60">Protection add-on (' + protectionFee + '%)</span>');
-        fill('fee-protection-example-pp-value',
-          '<span class="text-[13px] font-600 text-navy">$' + ppAmt + '</span>');
-        fill('fee-protection-example-total',
-          '<span class="text-[13px] font-700 text-green">$' + totalPfPp + '</span>');
-
-        /* ── Fee Comparison Table ── */
-        fill('fee-table-platform',
-          '<td class="px-6 py-4 text-[14px] font-600 text-navy">' + platformFee + '% of project total</td>');
-        fill('fee-table-withdrawal-free',
-          '<td class="px-6 py-4 text-[14px] font-600 text-navy">' + withdrawalFee + '% + ~$1.20 network</td>');
-        fill('fee-table-withdrawal-pro',
-          '<td class="px-6 py-4 text-[14px] font-600 text-green">' + earlyPayoutFee + '% + ~$1.20 network</td>');
-        fill('fee-table-protection',
-          '<td class="px-6 py-4 text-[14px] font-600 text-navy">' + protectionFee + '% of project total</td>');
-
-      } catch (err) {
-        /* On error: replace skeletons with static fallback values so page still reads correctly */
-        console.warn('Could not load platform settings:', err);
-        const fallbacks = {
-          'fee-withdrawal-free-pct':        '<span class="text-[13px] font-600 text-navy">5%</span>',
-          'fee-withdrawal-pro-label':        '<span class="text-[14px] text-navy/70 font-400">Reduced withdrawal fee (3%)</span>',
-          'fee-withdrawal-pro-pct':          '<span class="text-[13px] font-600 text-green">3%</span>',
-          'fee-platform-hero':               '<span class="text-[42px] font-800 text-navy tracking-tight leading-none">9%</span>',
-          'fee-platform-example-label':      '<span class="text-[13px] text-navy/60">Platform fee (9%)</span>',
-          'fee-platform-example-value':      '<span class="text-[13px] font-600 text-navy">$45.00</span>',
-          'fee-platform-example-total':      '<span class="text-[13px] font-700 text-green">$545.00</span>',
-          'fee-protection-hero':             '<span class="text-[42px] font-800 text-navy tracking-tight leading-none">2.5%</span>',
-          'fee-protection-example-pf-label': '<span class="text-[13px] text-navy/60">Platform fee (9%)</span>',
-          'fee-protection-example-pf-value': '<span class="text-[13px] font-600 text-navy">$45.00</span>',
-          'fee-protection-example-pp-label': '<span class="text-[13px] text-navy/60">Protection add-on (2.5%)</span>',
-          'fee-protection-example-pp-value': '<span class="text-[13px] font-600 text-navy">$12.50</span>',
-          'fee-protection-example-total':    '<span class="text-[13px] font-700 text-green">$557.50</span>',
-          'fee-table-platform':     '<td class="px-6 py-4 text-[14px] font-600 text-navy">9% of project total</td>',
-          'fee-table-withdrawal-free': '<td class="px-6 py-4 text-[14px] font-600 text-navy">5% + ~$1.20 network</td>',
-          'fee-table-withdrawal-pro':  '<td class="px-6 py-4 text-[14px] font-600 text-green">3% + ~$1.20 network</td>',
-          'fee-table-protection':   '<td class="px-6 py-4 text-[14px] font-600 text-navy">2.5% of project total</td>',
-        };
-        Object.entries(fallbacks).forEach(([id, html]) => {
-          const el = document.getElementById(id);
-          if (el) el.outerHTML = html;
-        });
-      }
-    }
-
-    /* Run immediately — no auth needed, config/platform is public-read */
-    loadPricingFees();
+    window.db = getFirestore(app); window.auth = getAuth(app); window.storage = getStorage(app);
+    window._fsPlatformConfig = { doc, getDoc };
+    window.dispatchEvent(new Event('kreddlo-firebase-ready'));
   </script>
   <meta id="meta-description" name="description" content="" />
   <meta id="og-title" property="og:title" content="" />
@@ -429,11 +336,7 @@
           <div class="border-t border-border/60 pt-5">
             <p class="text-xs font-700 uppercase tracking-widest text-navy/35 mb-3">Withdrawal Fee</p>
             <div class="glass rounded-xl px-4 py-3 flex flex-col gap-2">
-              <div class="flex justify-between">
-                <span class="text-[13px] text-navy/60">Platform cut</span>
-                <!-- DYNAMIC: withdrawalFeePercent -->
-                <span id="fee-withdrawal-free-pct"><span class="fee-skeleton fee-sk-sm"></span></span>
-              </div>
+              <div class="flex justify-between"><span class="text-[13px] text-navy/60">Platform cut</span><span class="text-[13px] font-600 text-navy"><span id="fee-free-withdrawal-cut" class="fee-skel fee-skel-sm">5%</span></span></div>
               <div class="flex justify-between"><span class="text-[13px] text-navy/60">Network fee</span><span class="text-[13px] font-600 text-navy">~$1.20</span></div>
             </div>
           </div>
@@ -464,22 +367,14 @@
             <div class="flex gap-3 items-start"><span class="check">&#10003;</span><span class="text-[14px] text-navy/70 font-400">Priority dispute resolution</span></div>
             <div class="flex gap-3 items-start"><span class="check">&#10003;</span><span class="text-[14px] text-navy/70 font-400">Advanced analytics dashboard</span></div>
             <div class="flex gap-3 items-start"><span class="check">&#10003;</span><span class="text-[14px] text-navy/70 font-400">Early payout on escrow release</span></div>
-            <div class="flex gap-3 items-start">
-              <span class="check">&#10003;</span>
-              <!-- DYNAMIC: earlyPayoutFeePercent in label text -->
-              <span id="fee-withdrawal-pro-label"><span class="fee-skeleton fee-sk-inline" style="display:inline-block;"></span></span>
-            </div>
+            <div class="flex gap-3 items-start"><span class="check">&#10003;</span><span class="text-[14px] text-navy/70 font-400">Reduced withdrawal fee (<span id="fee-pro-withdrawal-bullet" class="fee-skel fee-skel-sm">3%</span>)</span></div>
             <div class="flex gap-3 items-start"><span class="check">&#10003;</span><span class="text-[14px] text-navy/70 font-400">Pro-only client badge</span></div>
           </div>
 
           <div class="border-t border-green/20 pt-5">
             <p class="text-xs font-700 uppercase tracking-widest text-navy/35 mb-3">Withdrawal Fee</p>
             <div class="glass rounded-xl px-4 py-3 flex flex-col gap-2">
-              <div class="flex justify-between">
-                <span class="text-[13px] text-navy/60">Platform cut</span>
-                <!-- DYNAMIC: earlyPayoutFeePercent -->
-                <span id="fee-withdrawal-pro-pct"><span class="fee-skeleton fee-sk-sm"></span></span>
-              </div>
+              <div class="flex justify-between"><span class="text-[13px] text-navy/60">Platform cut</span><span class="text-[13px] font-600 text-green"><span id="fee-pro-withdrawal-cut" class="fee-skel fee-skel-sm">3%</span></span></div>
               <div class="flex justify-between"><span class="text-[13px] text-navy/60">Network fee</span><span class="text-[13px] font-600 text-navy">~$1.20</span></div>
             </div>
           </div>
@@ -546,8 +441,7 @@
             <p class="text-xs font-700 uppercase tracking-widest text-navy/40 mb-2">Standard</p>
             <p class="text-[20px] font-700 text-navy mb-1 tracking-tight">Platform Fee</p>
             <div class="flex items-baseline gap-1 mb-2">
-              <!-- DYNAMIC: platformFeePercent hero -->
-              <span id="fee-platform-hero"><span class="fee-skeleton fee-sk-xl"></span></span>
+              <span id="fee-platform-range" class="text-[42px] font-800 text-navy tracking-tight leading-none fee-skel fee-skel-lg">8–10%</span>
             </div>
             <p class="text-navy/50 text-[14px] font-400 leading-relaxed">
               Added to the project total at checkout. The exact rate is shown before you confirm any payment, with no last-minute additions.
@@ -557,17 +451,8 @@
             <p class="text-xs font-700 uppercase tracking-widest text-navy/35 mb-3">Worked Example</p>
             <div class="glass rounded-xl px-5 py-4 flex flex-col gap-2.5">
               <div class="flex justify-between"><span class="text-[13px] text-navy/60">Project price</span><span class="text-[13px] font-600 text-navy">$500.00</span></div>
-              <div class="flex justify-between">
-                <!-- DYNAMIC label -->
-                <span id="fee-platform-example-label"><span class="fee-skeleton fee-sk-md"></span></span>
-                <!-- DYNAMIC value -->
-                <span id="fee-platform-example-value"><span class="fee-skeleton fee-sk-sm"></span></span>
-              </div>
-              <div class="border-t border-border/60 pt-2 flex justify-between">
-                <span class="text-[13px] font-700 text-navy">Total charged</span>
-                <!-- DYNAMIC total -->
-                <span id="fee-platform-example-total"><span class="fee-skeleton fee-sk-sm"></span></span>
-              </div>
+              <div class="flex justify-between"><span class="text-[13px] text-navy/60">Platform fee (<span id="fee-platform-example" class="fee-skel fee-skel-sm">9%</span>)</span><span class="text-[13px] font-600 text-navy">$45.00</span></div>
+              <div class="border-t border-border/60 pt-2 flex justify-between"><span class="text-[13px] font-700 text-navy">Total charged</span><span class="text-[13px] font-700 text-green">$545.00</span></div>
             </div>
           </div>
           <div class="flex flex-col gap-2">
@@ -583,8 +468,7 @@
             <p class="text-xs font-700 uppercase tracking-widest text-navy/40 mb-2">Optional Add-On</p>
             <p class="text-[20px] font-700 text-navy mb-1 tracking-tight">Project Protection</p>
             <div class="flex items-baseline gap-1 mb-2">
-              <!-- DYNAMIC: projectProtectionPercent hero -->
-              <span id="fee-protection-hero"><span class="fee-skeleton fee-sk-xl"></span></span>
+              <span id="fee-protection-range" class="text-[42px] font-800 text-navy tracking-tight leading-none fee-skel fee-skel-lg">2–3%</span>
             </div>
             <p class="text-navy/50 text-[14px] font-400 leading-relaxed">
               An optional add-on that escalates your dispute to a senior admin reviewer and guarantees a ruling within 48 hours.
@@ -594,23 +478,9 @@
             <p class="text-xs font-700 uppercase tracking-widest text-navy/35 mb-3">Worked Example</p>
             <div class="glass rounded-xl px-5 py-4 flex flex-col gap-2.5">
               <div class="flex justify-between"><span class="text-[13px] text-navy/60">Project price</span><span class="text-[13px] font-600 text-navy">$500.00</span></div>
-              <div class="flex justify-between">
-                <!-- DYNAMIC platform fee label -->
-                <span id="fee-protection-example-pf-label"><span class="fee-skeleton fee-sk-md"></span></span>
-                <!-- DYNAMIC platform fee value -->
-                <span id="fee-protection-example-pf-value"><span class="fee-skeleton fee-sk-sm"></span></span>
-              </div>
-              <div class="flex justify-between">
-                <!-- DYNAMIC protection label -->
-                <span id="fee-protection-example-pp-label"><span class="fee-skeleton fee-sk-md"></span></span>
-                <!-- DYNAMIC protection value -->
-                <span id="fee-protection-example-pp-value"><span class="fee-skeleton fee-sk-sm"></span></span>
-              </div>
-              <div class="border-t border-border/60 pt-2 flex justify-between">
-                <span class="text-[13px] font-700 text-navy">Total charged</span>
-                <!-- DYNAMIC total -->
-                <span id="fee-protection-example-total"><span class="fee-skeleton fee-sk-sm"></span></span>
-              </div>
+              <div class="flex justify-between"><span class="text-[13px] text-navy/60">Platform fee (<span id="fee-protection-platform-example" class="fee-skel fee-skel-sm">9%</span>)</span><span class="text-[13px] font-600 text-navy">$45.00</span></div>
+              <div class="flex justify-between"><span class="text-[13px] text-navy/60">Protection add-on (<span id="fee-protection-example" class="fee-skel fee-skel-sm">2.5%</span>)</span><span class="text-[13px] font-600 text-navy">$12.50</span></div>
+              <div class="border-t border-border/60 pt-2 flex justify-between"><span class="text-[13px] font-700 text-navy">Total charged</span><span class="text-[13px] font-700 text-green">$557.50</span></div>
             </div>
           </div>
           <div class="flex flex-col gap-2">
@@ -628,9 +498,58 @@
   <section class="py-16 px-5">
     <div class="max-w-4xl mx-auto">
       <h2 class="text-[24px] md:text-[32px] font-800 tracking-[-0.6px] text-navy mb-8 text-center">Full Fee Breakdown</h2>
-      <div class="glass overflow-hidden">
+
+      <!-- Mobile fee card list -->
+      <div class="fee-card-list md:hidden">
+        <div class="glass fee-card">
+          <p class="fee-card-name">Platform Fee</p>
+          <div class="fee-card-row"><span class="fee-card-meta">Buyer</span><span class="fee-card-amount"><span id="fee-card-platform" class="fee-skel fee-skel-sm">8–10%</span> of project total</span></div>
+        </div>
+        <div class="glass fee-card">
+          <p class="fee-card-name">Freelancer Withdrawal (Free)</p>
+          <div class="fee-card-row"><span class="fee-card-meta">Freelancer</span><span class="fee-card-amount"><span id="fee-card-withdrawal-free" class="fee-skel fee-skel-sm">5%</span> + ~$1.20 network</span></div>
+        </div>
+        <div class="glass fee-card">
+          <p class="fee-card-name">Freelancer Withdrawal (Pro)</p>
+          <div class="fee-card-row"><span class="fee-card-meta">Freelancer</span><span class="fee-card-amount text-green"><span id="fee-card-withdrawal-pro" class="fee-skel fee-skel-sm">3%</span> + ~$1.20 network</span></div>
+        </div>
+        <div class="glass fee-card">
+          <p class="fee-card-name">Project Protection</p>
+          <div class="fee-card-row"><span class="fee-card-meta">Buyer (optional)</span><span class="fee-card-amount"><span id="fee-card-protection" class="fee-skel fee-skel-sm">2–3%</span> of project total</span></div>
+        </div>
+        <div class="glass fee-card">
+          <p class="fee-card-name">Profile Boost (3 days)</p>
+          <div class="fee-card-row"><span class="fee-card-meta">Freelancer (optional)</span><span class="fee-card-amount">$5 one-time</span></div>
+        </div>
+        <div class="glass fee-card">
+          <p class="fee-card-name">Profile Boost (7 days)</p>
+          <div class="fee-card-row"><span class="fee-card-meta">Freelancer (optional)</span><span class="fee-card-amount">$10 one-time</span></div>
+        </div>
+        <div class="glass fee-card">
+          <p class="fee-card-name">Profile Boost (30 days)</p>
+          <div class="fee-card-row"><span class="fee-card-meta">Freelancer (optional)</span><span class="fee-card-amount">$35 one-time</span></div>
+        </div>
+        <div class="glass fee-card">
+          <p class="fee-card-name">KYC Verification</p>
+          <div class="fee-card-row"><span class="fee-card-meta">Freelancer</span><span class="fee-card-amount text-green">Free</span></div>
+        </div>
+        <div class="glass fee-card">
+          <p class="fee-card-name">Contract Generation</p>
+          <div class="fee-card-row"><span class="fee-card-meta">Both parties</span><span class="fee-card-amount text-green">Free</span></div>
+        </div>
+        <div class="glass fee-card">
+          <p class="fee-card-name">Product Platform Fee</p>
+          <div class="fee-card-row"><span class="fee-card-meta">Buyer</span><span class="fee-card-amount"><span id="fee-card-product-platform" class="fee-skel fee-skel-sm">8–10%</span> of project total</span></div>
+        </div>
+        <div class="glass fee-card">
+          <p class="fee-card-name">Bank Withdrawal Fee</p>
+          <div class="fee-card-row"><span class="fee-card-meta">Freelancer</span><span class="fee-card-amount"><span id="fee-card-bank-withdrawal" class="fee-skel fee-skel-sm">5%</span> + ~$1.20 network</span></div>
+        </div>
+      </div>
+
+      <div class="glass overflow-hidden hidden md:block">
         <div class="overflow-x-auto">
-          <table class="w-full min-w-[560px]">
+          <table class="w-full">
             <thead>
               <tr class="border-b border-border/60">
                 <th class="text-left px-6 py-4 text-[12px] font-700 uppercase tracking-widest text-navy/40">Fee Name</th>
@@ -642,26 +561,22 @@
               <tr class="hover:bg-white/40 transition-colors">
                 <td class="px-6 py-4 text-[14px] font-600 text-navy">Platform Fee</td>
                 <td class="px-6 py-4 text-[14px] text-navy/60 font-400">Buyer</td>
-                <!-- DYNAMIC: platformFeePercent -->
-                <span id="fee-table-platform"><td class="px-6 py-4 text-[14px] font-600 text-navy"><span class="fee-skeleton fee-sk-md"></span></td></span>
+                <td class="px-6 py-4 text-[14px] font-600 text-navy"><span id="fee-table-platform" class="fee-skel fee-skel-sm">8–10%</span> of project total</td>
               </tr>
               <tr class="hover:bg-white/40 transition-colors">
                 <td class="px-6 py-4 text-[14px] font-600 text-navy">Freelancer Withdrawal (Free)</td>
                 <td class="px-6 py-4 text-[14px] text-navy/60 font-400">Freelancer</td>
-                <!-- DYNAMIC: withdrawalFeePercent -->
-                <span id="fee-table-withdrawal-free"><td class="px-6 py-4 text-[14px] font-600 text-navy"><span class="fee-skeleton fee-sk-md"></span></td></span>
+                <td class="px-6 py-4 text-[14px] font-600 text-navy"><span id="fee-table-withdrawal-free" class="fee-skel fee-skel-sm">5%</span> + ~$1.20 network</td>
               </tr>
               <tr class="hover:bg-white/40 transition-colors">
                 <td class="px-6 py-4 text-[14px] font-600 text-navy">Freelancer Withdrawal (Pro)</td>
                 <td class="px-6 py-4 text-[14px] text-navy/60 font-400">Freelancer</td>
-                <!-- DYNAMIC: earlyPayoutFeePercent -->
-                <span id="fee-table-withdrawal-pro"><td class="px-6 py-4 text-[14px] font-600 text-green"><span class="fee-skeleton fee-sk-md"></span></td></span>
+                <td class="px-6 py-4 text-[14px] font-600 text-green"><span id="fee-table-withdrawal-pro" class="fee-skel fee-skel-sm">3%</span> + ~$1.20 network</td>
               </tr>
               <tr class="hover:bg-white/40 transition-colors">
                 <td class="px-6 py-4 text-[14px] font-600 text-navy">Project Protection</td>
                 <td class="px-6 py-4 text-[14px] text-navy/60 font-400">Buyer (optional)</td>
-                <!-- DYNAMIC: projectProtectionPercent -->
-                <span id="fee-table-protection"><td class="px-6 py-4 text-[14px] font-600 text-navy"><span class="fee-skeleton fee-sk-md"></span></td></span>
+                <td class="px-6 py-4 text-[14px] font-600 text-navy"><span id="fee-table-protection" class="fee-skel fee-skel-sm">2–3%</span> of project total</td>
               </tr>
               <tr class="hover:bg-white/40 transition-colors">
                 <td class="px-6 py-4 text-[14px] font-600 text-navy">Profile Boost (3 days)</td>
@@ -687,6 +602,16 @@
                 <td class="px-6 py-4 text-[14px] font-600 text-navy">Contract Generation</td>
                 <td class="px-6 py-4 text-[14px] text-navy/60 font-400">Both parties</td>
                 <td class="px-6 py-4 text-[14px] font-600 text-green">Free</td>
+              </tr>
+              <tr class="hover:bg-white/40 transition-colors">
+                <td class="px-6 py-4 text-[14px] font-600 text-navy">Product Platform Fee</td>
+                <td class="px-6 py-4 text-[14px] text-navy/60 font-400">Buyer</td>
+                <td class="px-6 py-4 text-[14px] font-600 text-navy"><span id="fee-table-product-platform" class="fee-skel fee-skel-sm">8–10%</span> of project total</td>
+              </tr>
+              <tr class="hover:bg-white/40 transition-colors">
+                <td class="px-6 py-4 text-[14px] font-600 text-navy">Bank Withdrawal Fee</td>
+                <td class="px-6 py-4 text-[14px] text-navy/60 font-400">Freelancer</td>
+                <td class="px-6 py-4 text-[14px] font-600 text-navy"><span id="fee-table-bank-withdrawal" class="fee-skel fee-skel-sm">5%</span> + ~$1.20 network</td>
               </tr>
             </tbody>
           </table>
@@ -763,6 +688,32 @@
           <div class="faq-answer px-6">
             <p class="text-[14px] text-navy/60 font-400 leading-relaxed pb-5">
               Yes. You can cancel your Pro Plan at any time from your dashboard settings. Your Pro benefits remain active until the end of the billing period you have already paid for. There are no cancellation fees and no lock-in contracts. After cancellation your account reverts to the Free plan automatically.
+            </p>
+          </div>
+        </div>
+
+        <!-- Q6 -->
+        <div class="glass overflow-hidden">
+          <button class="faq-trigger w-full flex items-center justify-between px-6 py-5 text-left" onclick="toggleFaq(this)">
+            <span class="text-[15px] font-600 text-navy">Can I sell digital products without doing custom work?</span>
+            <span class="faq-icon text-green text-xl font-300 ml-4 flex-shrink-0">+</span>
+          </button>
+          <div class="faq-answer px-6">
+            <p class="text-[14px] text-navy/60 font-400 leading-relaxed pb-5">
+              Yes. Create a product in your dashboard, set a price and share your product link anywhere including social media, newsletters or your own website. Buyers pay and receive instant automatic delivery. No contract or escrow required for product sales.
+            </p>
+          </div>
+        </div>
+
+        <!-- Q7 -->
+        <div class="glass overflow-hidden">
+          <button class="faq-trigger w-full flex items-center justify-between px-6 py-5 text-left" onclick="toggleFaq(this)">
+            <span class="text-[15px] font-600 text-navy">Does Kreddlo take a cut of product sales?</span>
+            <span class="faq-icon text-green text-xl font-300 ml-4 flex-shrink-0">+</span>
+          </button>
+          <div class="faq-answer px-6">
+            <p class="text-[14px] text-navy/60 font-400 leading-relaxed pb-5">
+              Yes the same platform fee applies to product sales as to service projects. You always see the exact amount you will receive before publishing your product.
             </p>
           </div>
         </div>
@@ -863,6 +814,120 @@
       // Open clicked if it was closed
       if (!isOpen) { answer.classList.add('open'); icon.classList.add('open'); }
     }
+  </script>
+
+  <!-- Live fee percentages from config/platform (Firestore) -->
+  <script>
+    (function () {
+      // Fallback values match the figures currently shown in the markup,
+      // so nothing changes visually if Firestore is unreachable.
+      var FEE_DEFAULTS = {
+        platformFeeMin: 8, platformFeeMax: 10, platformFeeExample: 9,
+        protectionFeeMin: 2, protectionFeeMax: 3, protectionFeeExample: 2.5,
+        withdrawalFeeFree: 5, withdrawalFeePro: 3
+      };
+
+      function fmtPct(n) {
+        var num = Number(n);
+        if (!isFinite(num)) return n + '%';
+        var str = (Math.round(num * 100) / 100).toString();
+        return str + '%';
+      }
+      function fmtRange(min, max) {
+        return fmtPct(min).replace('%', '') + '\u2013' + fmtPct(max);
+      }
+      function setFee(id, text) {
+        var el = document.getElementById(id);
+        if (!el) return;
+        el.textContent = text;
+        el.classList.remove('fee-skel', 'fee-skel-lg', 'fee-skel-sm');
+      }
+
+      function renderFees(fees) {
+        var platformRange   = fmtRange(fees.platformFeeMin, fees.platformFeeMax);
+        var protectionRange = fmtRange(fees.protectionFeeMin, fees.protectionFeeMax);
+        var withdrawalFree  = fmtPct(fees.withdrawalFeeFree);
+        var withdrawalPro   = fmtPct(fees.withdrawalFeePro);
+
+        // Freelancer plan cards
+        setFee('fee-free-withdrawal-cut', withdrawalFree);
+        setFee('fee-pro-withdrawal-cut', withdrawalPro);
+        setFee('fee-pro-withdrawal-bullet', withdrawalPro);
+
+        // Buyer pricing cards
+        setFee('fee-platform-range', platformRange);
+        setFee('fee-platform-example', fmtPct(fees.platformFeeExample));
+        setFee('fee-protection-range', protectionRange);
+        setFee('fee-protection-platform-example', fmtPct(fees.platformFeeExample));
+        setFee('fee-protection-example', fmtPct(fees.protectionFeeExample));
+
+        // Fee table (desktop)
+        setFee('fee-table-platform', platformRange);
+        setFee('fee-table-withdrawal-free', withdrawalFree);
+        setFee('fee-table-withdrawal-pro', withdrawalPro);
+        setFee('fee-table-protection', protectionRange);
+        setFee('fee-table-product-platform', platformRange);   // same as Service Platform Fee
+        setFee('fee-table-bank-withdrawal', withdrawalFree);    // same as Crypto Withdrawal Fee
+
+        // Mobile fee card list
+        setFee('fee-card-platform', platformRange);
+        setFee('fee-card-withdrawal-free', withdrawalFree);
+        setFee('fee-card-withdrawal-pro', withdrawalPro);
+        setFee('fee-card-protection', protectionRange);
+        setFee('fee-card-product-platform', platformRange);    // same as Service Platform Fee
+        setFee('fee-card-bank-withdrawal', withdrawalFree);     // same as Crypto Withdrawal Fee
+      }
+
+      function loadPlatformFees() {
+        var fees = Object.assign({}, FEE_DEFAULTS);
+
+        if (!window.db || !window._fsPlatformConfig) {
+          renderFees(fees);
+          return;
+        }
+
+        var doc    = window._fsPlatformConfig.doc;
+        var getDoc = window._fsPlatformConfig.getDoc;
+
+        getDoc(doc(window.db, 'config', 'platform')).then(function (snap) {
+          if (snap.exists()) {
+            var d = snap.data();
+            if (typeof d.platformFeeMin === 'number')   fees.platformFeeMin       = d.platformFeeMin;
+            if (typeof d.platformFeeMax === 'number')   fees.platformFeeMax       = d.platformFeeMax;
+            if (typeof d.platformFee === 'number')      fees.platformFeeExample   = d.platformFee;
+            if (typeof d.protectionFeeMin === 'number') fees.protectionFeeMin     = d.protectionFeeMin;
+            if (typeof d.protectionFeeMax === 'number') fees.protectionFeeMax     = d.protectionFeeMax;
+            if (typeof d.protectionFee === 'number')    fees.protectionFeeExample = d.protectionFee;
+            if (typeof d.withdrawalFee === 'number')    fees.withdrawalFeeFree    = d.withdrawalFee;
+            if (typeof d.earlyPayoutFee === 'number')   fees.withdrawalFeePro     = d.earlyPayoutFee;
+          }
+          renderFees(fees);
+        }).catch(function (err) {
+          console.warn('Platform fee config unavailable, using defaults:', err);
+          renderFees(fees);
+        });
+      }
+
+      function start() {
+        if (window.db && window._fsPlatformConfig) {
+          loadPlatformFees();
+          return;
+        }
+        var started = false;
+        window.addEventListener('kreddlo-firebase-ready', function () {
+          started = true;
+          loadPlatformFees();
+        }, { once: true });
+        // Safety net in case Firebase init never fires (e.g. blocked script)
+        setTimeout(function () { if (!started) loadPlatformFees(); }, 3000);
+      }
+
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', start);
+      } else {
+        start();
+      }
+    })();
   </script>
 
 <div id="footer-placeholder"></div>

@@ -11,6 +11,9 @@
 [functions."scheduled-subscriptions"]
   schedule = "0 0 * * *"
 
+[functions."process-email-queue"]
+  schedule = "*/5 * * * *"
+
 # ── Clean URL redirects ──────────────────────────────────────────────────────
 [[redirects]]
   from = "/dashboard"
@@ -122,7 +125,6 @@
   to   = "/admin.html"
   status = 200
 
-# ── Webhook redirects ────────────────────────────────────────────────────────
 [[redirects]]
   from = "/stripe-webhook"
   to   = "/.netlify/functions/stripe-webhook"
@@ -131,4 +133,34 @@
 [[redirects]]
   from = "/paystack-webhook"
   to   = "/.netlify/functions/paystack-webhook"
+  status = 200
+
+[[redirects]]
+  from = "/p"
+  to   = "/p.html"
+  status = 200
+
+[[redirects]]
+  from = "/p/:slug"
+  to   = "/p.html"
+  status = 200
+
+[[redirects]]
+  from = "/store"
+  to   = "/store.html"
+  status = 200
+
+[[redirects]]
+  from = "/store/:slug"
+  to   = "/store.html"
+  status = 200
+
+[[redirects]]
+  from = "/review"
+  to   = "/review.html"
+  status = 200
+
+[[redirects]]
+  from = "/dashboard-products"
+  to   = "/dashboard-products.html"
   status = 200

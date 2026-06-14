@@ -134,16 +134,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
 @media(min-width:768px){
   #page-content{padding:32px!important}
   .stat-val{font-size:42px}
-  #summary-cards{grid-template-columns:1fr 1fr!important}
-  #summary-cards-bottom{grid-template-columns:1fr 1fr!important}
+  #summary-cards{grid-template-columns:1fr 1fr 1fr!important}
   #premium-cards{grid-template-columns:1fr 1fr 1fr 1fr!important}
   .payout-mobile{display:none!important}
   .payout-desktop{display:table!important}
   #chart-canvas-wrap{height:260px!important}
-}
-@media(min-width:1024px){
-  #summary-cards{grid-template-columns:1fr 1fr!important}
-  #summary-cards-bottom{grid-template-columns:1fr 1fr!important}
 }
 @media(max-width:767px){
   .payout-desktop{display:none!important}
@@ -221,12 +216,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
         <button class="pill pill-inactive" data-period="12m" onclick="selectPeriod('12m')">12 Months</button>
       </div>
 
-      <!-- SECTION B: Summary stat cards — ROW 1: Earned + Withdrawn -->
-      <div id="summary-cards" class="fu fu-2" style="display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:13px;">
+      <!-- SECTION B: Summary stat cards -->
+      <div id="summary-cards" class="fu fu-2" style="display:grid;grid-template-columns:1fr;gap:13px;margin-bottom:26px;">
 
         <div class="stat-card" style="background:linear-gradient(135deg,rgba(45,138,94,0.08),rgba(255,255,255,0.85));border:1px solid rgba(45,138,94,0.16);box-shadow:0 4px 24px rgba(45,138,94,0.08);">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <div style="width:38px;height:38px;background:rgba(45,138,94,0.12);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <div style="width:38px;height:38px;background:rgba(45,138,94,0.12);border-radius:11px;display:flex;align-items:center;justify-content:center;">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#2d8a5e" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>
             </div>
             <span class="badge badge-green">Earned</span>
@@ -241,7 +236,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
 
         <div class="stat-card" style="background:linear-gradient(135deg,rgba(13,33,69,0.04),rgba(255,255,255,0.85));border:1px solid rgba(255,255,255,0.55);box-shadow:0 4px 24px rgba(13,33,69,0.06);">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <div style="width:38px;height:38px;background:rgba(13,33,69,0.07);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+            <div style="width:38px;height:38px;background:rgba(13,33,69,0.07);border-radius:11px;display:flex;align-items:center;justify-content:center;">
               <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#0d2145" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
             </div>
             <span class="badge badge-navy">Withdrawn</span>
@@ -254,42 +249,18 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
           </div>
         </div>
 
-      </div>
-
-      <!-- SECTION B2: Summary stat cards — ROW 2: Fiat Balance + Crypto Balance -->
-      <div id="summary-cards-bottom" class="fu fu-2" style="display:grid;grid-template-columns:1fr 1fr;gap:13px;margin-bottom:26px;">
-
-        <!-- FIAT BALANCE — from Paystack / Stripe -->
-        <div class="stat-card" style="background:linear-gradient(135deg,rgba(26,86,219,0.06),rgba(255,255,255,0.90));border:1px solid rgba(26,86,219,0.14);box-shadow:0 4px 24px rgba(26,86,219,0.07);">
+        <div class="stat-card" style="background:linear-gradient(135deg,rgba(133,100,4,0.05),rgba(255,255,255,0.85));border:1px solid rgba(133,100,4,0.12);box-shadow:0 4px 24px rgba(13,33,69,0.06);">
           <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <div style="width:38px;height:38px;background:rgba(26,86,219,0.09);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <!-- Bank / fiat icon -->
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#1a56db" stroke-width="2" stroke-linecap="round"><rect x="2" y="7" width="20" height="14" rx="2"/><path d="M16 7V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v2"/><line x1="12" y1="12" x2="12" y2="16"/><line x1="10" y1="14" x2="14" y2="14"/></svg>
+            <div style="width:38px;height:38px;background:rgba(133,100,4,0.10);border-radius:11px;display:flex;align-items:center;justify-content:center;">
+              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#856404" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
             </div>
-            <span class="badge badge-blue">Fiat</span>
+            <span class="badge badge-amber">Available</span>
           </div>
-          <div id="card-fiat" class="stat-val sk" style="color:#1a56db;height:42px;width:60%;"></div>
-          <div class="stat-lbl">Fiat Balance</div>
-          <div class="stat-trend" style="color:rgba(26,86,219,0.60);margin-top:9px;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/></svg>
-            <span>Paystack / Stripe</span>
-          </div>
-        </div>
-
-        <!-- CRYPTO BALANCE — from NOWPayments -->
-        <div class="stat-card" style="background:linear-gradient(135deg,rgba(133,100,4,0.06),rgba(255,255,255,0.90));border:1px solid rgba(133,100,4,0.14);box-shadow:0 4px 24px rgba(133,100,4,0.06);">
-          <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;">
-            <div style="width:38px;height:38px;background:rgba(133,100,4,0.10);border-radius:11px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-              <!-- Crypto / chain icon -->
-              <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="#856404" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><path d="M9.5 8.5h3a2 2 0 0 1 0 4h-3v4"/><path d="M9.5 8.5V7"/><path d="M12.5 16.5v1.5"/></svg>
-            </div>
-            <span class="badge badge-amber">Crypto</span>
-          </div>
-          <div id="card-crypto" class="stat-val sk" style="color:#856404;height:42px;width:60%;"></div>
-          <div class="stat-lbl">Crypto Balance</div>
-          <div class="stat-trend" style="color:rgba(133,100,4,0.65);margin-top:9px;display:flex;align-items:center;gap:4px;font-size:12px;font-weight:600;">
-            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="2" width="20" height="8" rx="2"/><rect x="2" y="14" width="20" height="8" rx="2"/><line x1="6" y1="6" x2="6.01" y2="6"/><line x1="6" y1="18" x2="6.01" y2="18"/></svg>
-            <span>NOWPayments</span>
+          <div id="card-pending" class="stat-val sk" style="color:#856404;height:42px;width:60%;"></div>
+          <div class="stat-lbl">Pending Balance</div>
+          <div id="trend-pending" class="stat-trend" style="color:rgba(13,33,69,0.45);visibility:hidden;">
+            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
+            <span></span>
           </div>
         </div>
 
@@ -361,9 +332,8 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
 // ============ DEMO USER ============
 var DEMO = {
   name: 'Marco Ricci',
-  premiumStatus: 'inactive',
-  fiatBalance:   740.00,
-  cryptoBalance: 500.50
+  premiumStatus: 'inactive', // change to 'active' to preview premium analytics
+  availableBalance: 1240.50
 };
 
 // ============ DEMO PROJECTS (completed, with netAmount + completedAt) ============
@@ -483,40 +453,24 @@ function renderSummaryCards(period) {
   var projectsInPeriod = filterByPeriod(DEMO_PROJECTS, 'completedAt', period);
   var payoutsInPeriod  = filterByPeriod(DEMO_PAYOUTS, 'date', period).filter(function(p){ return p.status === 'completed'; });
 
-  var totalEarned    = projectsInPeriod.reduce(function(sum, p){ return sum + p.netAmount; }, 0);
+  var totalEarned = projectsInPeriod.reduce(function(sum, p){ return sum + p.netAmount; }, 0);
   var totalWithdrawn = payoutsInPeriod.reduce(function(sum, p){ return sum + p.amountUsd; }, 0);
 
-  // --- Total Earned ---
-  var elEarned = document.getElementById('card-earned');
-  elEarned.classList.remove('sk');
-  elEarned.style.width = 'auto';
-  elEarned.style.height = 'auto';
-  elEarned.textContent = '$' + totalEarned.toLocaleString();
+  document.getElementById('card-earned').classList.remove('sk');
+  document.getElementById('card-earned').style.width = 'auto';
+  document.getElementById('card-earned').style.height = 'auto';
+  document.getElementById('card-earned').textContent = '$' + totalEarned.toLocaleString();
 
-  // --- Total Withdrawn ---
-  var elWithdrawn = document.getElementById('card-withdrawn');
-  elWithdrawn.classList.remove('sk');
-  elWithdrawn.style.width = 'auto';
-  elWithdrawn.style.height = 'auto';
-  elWithdrawn.textContent = '$' + totalWithdrawn.toLocaleString();
+  document.getElementById('card-withdrawn').classList.remove('sk');
+  document.getElementById('card-withdrawn').style.width = 'auto';
+  document.getElementById('card-withdrawn').style.height = 'auto';
+  document.getElementById('card-withdrawn').textContent = '$' + totalWithdrawn.toLocaleString();
 
-  // --- Fiat Balance (Paystack / Stripe) ---
-  // Production: read from Firestore users/{uid}.fiatBalance
-  var elFiat = document.getElementById('card-fiat');
-  elFiat.classList.remove('sk');
-  elFiat.style.width = 'auto';
-  elFiat.style.height = 'auto';
-  elFiat.textContent = '$' + DEMO.fiatBalance.toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 });
+  document.getElementById('card-pending').classList.remove('sk');
+  document.getElementById('card-pending').style.width = 'auto';
+  document.getElementById('card-pending').style.height = 'auto';
+  document.getElementById('card-pending').textContent = '$' + DEMO.availableBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 
-  // --- Crypto Balance (NOWPayments) ---
-  // Production: read from Firestore users/{uid}.cryptoBalance
-  var elCrypto = document.getElementById('card-crypto');
-  elCrypto.classList.remove('sk');
-  elCrypto.style.width = 'auto';
-  elCrypto.style.height = 'auto';
-  elCrypto.textContent = '$' + DEMO.cryptoBalance.toLocaleString(undefined, { minimumFractionDigits:2, maximumFractionDigits:2 });
-
-  // --- Trend labels ---
   var trendEarned = document.getElementById('trend-earned');
   trendEarned.querySelector('span').textContent = projectsInPeriod.length + ' projects completed';
   trendEarned.style.visibility = 'visible';
@@ -524,6 +478,10 @@ function renderSummaryCards(period) {
   var trendWithdrawn = document.getElementById('trend-withdrawn');
   trendWithdrawn.querySelector('span').textContent = payoutsInPeriod.length + ' payouts sent';
   trendWithdrawn.style.visibility = 'visible';
+
+  var trendPending = document.getElementById('trend-pending');
+  trendPending.querySelector('span').textContent = 'Ready to withdraw';
+  trendPending.style.visibility = 'visible';
 }
 
 // ============ CHART GROUPING ============
@@ -845,12 +803,6 @@ function refreshPageData() {
   renderChart(currentPeriod);
   renderPayouts();
   renderPremiumSection();
-  // Re-skeleton both balance cards so they feel like they refreshed
-  ['card-fiat','card-crypto'].forEach(function(id) {
-    var el = document.getElementById(id);
-    if (el) { el.classList.add('sk'); el.style.width='60%'; el.style.height='42px'; el.textContent=''; }
-  });
-  setTimeout(function() { renderSummaryCards(currentPeriod); }, 600);
 }
 
 (function initPullToRefresh() {

@@ -219,7 +219,7 @@ exports.handler = async (event) => {
     return respond(500, { error: 'Database not available.' });
   }
 
-  /* ── 8. Fetch the project document ── */
+  /* ── 8. Route: try projects first, then product-orders ── */
   const projectRef = db.collection('projects').doc(orderId);
   let   projectSnap;
 
@@ -230,12 +230,70 @@ exports.handler = async (event) => {
     return respond(500, { error: 'Database read failed.' });
   }
 
+  /* ── 8a. Product-order path ── */
   if (!projectSnap.exists) {
-    console.error(`Project "${orderId}" not found in Firestore.`);
-    // Return 200 — retrying will not fix a missing document
-    return respond(200, { received: true, warning: `Project ${orderId} not found.` });
+    const orderRef  = db.collection('product-orders').doc(orderId);
+    let   orderSnap;
+    try {
+      orderSnap = await orderRef.get();
+    } catch (err) {
+      console.error(`Firestore read failed for product-order ${orderId}:`, err.message);
+      return respond(500, { error: 'Database read failed.' });
+    }
+
+    if (!orderSnap.exists) {
+      console.error(`Order "${orderId}" not found in projects or product-orders.`);
+      return respond(200, { received: true, warning: `Order ${orderId} not found.` });
+    }
+
+    const order = orderSnap.data();
+
+    // Idempotency guard
+    if (order.paymentStatus === 'paid') {
+      console.log(`Product order ${orderId} already paid. Skipping duplicate webhook.`);
+      return respond(200, { received: true });
+    }
+
+    // Mark order paid
+    try {
+      await orderRef.update({
+        paymentStatus:      'paid',
+        paymentMethod:      'paystack',
+        paystackReference:  reference,
+        paymentConfirmedAt: FieldValue.serverTimestamp(),
+        updatedAt:          FieldValue.serverTimestamp(),
+      });
+      console.log(`Product order ${orderId} marked as paid.`);
+    } catch (err) {
+      console.error(`Firestore update failed for product-order ${orderId}:`, err.message);
+      return respond(500, { error: 'Failed to update product order status.' });
+    }
+
+    // Trigger delivery
+    await callFunction('deliver-product', { orderId });
+
+    // Fire Facebook pixel if product has a pixelId configured
+    try {
+      const productSnap = await db.collection('products').doc(order.productId).get();
+      if (productSnap.exists && productSnap.data().facebookPixelId) {
+        await callFunction('pixel-event', {
+          pixelId:   productSnap.data().facebookPixelId,
+          eventName: 'Purchase',
+          value:     order.amountUsd || amountUsd || 0,
+          currency:  'USD',
+          email:     order.buyerEmail || customerEmail || '',
+          orderId,
+        });
+      }
+    } catch (err) {
+      console.warn(`Could not fire pixel for product-order ${orderId}:`, err.message);
+    }
+
+    console.log(`Paystack product order ${orderId} handled successfully.`);
+    return respond(200, { received: true });
   }
 
+  /* ── 8b. Project path (existing logic) ── */
   const project = projectSnap.data();
 
   /* Guard against double-processing the same payment */
@@ -245,24 +303,17 @@ exports.handler = async (event) => {
   }
 
   /* ── 9. Update the Firestore project document ── */
-  /*
-   * paymentSource: 'fiat' tells approve-delivery.js to credit the freelancer's
-   * fiatBalance (not cryptoBalance or the legacy availableBalance) when the
-   * buyer approves the delivery. This is the source-of-truth tag that drives
-   * the dual-balance routing introduced in step 1.
-   */
   try {
     await projectRef.update({
       escrowStatus:        'funded',
       status:              'in_progress',
       paymentMethod:       'paystack',
-      paymentSource:       'fiat',
       paystackReference:   reference,
       paymentStatus:       'success',
       paymentConfirmedAt:  FieldValue.serverTimestamp(),
       updatedAt:           FieldValue.serverTimestamp(),
     });
-    console.log(`Project ${orderId} updated — escrowStatus: funded, status: in_progress, paymentSource: fiat.`);
+    console.log(`Project ${orderId} updated — escrowStatus: funded, status: in_progress.`);
   } catch (err) {
     console.error(`Firestore update failed for project ${orderId}:`, err.message);
     return respond(500, { error: 'Failed to update project status.' });
@@ -302,21 +353,16 @@ exports.handler = async (event) => {
   const platformUrl = (process.env.PLATFORM_URL || '').replace(/\/$/, '');
   const projectUrl  = `${platformUrl}/dashboard-projects.html?projectId=${encodeURIComponent(orderId)}`;
 
-  /* ── 11. Send push notification to the freelancer ── */
-  if (freelancerUid) {
-    await callFunction('send-push-notification', {
-      userUid: freelancerUid,
-      title:   'Payment Received',
-      body:    `Payment has been placed in escrow for "${projectTitle}". You can begin work.`,
-      url:     projectUrl,
-    });
-  }
-
-  /* ── 12. Send payment-received email to the freelancer ── */
-  if (freelancerEmail) {
-    await callFunction('send-email', {
-      to:         freelancerEmail,
+  /* ── 11 + 12. Notify the freelancer: payment received (push + email always) ── */
+  if (freelancerUid || freelancerEmail) {
+    await callFunction('send-smart-notification', {
+      userUid:    freelancerUid  || null,
+      to:         freelancerEmail || null,
+      title:      'Payment Received',
+      body:       `Payment has been placed in escrow for "${projectTitle}". You can begin work.`,
+      url:        projectUrl,
       templateId: 'payment-received',
+      emailMode:  'always',
       data: {
         name:         freelancerName,
         buyerName,
@@ -326,7 +372,7 @@ exports.handler = async (event) => {
       },
     });
   } else {
-    console.warn(`No freelancer email found for project ${orderId}. Email not sent.`);
+    console.warn(`No freelancer uid or email found for project ${orderId}. Notification not sent.`);
   }
 
   console.log(`Paystack charge.success handled successfully for project ${orderId}.`);

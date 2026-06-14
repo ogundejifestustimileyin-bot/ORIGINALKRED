@@ -798,6 +798,39 @@ input[type=range]::-moz-range-thumb {
             <label class="lbl" style="display:block;margin-bottom:8px;">Referral Credit Amount (€)</label>
             <input type="number" id="set-referral-credit" class="input-field" value="5.00" min="0" step="0.01"/>
           </div>
+
+          <!-- Stripe toggle -->
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+            <div>
+              <label class="lbl" style="display:block;margin-bottom:4px;">Stripe Payments</label>
+              <p style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.50);margin:0;line-height:1.5;">Enables card payments via Stripe. Accepts Visa, Mastercard, Amex, iDEAL, Giropay and 20+ payment methods globally.</p>
+            </div>
+            <div id="toggle-stripe"
+              onclick="toggleGateway('stripe')"
+              role="switch"
+              tabindex="0"
+              onkeydown="if(event.key==='Enter'||event.key===' ')toggleGateway('stripe')"
+              style="width:48px;height:28px;border-radius:50px;background:#e2e8f0;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;">
+              <div style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:transform .2s;"></div>
+            </div>
+          </div>
+
+          <!-- Paystack toggle -->
+          <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
+            <div>
+              <label class="lbl" style="display:block;margin-bottom:4px;">Paystack Payments</label>
+              <p style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.50);margin:0;line-height:1.5;">Enables card, mobile money, bank transfer and USSD payments. Supports USD, GBP, EUR, GHS, ZAR, KES and more across Africa and globally.</p>
+            </div>
+            <div id="toggle-paystack"
+              onclick="toggleGateway('paystack')"
+              role="switch"
+              tabindex="0"
+              onkeydown="if(event.key==='Enter'||event.key===' ')toggleGateway('paystack')"
+              style="width:48px;height:28px;border-radius:50px;background:#e2e8f0;position:relative;cursor:pointer;transition:background .2s;flex-shrink:0;">
+              <div style="position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;box-shadow:0 1px 4px rgba(0,0,0,0.2);transition:transform .2s;"></div>
+            </div>
+          </div>
+
         </div>
 
         <div style="height:1px;background:#e2e8f0;margin:24px 0;"></div>
@@ -1710,31 +1743,80 @@ function confirmKycReject(uid) {
 
 /* ============ SETTINGS ============ */
 var SETTINGS_FIELDS = [
-  { id: 'set-platform-fee', min: 0, max: 100 },
-  { id: 'set-protection-fee', min: 0, max: 100 },
-  { id: 'set-withdrawal-fee', min: 0, max: 100 },
-  { id: 'set-early-payout-fee', min: 0, max: 100 },
-  { id: 'set-boost-24h', min: 0, max: null },
-  { id: 'set-boost-3d', min: 0, max: null },
-  { id: 'set-boost-7d', min: 0, max: null },
-  { id: 'set-holding-days', min: 0, max: 30 },
-  { id: 'set-referral-credit', min: 0, max: null }
+  { id: 'set-platform-fee',    min: 0, max: 100, key: 'platformFee',    parse: parseFloat },
+  { id: 'set-protection-fee',  min: 0, max: 100, key: 'protectionFee',  parse: parseFloat },
+  { id: 'set-withdrawal-fee',  min: 0, max: 100, key: 'withdrawalFee',  parse: parseFloat },
+  { id: 'set-early-payout-fee',min: 0, max: 100, key: 'earlyPayoutFee', parse: parseFloat },
+  { id: 'set-boost-24h',       min: 0, max: null, key: 'boost24h',      parse: parseFloat },
+  { id: 'set-boost-3d',        min: 0, max: null, key: 'boost3d',       parse: parseFloat },
+  { id: 'set-boost-7d',        min: 0, max: null, key: 'boost7d',       parse: parseFloat },
+  { id: 'set-holding-days',    min: 0, max: 30,   key: 'holdingDays',   parse: parseInt   },
+  { id: 'set-referral-credit', min: 0, max: null, key: 'referralCredit',parse: parseFloat }
 ];
 
+/* -- Toggle visual helper -- */
+var GATEWAY_STATE = { stripe: false, paystack: false };
+
+function setToggleVisual(gateway, enabled) {
+  var el = document.getElementById('toggle-' + gateway);
+  if (!el) return;
+  el.style.background = enabled ? '#2d8a5e' : '#e2e8f0';
+  el.querySelector('div').style.transform = enabled ? 'translateX(20px)' : 'translateX(0)';
+  GATEWAY_STATE[gateway] = enabled;
+}
+
+/* Change 3: toggleGateway */
+function toggleGateway(gateway) {
+  var newState = !GATEWAY_STATE[gateway];
+  setToggleVisual(gateway, newState);
+
+  if (window.firestore && window.db) {
+    var _f = window.firestore;
+    var payload = {};
+    payload[gateway === 'stripe' ? 'stripeEnabled' : 'paystackEnabled'] = newState;
+    _f.setDoc(_f.doc(window.db, 'config', 'platform'), payload, { merge: true })
+      .then(function() {
+        showToast((gateway === 'stripe' ? 'Stripe' : 'Paystack') + ' payments ' + (newState ? 'enabled' : 'disabled') + '.');
+      })
+      .catch(function(err) {
+        console.error('toggleGateway error:', err);
+        // Revert visual on failure
+        setToggleVisual(gateway, !newState);
+        showToast('Failed to update gateway setting.');
+      });
+  } else {
+    showToast((gateway === 'stripe' ? 'Stripe' : 'Paystack') + ' payments ' + (newState ? 'enabled' : 'disabled') + ' (demo mode).');
+  }
+}
+
+/* Change 4: loadSettings — reads Firestore and pre-fills all fields */
+function loadSettings() {
+  if (!window.firestore || !window.db) return;
+  var _f = window.firestore;
+  _f.getDoc(_f.doc(window.db, 'config', 'platform')).then(function(snap) {
+    if (!snap.exists()) return;
+    var d = snap.data();
+    SETTINGS_FIELDS.forEach(function(f) {
+      var el = document.getElementById(f.id);
+      if (el && d[f.key] !== undefined) el.value = d[f.key];
+    });
+    if (d.stripeEnabled  !== undefined) setToggleVisual('stripe',   !!d.stripeEnabled);
+    if (d.paystackEnabled !== undefined) setToggleVisual('paystack', !!d.paystackEnabled);
+  }).catch(function(err) {
+    console.warn('loadSettings error:', err);
+  });
+}
+
+/* Change 4 updated: saveSettings also writes stripeEnabled and paystackEnabled */
 function saveSettings() {
   var valid = true;
 
   SETTINGS_FIELDS.forEach(function(f) {
     var input = document.getElementById(f.id);
-    var value = parseFloat(input.value);
+    var value = f.parse(input.value);
     var fieldValid = !isNaN(value) && value >= f.min && (f.max === null || value <= f.max);
-
-    if (fieldValid) {
-      input.style.borderColor = '#e2e8f0';
-    } else {
-      input.style.borderColor = '#c81e1e';
-      valid = false;
-    }
+    input.style.borderColor = fieldValid ? '#e2e8f0' : '#c81e1e';
+    if (!fieldValid) valid = false;
   });
 
   if (!valid) {
@@ -1747,55 +1829,338 @@ function saveSettings() {
   btn.innerHTML = '<span class="btn-spinner"></span> Saving...';
   btn.disabled = true;
 
-  setTimeout(function() {
-    // In production:
-    // setDoc(doc(window.db, 'config', 'platform'), {
-    //   platformFee: parseFloat(document.getElementById('set-platform-fee').value),
-    //   protectionFee: parseFloat(document.getElementById('set-protection-fee').value),
-    //   withdrawalFee: parseFloat(document.getElementById('set-withdrawal-fee').value),
-    //   earlyPayoutFee: parseFloat(document.getElementById('set-early-payout-fee').value),
-    //   boost24h: parseFloat(document.getElementById('set-boost-24h').value),
-    //   boost3d: parseFloat(document.getElementById('set-boost-3d').value),
-    //   boost7d: parseFloat(document.getElementById('set-boost-7d').value),
-    //   holdingDays: parseInt(document.getElementById('set-holding-days').value),
-    //   referralCredit: parseFloat(document.getElementById('set-referral-credit').value),
-    //   updatedAt: serverTimestamp()
-    // }, { merge: true });
+  var payload = {};
+  SETTINGS_FIELDS.forEach(function(f) {
+    payload[f.key] = f.parse(document.getElementById(f.id).value);
+  });
+  payload.stripeEnabled  = GATEWAY_STATE.stripe;
+  payload.paystackEnabled = GATEWAY_STATE.paystack;
 
+  function finish(ok) {
     btn.innerHTML = originalText;
     btn.disabled = false;
-    showToast('Settings saved successfully.');
-  }, 1000);
+    showToast(ok ? 'Settings saved successfully.' : 'Save failed. Check console.');
+  }
+
+  if (window.firestore && window.db) {
+    var _f = window.firestore;
+    _f.setDoc(_f.doc(window.db, 'config', 'platform'), payload, { merge: true })
+      .then(function() { finish(true); })
+      .catch(function(err) { console.error('saveSettings error:', err); finish(false); });
+  } else {
+    setTimeout(function() { finish(true); }, 800);
+  }
+}
+
+/* ============ FIRESTORE DATA LOADERS (Change 5) ============ */
+
+/* -- Overview stats from Firestore -- */
+function loadOverviewStats() {
+  if (!window.firestore || !window.db) { animateStats(); return; }
+  var _f = window.firestore;
+  var db = window.db;
+
+  Promise.all([
+    _f.getDocs(_f.collection(db, 'users')),
+    _f.getDocs(_f.query(_f.collection(db, 'projects'))),
+    _f.getDocs(_f.query(_f.collection(db, 'disputes'), _f.where('status', '==', 'open'))),
+    _f.getDocs(_f.collection(db, 'payouts'))
+  ]).then(function(results) {
+    var usersSnap = results[0], projectsSnap = results[1],
+        disputesSnap = results[2], payoutsSnap = results[3];
+
+    var freelancers = 0, buyers = 0, platformFees = 0, totalPayouts = 0;
+    usersSnap.forEach(function(d) {
+      var u = d.data();
+      if (u.role === 'freelancer' && u.kycStatus === 'verified') freelancers++;
+      if (u.role === 'buyer') buyers++;
+    });
+    projectsSnap.forEach(function(d) {
+      var p = d.data();
+      platformFees += (p.platformFeeAmount || 0);
+    });
+    payoutsSnap.forEach(function(d) {
+      var p = d.data();
+      totalPayouts += (p.amountUsd || 0);
+    });
+
+    STATS.earnings = platformFees;
+    STATS.transactions = projectsSnap.size;
+    STATS.freelancers = freelancers;
+    STATS.buyers = buyers;
+    STATS.disputes = disputesSnap.size;
+    STATS.payouts = totalPayouts;
+    statsAnimated = false;
+    animateStats();
+  }).catch(function(err) {
+    console.warn('loadOverviewStats error:', err);
+    animateStats();
+  });
+}
+
+/* -- Users from Firestore -- */
+function loadUsers() {
+  if (!window.firestore || !window.db) { filterUsers(); return; }
+  var _f = window.firestore;
+  var rowsEl  = document.getElementById('users-rows');
+  var mobileEl = document.getElementById('users-mobile');
+  rowsEl.innerHTML  = '<div style="padding:20px;"><div class="sk" style="height:16px;width:60%;margin-bottom:12px;"></div><div class="sk" style="height:16px;width:80%;margin-bottom:12px;"></div><div class="sk" style="height:16px;width:50%;"></div></div>';
+  mobileEl.innerHTML = rowsEl.innerHTML;
+
+  _f.getDocs(_f.query(_f.collection(window.db, 'users'), _f.orderBy('createdAt', 'desc')))
+    .then(function(snap) {
+      USERS = [];
+      snap.forEach(function(d) {
+        var u = d.data();
+        var joined = u.createdAt && u.createdAt.toDate
+          ? u.createdAt.toDate().toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })
+          : (u.joinedDate || 'Unknown');
+        USERS.push({
+          uid: d.id,
+          name: u.name || u.displayName || 'Unknown',
+          email: u.email || '',
+          role: u.role || 'freelancer',
+          kycStatus: u.kycStatus || 'not_started',
+          joined: joined,
+          totalEarnings: u.totalEarnings || 0,
+          totalSpent: u.totalSpent || 0,
+          projectCount: u.projectCount || 0,
+          suspended: !!u.suspended,
+          banned: !!u.banned
+        });
+      });
+      filterUsers();
+    })
+    .catch(function(err) {
+      console.warn('loadUsers error:', err);
+      filterUsers();
+    });
+}
+
+/* -- Transactions from Firestore (projects collection) -- */
+function loadTransactions() {
+  if (!window.firestore || !window.db) { filterTransactions(); return; }
+  var _f = window.firestore;
+  var rowsEl = document.getElementById('tx-rows');
+  var mobileEl = document.getElementById('tx-mobile');
+  rowsEl.innerHTML = '<div style="padding:20px;"><div class="sk" style="height:16px;width:70%;margin-bottom:12px;"></div><div class="sk" style="height:16px;width:90%;"></div></div>';
+  mobileEl.innerHTML = rowsEl.innerHTML;
+
+  _f.getDocs(_f.query(_f.collection(window.db, 'projects'), _f.orderBy('createdAt', 'desc')))
+    .then(function(snap) {
+      TRANSACTIONS = [];
+      snap.forEach(function(d) {
+        var p = d.data();
+        var date = p.createdAt && p.createdAt.toDate
+          ? p.createdAt.toDate().toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })
+          : '';
+        TRANSACTIONS.push({
+          id: d.id,
+          project: p.projectTitle || p.title || 'Untitled',
+          buyer: p.buyerName || 'Unknown',
+          freelancer: p.freelancerName || 'Unknown',
+          gross: p.amount || 0,
+          fee: p.platformFeeAmount || 0,
+          net: p.netAmount || (p.amount || 0),
+          method: p.paymentMethod || 'Unknown',
+          date: date,
+          escrowStatus: p.escrowStatus || 'pending'
+        });
+      });
+      filterTransactions();
+    })
+    .catch(function(err) {
+      console.warn('loadTransactions error:', err);
+      filterTransactions();
+    });
+}
+
+/* -- Contracts from Firestore -- */
+function loadContracts() {
+  if (!window.firestore || !window.db) { renderContractsTable(); return; }
+  var _f = window.firestore;
+  var rowsEl = document.getElementById('contracts-rows');
+  rowsEl.innerHTML = '<div style="padding:20px;"><div class="sk" style="height:16px;width:60%;margin-bottom:12px;"></div><div class="sk" style="height:16px;width:80%;"></div></div>';
+
+  _f.getDocs(_f.query(
+    _f.collection(window.db, 'projects'),
+    _f.where('freelancerSigned', '==', true),
+    _f.where('buyerSigned', '==', true),
+    _f.orderBy('signedAt', 'desc')
+  ))
+    .then(function(snap) {
+      CONTRACTS = [];
+      snap.forEach(function(d) {
+        var p = d.data();
+        var date = p.signedAt && p.signedAt.toDate
+          ? p.signedAt.toDate().toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })
+          : '';
+        CONTRACTS.push({
+          id: d.id,
+          project: p.projectTitle || p.title || 'Untitled',
+          buyer: p.buyerName || 'Unknown',
+          freelancer: p.freelancerName || 'Unknown',
+          dateSigned: date,
+          amount: p.amount || 0,
+          pdfUrl: p.contractPdfUrl || '#'
+        });
+      });
+      renderContractsTable();
+    })
+    .catch(function(err) {
+      console.warn('loadContracts error:', err);
+      renderContractsTable();
+    });
+}
+
+/* -- Disputes from Firestore -- */
+function loadDisputes() {
+  if (!window.firestore || !window.db) { renderDisputesTable(); return; }
+  var _f = window.firestore;
+  var rowsEl = document.getElementById('disputes-rows');
+  rowsEl.innerHTML = '<div style="padding:20px;"><div class="sk" style="height:16px;width:60%;margin-bottom:12px;"></div><div class="sk" style="height:16px;width:80%;"></div></div>';
+
+  _f.getDocs(_f.query(_f.collection(window.db, 'disputes'), _f.orderBy('createdAt', 'desc')))
+    .then(function(snap) {
+      DISPUTES = [];
+      snap.forEach(function(d) {
+        var dis = d.data();
+        var date = dis.createdAt && dis.createdAt.toDate
+          ? dis.createdAt.toDate().toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })
+          : '';
+        DISPUTES.push({
+          id: d.id,
+          project: dis.projectTitle || 'Untitled',
+          buyer: dis.buyerName || 'Unknown',
+          freelancer: dis.freelancerName || 'Unknown',
+          dateRaised: date,
+          status: dis.status || 'open',
+          amount: dis.amount || 0,
+          contractPdfUrl: dis.contractPdfUrl || '#',
+          freelancerEvidence: dis.freelancerEvidence || '',
+          buyerEvidence: dis.buyerEvidence || ''
+        });
+      });
+      renderDisputesTable();
+    })
+    .catch(function(err) {
+      console.warn('loadDisputes error:', err);
+      renderDisputesTable();
+    });
+}
+
+/* -- Payouts from Firestore -- */
+function loadPayouts() {
+  if (!window.firestore || !window.db) { filterPayouts(); return; }
+  var _f = window.firestore;
+  var rowsEl = document.getElementById('payouts-rows');
+  rowsEl.innerHTML = '<div style="padding:20px;"><div class="sk" style="height:16px;width:60%;margin-bottom:12px;"></div><div class="sk" style="height:16px;width:80%;"></div></div>';
+
+  _f.getDocs(_f.query(_f.collection(window.db, 'payouts'), _f.orderBy('createdAt', 'desc')))
+    .then(function(snap) {
+      PAYOUTS = [];
+      snap.forEach(function(d) {
+        var p = d.data();
+        var date = p.createdAt && p.createdAt.toDate
+          ? p.createdAt.toDate().toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })
+          : '';
+        PAYOUTS.push({
+          id: d.id,
+          freelancer: p.freelancerName || 'Unknown',
+          email: p.email || '',
+          amountUsd: p.amountUsd || 0,
+          amountCrypto: p.amountCrypto || 0,
+          currency: p.currency || 'USDT',
+          wallet: p.walletAddress || '',
+          date: date,
+          status: p.status || 'processing'
+        });
+      });
+      filterPayouts();
+    })
+    .catch(function(err) {
+      console.warn('loadPayouts error:', err);
+      filterPayouts();
+    });
+}
+
+/* -- KYC pending from Firestore -- */
+function loadKyc() {
+  if (!window.firestore || !window.db) { renderKycCards(); return; }
+  var _f = window.firestore;
+  var grid = document.getElementById('kyc-grid');
+  grid.innerHTML = '<div class="glass" style="padding:24px;grid-column:1/-1;"><div class="sk" style="height:18px;width:40%;margin-bottom:12px;"></div><div class="sk" style="height:14px;width:70%;"></div></div>';
+
+  _f.getDocs(_f.query(
+    _f.collection(window.db, 'users'),
+    _f.where('kycStatus', '==', 'under-review'),
+    _f.orderBy('kycSubmittedAt', 'desc')
+  ))
+    .then(function(snap) {
+      KYC_PENDING = [];
+      snap.forEach(function(d) {
+        var u = d.data();
+        var date = u.kycSubmittedAt && u.kycSubmittedAt.toDate
+          ? u.kycSubmittedAt.toDate().toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' })
+          : '';
+        KYC_PENDING.push({
+          uid: d.id,
+          name: u.name || u.displayName || 'Unknown',
+          email: u.email || '',
+          submittedDate: date,
+          sessionId: u.kycSessionId || '',
+          documentType: u.kycDocumentType || 'Document',
+          kycStatus: 'pending'
+        });
+      });
+      renderKycCards();
+    })
+    .catch(function(err) {
+      console.warn('loadKyc error:', err);
+      renderKycCards();
+    });
 }
 
 /* ============ BOOT ============ */
 function boot() {
   buildNav();
   showSection('overview');
-  filterUsers();
-  filterTransactions();
-  renderContractsTable();
-  renderDisputesTable();
-  filterPayouts();
-  renderKycCards();
+  loadOverviewStats();
+  loadUsers();
+  loadTransactions();
+  loadContracts();
+  loadDisputes();
+  loadPayouts();
+  loadKyc();
+  loadSettings();
   document.getElementById('loading-overlay').style.display = 'none';
 }
 
-/*
-In production replace with real Firebase auth:
-onAuthStateChanged(window.auth, function(user) {
-  if (!user) { window.location.href = '/login.html'; return; }
-  getDoc(doc(window.db, 'users', user.uid)).then(function(snap) {
-    if (!snap.exists() || snap.data().role !== 'admin') {
+/* ── Auth check ── */
+(function waitForAuth() {
+  if (!window.authFn || !window.auth || !window.firestore) {
+    return setTimeout(waitForAuth, 50);
+  }
+  window.authFn.onAuthStateChanged(window.auth, function(user) {
+    if (!user) {
       window.location.href = '/login.html';
       return;
     }
-    document.getElementById('user-avatar').textContent = getInitials(snap.data().displayName || 'Admin');
-    boot();
+    var _f = window.firestore;
+    _f.getDoc(_f.doc(window.db, 'users', user.uid)).then(function(snap) {
+      if (!snap.exists() || snap.data().role !== 'admin') {
+        window.location.href = '/login.html';
+        return;
+      }
+      var name = snap.data().displayName || snap.data().name || 'Admin';
+      document.getElementById('user-avatar').textContent = getInitials(name);
+      boot();
+    }).catch(function(err) {
+      console.error('Auth error:', err);
+      window.location.href = '/login.html';
+    });
   });
-});
-*/
-boot();
+})();
 </script>
 </body>
 </html>
