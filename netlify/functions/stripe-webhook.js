@@ -29,6 +29,7 @@
 const crypto                           = require('crypto');
 const { initializeApp, cert, getApps } = require('firebase-admin/app');
 const { getFirestore, FieldValue }     = require('firebase-admin/firestore');
+const { getSettings } = require('./get-settings');
 
 /* ── Firebase Admin — lazy singleton ── */
 let _db = null;
@@ -298,6 +299,20 @@ exports.handler = async (event) => {
     return respond(200, { received: true });
   }
 
+  /* Fetch platform fee settings */
+  let settings;
+  try {
+    settings = await getSettings(db);
+  } catch (err) {
+    console.warn('[stripe-webhook] Could not fetch settings, using defaults:', err.message);
+    settings = { platformFeePercent: 2.5, projectProtectionPercent: 1.0 };
+  }
+
+  const baseAmount       = Number(amountUsd || 0);
+  const platformFeeAmt   = baseAmount * (settings.platformFeePercent / 100);
+  const protectionFeeAmt = baseAmount * (settings.projectProtectionPercent / 100);
+  const netAmount        = baseAmount - platformFeeAmt - protectionFeeAmt;
+
   /* ── 9. Update the Firestore project document ── */
   try {
     await projectRef.update({
@@ -306,6 +321,9 @@ exports.handler = async (event) => {
       paymentMethod:      'stripe',
       stripeSessionId:    sessionId,
       paymentStatus:      paymentStatus,
+      platformFee:        platformFeeAmt,
+      protectionFee:      protectionFeeAmt,
+      netAmount:          netAmount,
       paymentConfirmedAt: FieldValue.serverTimestamp(),
       updatedAt:          FieldValue.serverTimestamp(),
     });

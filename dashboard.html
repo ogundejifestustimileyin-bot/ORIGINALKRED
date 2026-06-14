@@ -249,7 +249,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
       <!-- SECTION A: Greeting + actions -->
       <div class="fu fu-1" style="margin-bottom:26px;">
         <p id="greeting" style="font-size:11px;font-weight:600;letter-spacing:1.4px;text-transform:uppercase;color:rgba(13,33,69,0.48);margin:0 0 5px;">GOOD MORNING</p>
-        <h2 style="font-size:26px;font-weight:800;color:#0d2145;letter-spacing:-0.7px;margin:0 0 5px;line-height:1.2;">Welcome back, Marco.</h2>
+        <h2 style="font-size:26px;font-weight:800;color:#0d2145;letter-spacing:-0.7px;margin:0 0 5px;line-height:1.2;">Welcome back, <span id="user-name">...</span>.</h2>
         <p style="font-size:14px;font-weight:500;color:rgba(13,33,69,0.52);margin:0 0 18px;">Here is what is happening with your business today.</p>
         <div style="display:flex;flex-wrap:wrap;gap:10px;">
           <button class="btn-green" onclick="openWithdrawModal()">
@@ -273,11 +273,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
             </div>
             <span class="badge badge-navy">All time</span>
           </div>
-          <div class="stat-val">€8,750</div>
+          <div class="stat-val" id="stat-earnings">€0</div>
           <div class="stat-lbl">Total Earnings</div>
           <div class="stat-trend" style="color:#2d8a5e;">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-            +14.2% vs last month
+            <span id="stat-earnings-trend">Loading...</span>
           </div>
         </div>
 
@@ -288,11 +288,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
             </div>
             <span class="badge badge-green">Withdraw</span>
           </div>
-          <div class="stat-val" style="color:#2d8a5e;">€1,240</div>
+          <div class="stat-val" id="stat-balance" style="color:#2d8a5e;">€0</div>
           <div class="stat-lbl">Available Balance</div>
           <div class="stat-trend" style="color:rgba(13,33,69,0.45);">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/></svg>
-            Last payout 3 days ago
+            <span id="stat-balance-trend">--</span>
           </div>
         </div>
 
@@ -303,11 +303,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
             </div>
             <span class="badge badge-blue">Active</span>
           </div>
-          <div class="stat-val" style="color:#1a56db;">4</div>
+          <div class="stat-val" id="stat-active" style="color:#1a56db;">--</div>
           <div class="stat-lbl">Active Projects</div>
           <div class="stat-trend" style="color:#2d8a5e;">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-            2 awaiting review
+            <span id="stat-active-trend">--</span>
           </div>
         </div>
 
@@ -318,11 +318,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
             </div>
             <span class="badge badge-amber">This year</span>
           </div>
-          <div class="stat-val" style="color:#856404;">23</div>
+          <div class="stat-val" id="stat-completed" style="color:#856404;">--</div>
           <div class="stat-lbl">Completed</div>
           <div class="stat-trend" style="color:#2d8a5e;">
             <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><polyline points="18 15 12 9 6 15"/></svg>
-            +5 this month
+            <span id="stat-completed-trend">--</span>
           </div>
         </div>
 
@@ -353,26 +353,26 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
                 <div style="width:8px;height:8px;border-radius:50%;background:#2d8a5e;flex-shrink:0;"></div>
                 <span style="font-size:13px;font-weight:600;color:#0d2145;">Earned</span>
               </div>
-              <span style="font-size:15px;font-weight:800;color:#0d2145;">€2,180</span>
+              <span id="month-earned" style="font-size:15px;font-weight:800;color:#0d2145;">€0</span>
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid #f0f2f6;">
               <div style="display:flex;align-items:center;gap:9px;">
                 <div style="width:8px;height:8px;border-radius:50%;background:#0d2145;flex-shrink:0;"></div>
                 <span style="font-size:13px;font-weight:600;color:#0d2145;">Withdrawn</span>
               </div>
-              <span style="font-size:15px;font-weight:800;color:#0d2145;">€940</span>
+              <span id="month-withdrawn" style="font-size:15px;font-weight:800;color:#0d2145;">€0</span>
             </div>
             <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;">
               <div style="display:flex;align-items:center;gap:9px;">
                 <div style="width:8px;height:8px;border-radius:50%;background:#856404;flex-shrink:0;"></div>
                 <span style="font-size:13px;font-weight:600;color:#0d2145;">In Escrow</span>
               </div>
-              <span style="font-size:15px;font-weight:800;color:#856404;">€1,100</span>
+              <span id="month-escrow" style="font-size:15px;font-weight:800;color:#856404;">€0</span>
             </div>
           </div>
           <div style="margin-top:16px;padding:15px;background:#e8f5ef;border-radius:13px;">
             <p class="lbl" style="margin:0 0 3px;">DAILY RATE THIS MONTH</p>
-            <p style="font-size:21px;font-weight:800;color:#2d8a5e;margin:0;letter-spacing:-0.5px;">€72.67 / day</p>
+            <p id="month-daily" style="font-size:21px;font-weight:800;color:#2d8a5e;margin:0;letter-spacing:-0.5px;">-- / day</p>
           </div>
         </div>
 
@@ -434,7 +434,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
     <div style="background:#e8f5ef;border-radius:13px;padding:15px 17px;margin-bottom:20px;display:flex;align-items:center;justify-content:space-between;">
       <div>
         <p class="lbl" style="margin:0 0 2px;color:rgba(45,138,94,0.65);">AVAILABLE</p>
-        <p style="font-size:22px;font-weight:800;color:#2d8a5e;margin:0;letter-spacing:-0.5px;">€1,240.50</p>
+        <p id="w-available" style="font-size:22px;font-weight:800;color:#2d8a5e;margin:0;letter-spacing:-0.5px;">€0.00</p>
       </div>
       <div style="width:42px;height:42px;background:rgba(45,138,94,0.15);border-radius:11px;display:flex;align-items:center;justify-content:center;">
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#2d8a5e" stroke-width="2" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
@@ -444,7 +444,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
       <label class="lbl" style="display:block;margin-bottom:7px;">Amount (EUR)</label>
       <div style="position:relative;">
         <span style="position:absolute;left:14px;top:50%;transform:translateY(-50%);font-size:15px;font-weight:700;color:rgba(13,33,69,0.38);">€</span>
-        <input type="number" id="w-amount" class="inp" placeholder="0.00" min="10" max="1240.50" step="0.01" oninput="calcFee()" style="padding-left:30px;font-size:15px;font-weight:700;"/>
+        <input type="number" id="w-amount" class="inp" placeholder="0.00" min="10" max="9999999" step="0.01" oninput="calcFee()" style="padding-left:30px;font-size:15px;font-weight:700;"/>
       </div>
     </div>
     <div style="margin-bottom:18px;">
@@ -538,8 +538,16 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
   </div>
 </div>
 
-<script>
-// ============ FIREBASE CONFIG (replace with real values before deploying) ============
+
+<script type="module">
+import { initializeApp }                            from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+import { getAuth, onAuthStateChanged, signOut }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+import { getFirestore, doc, getDoc, collection,
+         query, where, orderBy, limit, getDocs,
+         setDoc }                                   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+import { getMessaging, getToken, onMessage }        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js';
+
+// ── Firebase config ──────────────────────────────────────────────────────────
 var FIREBASE_CONFIG = {
   apiKey:            'AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk',
   authDomain:        'kreddlo.firebaseapp.com',
@@ -548,33 +556,23 @@ var FIREBASE_CONFIG = {
   messagingSenderId: '764500458567',
   appId:             '1:764500458567:web:2389d5cf8c688caafd0562'
 };
-// VAPID key from Firebase console > Cloud Messaging > Web configuration
-var VAPID_KEY = 'REPLACE_WITH_REAL_VAPID_KEY';
+var VAPID_KEY = 'BAMBTh5A3sX4MsxQD1xlJwgLrFR9bYs-IXJ4Xoq-Orn1gByn81_qvD2lTtbkM1R328JqXe63veD3fyK1ulPDb1c';
 
-// ============ DEMO DATA ============
-var DEMO = {
-  name: 'Marco Ricci', role: 'freelancer',
-  uid:  'demo-uid-001',
-  balance: 1240.50, earnings: 8750, active: 4, completed: 23
-};
+var app  = initializeApp(FIREBASE_CONFIG);
+var auth = getAuth(app);
+var db   = getFirestore(app);
 
-var PROJECTS = [
-  { id:'p1', title:'E-commerce Platform Redesign', buyer:'Claire Dubois',    amount:950, status:'in_progress', date:'12 May 2026', desc:'Full redesign and frontend development of an e-commerce platform for a French retail brand. Includes responsive layouts, product filtering, and cart integration.' },
-  { id:'p2', title:'Brand Identity and Logo System', buyer:'Heinrich Bauer', amount:480, status:'delivered',   date:'28 Apr 2026', desc:'Comprehensive brand identity design including primary logo, colour palette, typography guidelines, and brand usage manual for a Berlin-based startup.' },
-  { id:'p3', title:'Mobile App UI Design',           buyer:'Sofia Andersen', amount:620, status:'completed',   date:'15 Apr 2026', desc:'Complete UI/UX design for an iOS fitness tracking application. 24 screens including onboarding, dashboard, workout tracking, and social features.' },
-  { id:'p4', title:'WordPress Custom Plugin',        buyer:'Luca Ferrari',   amount:340, status:'in_progress', date:'8 May 2026',  desc:'Custom WordPress plugin for event management and ticketing with multiple event types, payment integration, and automated email confirmations.' },
-  { id:'p5', title:'Analytics Dashboard',            buyer:'Elena Novak',    amount:780, status:'completed',   date:'2 Apr 2026',  desc:'Interactive analytics dashboard built with React and D3.js for a Czech SaaS company. Real-time data visualisation, export tools, and role-based access.' }
-];
-
+// ── Status label map ─────────────────────────────────────────────────────────
 var STATUS = {
-  in_progress:{ label:'In Progress', cls:'badge-blue'  },
-  delivered:  { label:'Delivered',   cls:'badge-amber' },
-  completed:  { label:'Completed',   cls:'badge-green' },
-  disputed:   { label:'Disputed',    cls:'badge-red'   },
-  cancelled:  { label:'Cancelled',   cls:'badge-grey'  }
+  in_progress: { label: 'In Progress', cls: 'badge-blue'  },
+  delivered:   { label: 'Delivered',   cls: 'badge-amber' },
+  completed:   { label: 'Completed',   cls: 'badge-green' },
+  disputed:    { label: 'Disputed',    cls: 'badge-red'   },
+  cancelled:   { label: 'Cancelled',   cls: 'badge-grey'  },
+  funded:      { label: 'Funded',      cls: 'badge-blue'  }
 };
 
-// ============ NAV ============
+// ── Nav ───────────────────────────────────────────────────────────────────────
 var NAV = [
   { label:'Dashboard',     href:'/dashboard.html',          icon:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>' },
   { label:'Earnings',      href:'/dashboard-earnings.html', icon:'<svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' },
@@ -591,165 +589,77 @@ function buildNav() {
     var active = cur === n.href.replace('/','') ? ' active' : '';
     return '<a href="'+n.href+'" class="nav-link'+active+'">'+n.icon+n.label+'</a>';
   }).join('');
-  document.getElementById('mobile-nav').innerHTML = html;
+  document.getElementById('mobile-nav').innerHTML  = html;
   document.getElementById('desktop-nav').innerHTML = html;
 }
 
-// ============ MOBILE MENU ============
-function openMobileMenu() {
+// ── Mobile menu ───────────────────────────────────────────────────────────────
+window.openMobileMenu  = function() {
   document.getElementById('mobile-menu').classList.add('open');
   document.getElementById('mobile-dim').classList.add('open');
   document.body.style.overflow = 'hidden';
-}
-function closeMobileMenu() {
+};
+window.closeMobileMenu = function() {
   document.getElementById('mobile-menu').classList.remove('open');
   document.getElementById('mobile-dim').classList.remove('open');
   document.body.style.overflow = '';
-}
+};
 
-// ============ LOGOUT ============
-function handleLogout() { showToast('Signed out (demo mode)'); }
+// ── Logout ────────────────────────────────────────────────────────────────────
+function handleLogout() {
+  signOut(auth).then(function() {
+    window.location.href = '/login.html';
+  }).catch(function(err) {
+    console.error('Sign out error:', err);
+    showToast('Could not sign out. Try again.');
+  });
+}
 document.getElementById('mb-signout').onclick = handleLogout;
 document.getElementById('dt-signout').onclick = handleLogout;
 
-// ============ GREETING ============
+// ── Greeting ──────────────────────────────────────────────────────────────────
 function setGreeting() {
   var h = new Date().getHours();
   document.getElementById('greeting').textContent =
     h < 12 ? 'GOOD MORNING' : h < 17 ? 'GOOD AFTERNOON' : 'GOOD EVENING';
 }
 
-// ============ PROJECTS LIST ============
-function renderProjects() {
-  document.getElementById('projects-list').innerHTML = PROJECTS.map(function(p) {
-    var s = STATUS[p.status] || STATUS.in_progress;
-    return '<div class="proj-row" onclick="openProjModal(\''+p.id+'\')" role="button" tabindex="0">'
-      +'<div style="min-width:0;flex:1;">'
-        +'<div class="proj-title">'+p.title+'</div>'
-        +'<div class="proj-buyer">'+p.buyer+'</div>'
-      +'</div>'
-      +'<div style="display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:10px;">'
-        +'<span class="badge '+s.cls+'">'+s.label+'</span>'
-        +'<span style="font-size:14px;font-weight:800;color:#0d2145;">€'+p.amount+'</span>'
-      +'</div>'
-    +'</div>';
-  }).join('');
-}
-
-// ============ PROJECT MODAL ============
-function openProjModal(id) {
-  var p = PROJECTS.find(function(x){ return x.id===id; });
-  if (!p) return;
-  var s = STATUS[p.status] || STATUS.in_progress;
-  document.getElementById('pm-title').textContent  = p.title;
-  document.getElementById('pm-buyer').textContent  = 'Client: '+p.buyer;
-  document.getElementById('pm-amount').textContent = '€'+p.amount;
-  document.getElementById('pm-status').innerHTML   = '<span class="badge '+s.cls+'">'+s.label+'</span>';
-  document.getElementById('pm-date').textContent   = p.date;
-  document.getElementById('pm-net').textContent    = '€'+(p.amount*0.975).toFixed(2);
-  document.getElementById('pm-desc').textContent   = p.desc;
-  document.getElementById('project-modal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeProjModal() {
-  document.getElementById('project-modal').classList.remove('open');
-  document.body.style.overflow = '';
-}
-
-// ============ WITHDRAW MODAL ============
-function openWithdrawModal() {
-  document.getElementById('withdraw-modal').classList.add('open');
-  document.body.style.overflow = 'hidden';
-}
-function closeWithdrawModal() {
-  document.getElementById('withdraw-modal').classList.remove('open');
-  document.body.style.overflow = '';
-}
-function calcFee() {
-  var amt = parseFloat(document.getElementById('w-amount').value) || 0;
-  var block = document.getElementById('fee-block');
-  if (amt > 0) {
-    var fee = amt * 0.025;
-    document.getElementById('f-amount').textContent = '€'+amt.toFixed(2);
-    document.getElementById('f-fee').textContent    = '-€'+fee.toFixed(2);
-    document.getElementById('f-net').textContent    = '€'+(amt-fee).toFixed(2);
-    block.style.display = 'block';
-  } else {
-    block.style.display = 'none';
-  }
-}
-function submitWithdraw() {
-  var amt    = parseFloat(document.getElementById('w-amount').value) || 0;
-  var wallet = document.getElementById('w-wallet').value.trim();
-  if (amt < 10)      { showToast('Minimum withdrawal is €10'); return; }
-  if (amt > 1240.50) { showToast('Exceeds available balance'); return; }
-  if (!wallet)       { showToast('Please enter your wallet address'); return; }
-  closeWithdrawModal();
-  showToast('Withdrawal of €'+amt.toFixed(2)+' submitted');
-}
-
-// ============ SHARE PROFILE ============
-function copyProfileLink() {
-  var url = 'https://kreddlo.com/profile/marco-ricci';
-  if (navigator.clipboard) {
-    navigator.clipboard.writeText(url).then(function() { showToast('Profile link copied'); });
-  } else { showToast('kreddlo.com/profile/marco-ricci'); }
-}
-
-// ============ SIMPLE TOAST ============
-function showToast(msg) {
+// ── Toast ─────────────────────────────────────────────────────────────────────
+window.showToast = function(msg) {
   var t = document.getElementById('toast');
   t.textContent = msg;
   t.classList.add('show');
   setTimeout(function(){ t.classList.remove('show'); }, 3000);
-}
+};
 
-// ============ PUSH NOTIFICATION TOAST ============
+// ── Push toast ────────────────────────────────────────────────────────────────
 var _pushTimer = null;
-function showPushToast(title, body, url) {
+window.showPushToast = function(title, body, url) {
   clearTimeout(_pushTimer);
   document.getElementById('push-toast-title').textContent = title || 'New notification';
   document.getElementById('push-toast-msg').textContent   = body  || '';
   document.getElementById('push-toast-time').textContent  = 'Just now';
-
-  // If the notification has an action URL make the whole card clickable
   var pt = document.getElementById('push-toast');
   if (url) {
     pt.style.cursor = 'pointer';
-    pt.onclick = function(e) {
-      if (e.target.closest('.push-toast-close')) return;
-      window.location.href = url;
-    };
+    pt.onclick = function(e) { if (e.target.closest('.push-toast-close')) return; window.location.href = url; };
   } else {
-    pt.style.cursor = 'default';
-    pt.onclick = null;
+    pt.style.cursor = 'default'; pt.onclick = null;
   }
-
-  // Restart the shrink bar animation
   var bar = document.getElementById('push-toast-bar');
-  bar.classList.remove('shrink');
-  void bar.offsetWidth; // force reflow
-  bar.classList.add('shrink');
-
+  bar.classList.remove('shrink'); void bar.offsetWidth; bar.classList.add('shrink');
   pt.classList.add('show');
-
-  // Bell dot: mark as unread
   document.getElementById('bell-dot').style.display = 'block';
-
-  // Auto-dismiss after 5 seconds (matching bar animation)
   _pushTimer = setTimeout(hidePushToast, 5000);
-}
-
-function hidePushToast() {
+};
+window.hidePushToast = function() {
   clearTimeout(_pushTimer);
   document.getElementById('push-toast').classList.remove('show');
-}
+};
 
-// ============ FCM SETUP ============
-// State: 'unknown' | 'pending' | 'granted' | 'denied'
+// ── FCM ───────────────────────────────────────────────────────────────────────
 var _fcmState = 'unknown';
-
-function updateFCMBanner(state) {
+window.updateFCMBanner = function(state) {
   _fcmState = state;
   var banner = document.getElementById('fcm-banner');
   if (state === 'unknown' || state === 'pending') {
@@ -758,169 +668,297 @@ function updateFCMBanner(state) {
     banner.classList.remove('visible');
     banner.style.display = 'none';
   }
-}
+};
 
-function requestFCMPermission() {
-  // In demo mode (no real Firebase), simulate the permission request flow
-  if (VAPID_KEY === 'REPLACE_WITH_REAL_VAPID_KEY') {
-    _simulateFCMDemo();
-    return;
-  }
-  _initFCMReal();
-}
+window.requestFCMPermission = function() { _initFCMReal(); };
 
-// ---------- DEMO MODE FCM SIMULATION ----------
-// Used when Firebase is not yet connected so you can preview the full flow.
-function _simulateFCMDemo() {
-  updateFCMBanner('pending');
-  showToast('Requesting notification permission...');
-
-  // Attempt real browser permission so the demo feels authentic
-  if (!('Notification' in window)) {
-    showToast('Notifications not supported on this device');
-    updateFCMBanner('denied');
-    return;
-  }
-
-  Notification.requestPermission().then(function(permission) {
-    if (permission === 'granted') {
-      updateFCMBanner('granted');
-      showToast('Notifications enabled');
-      // Fire a simulated welcome push after a short delay
-      setTimeout(function() {
-        showPushToast(
-          'Notifications active',
-          'You will now receive real-time updates on payments and project activity.',
-          null
-        );
-      }, 1200);
-    } else {
-      updateFCMBanner('denied');
-      showToast('Notification permission denied');
-    }
-  }).catch(function() {
-    updateFCMBanner('denied');
-    showToast('Could not request permission');
-  });
-}
-
-// ---------- REAL FCM SETUP (runs after Firebase is initialized) ----------
 async function _initFCMReal() {
   try {
-    // Dynamic import of Firebase Messaging
-    var { getMessaging, getToken, onMessage } = await import(
-      'https://www.gstatic.com/firebasejs/10.12.0/firebase-messaging.js'
-    );
-
-    var messaging = getMessaging(window._firebaseApp);
-
-    // 1. Request browser notification permission
-    var permission = await Notification.requestPermission();
+    var messaging   = getMessaging(app);
+    var permission  = await Notification.requestPermission();
     if (permission !== 'granted') {
       updateFCMBanner('denied');
       showToast('Notification permission denied');
-      console.warn('[FCM] Permission denied by user');
       return;
     }
-
     updateFCMBanner('granted');
     showToast('Notifications enabled');
 
-    // 2. Get FCM registration token
     var currentToken = await getToken(messaging, { vapidKey: VAPID_KEY });
+    if (!currentToken) { console.warn('[FCM] No token obtained.'); return; }
 
-    if (!currentToken) {
-      console.warn('[FCM] No registration token available. Check VAPID key and service worker.');
-      return;
-    }
-
-    console.log('[FCM] Token obtained:', currentToken.slice(0, 20) + '...');
-
-    // 3. Compare with stored token in Firestore — only write if changed
-    try {
-      var { getFirestore, doc, getDoc, setDoc } = window.firestore || {};
-      if (getFirestore && DEMO.uid) {
-        var db = getFirestore(window._firebaseApp);
-        var userRef = doc(db, 'users', DEMO.uid);
+    // Save token to Firestore only if changed
+    var uid = auth.currentUser ? auth.currentUser.uid : null;
+    if (uid) {
+      try {
+        var userRef  = doc(db, 'users', uid);
         var userSnap = await getDoc(userRef);
-        var existingToken = userSnap.exists() ? (userSnap.data().fcmToken || null) : null;
-
-        if (existingToken !== currentToken) {
+        var existing = userSnap.exists() ? (userSnap.data().fcmToken || null) : null;
+        if (existing !== currentToken) {
           await setDoc(userRef, { fcmToken: currentToken }, { merge: true });
-          console.log('[FCM] Token updated in Firestore');
-        } else {
-          console.log('[FCM] Token unchanged, no Firestore write needed');
         }
-      }
-    } catch (firestoreErr) {
-      // Non-fatal: token was obtained, Firestore update failed
-      console.warn('[FCM] Could not update token in Firestore:', firestoreErr);
+      } catch(e) { console.warn('[FCM] Token Firestore write failed:', e); }
     }
 
-    // 4. Listen for foreground messages (app is open and focused)
     onMessage(messaging, function(payload) {
-      console.log('[FCM] Foreground message received:', payload);
-
       var title = (payload.notification && payload.notification.title) || 'New notification';
       var body  = (payload.notification && payload.notification.body)  || '';
       var url   = (payload.data && payload.data.url) || null;
-
-      // Show the rich push toast
       showPushToast(title, body, url);
     });
-
-    console.log('[FCM] onMessage listener registered');
-
-  } catch (err) {
+  } catch(err) {
     console.error('[FCM] Setup failed:', err);
     showToast('Could not enable notifications');
     updateFCMBanner('unknown');
   }
 }
 
-// ============ DEMO: simulate an incoming push after 8 seconds ============
-// This lets you preview the push toast UI without a real FCM server.
-// Remove this block in production.
-function _demoIncomingPush() {
-  var pushes = [
-    { title: 'Payment received',      body: 'Claire Dubois funded €950 for E-commerce Platform Redesign. Work can begin.',              url: '/dashboard-projects.html' },
-    { title: 'Work approved',         body: 'Sofia Andersen approved Mobile App UI Design. Your payment has been released.',           url: '/dashboard-earnings.html' },
-    { title: 'Contract ready',        body: 'Both parties have signed the agreement for Analytics Dashboard.',                          url: '/dashboard-contracts.html' },
-    { title: 'Withdrawal processed',  body: 'Your withdrawal of €940 is on its way to your USDT wallet.',                              url: '/dashboard-withdraw.html' }
-  ];
-  var pick = pushes[Math.floor(Math.random() * pushes.length)];
-  showPushToast(pick.title, pick.body, pick.url);
+// ── Render projects list ──────────────────────────────────────────────────────
+var _currentProjects = [];
+
+function renderProjects(projects) {
+  _currentProjects = projects;
+  if (!projects.length) {
+    document.getElementById('projects-list').innerHTML =
+      '<p style="padding:20px;text-align:center;font-size:13px;font-weight:500;color:rgba(13,33,69,0.45);">No projects yet.</p>';
+    return;
+  }
+  document.getElementById('projects-list').innerHTML = projects.map(function(p, i) {
+    var s   = STATUS[p.status] || STATUS.in_progress;
+    var amt = p.netAmount || p.amount || 0;
+    return '<div class="proj-row" onclick="openProjModal('+i+')" role="button" tabindex="0">'
+      + '<div style="min-width:0;flex:1;">'
+        + '<div class="proj-title">'+escHtml(p.title || p.projectTitle || 'Untitled')+'</div>'
+        + '<div class="proj-buyer">'+escHtml(p.buyerName || p.clientName || 'Client')+'</div>'
+      + '</div>'
+      + '<div style="display:flex;align-items:center;gap:10px;flex-shrink:0;margin-left:10px;">'
+        + '<span class="badge '+s.cls+'">'+s.label+'</span>'
+        + '<span style="font-size:14px;font-weight:800;color:#0d2145;">$'+Number(amt).toFixed(0)+'</span>'
+      + '</div>'
+    + '</div>';
+  }).join('');
 }
 
-// ============ STEP 18A: PULL TO REFRESH ============
-// Primary data refresh for this page — re-renders projects and stats from demo data.
-// Swap the body of refreshPageData() for a real Firestore fetch when Firebase is live.
+// ── Project modal ─────────────────────────────────────────────────────────────
+window.openProjModal = function(idx) {
+  var p = _currentProjects[idx];
+  if (!p) return;
+  var s   = STATUS[p.status] || STATUS.in_progress;
+  var amt = p.netAmount || p.amount || 0;
+  document.getElementById('pm-title').textContent  = p.title || p.projectTitle || 'Untitled';
+  document.getElementById('pm-buyer').textContent  = 'Client: '+(p.buyerName || p.clientName || 'Client');
+  document.getElementById('pm-amount').textContent = '$'+Number(amt).toFixed(2);
+  document.getElementById('pm-status').innerHTML   = '<span class="badge '+s.cls+'">'+s.label+'</span>';
+  document.getElementById('pm-date').textContent   = p.createdAt
+    ? (p.createdAt.toDate ? p.createdAt.toDate().toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : p.createdAt)
+    : '--';
+  document.getElementById('pm-net').textContent    = '$'+Number(p.netAmount || amt * 0.975).toFixed(2);
+  document.getElementById('pm-desc').textContent   = p.description || p.projectDescription || 'No description provided.';
+  document.getElementById('project-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+};
+window.closeProjModal = function() {
+  document.getElementById('project-modal').classList.remove('open');
+  document.body.style.overflow = '';
+};
+
+// ── Withdraw modal ────────────────────────────────────────────────────────────
+var _userBalance = 0;
+window.openWithdrawModal = function() {
+  document.getElementById('withdraw-modal').classList.add('open');
+  document.body.style.overflow = 'hidden';
+};
+window.closeWithdrawModal = function() {
+  document.getElementById('withdraw-modal').classList.remove('open');
+  document.body.style.overflow = '';
+};
+window.calcFee = function() {
+  var amt   = parseFloat(document.getElementById('w-amount').value) || 0;
+  var block = document.getElementById('fee-block');
+  if (amt > 0) {
+    var fee = amt * 0.025;
+    document.getElementById('f-amount').textContent = '$'+amt.toFixed(2);
+    document.getElementById('f-fee').textContent    = '-$'+fee.toFixed(2);
+    document.getElementById('f-net').textContent    = '$'+(amt-fee).toFixed(2);
+    block.style.display = 'block';
+  } else {
+    block.style.display = 'none';
+  }
+};
+window.submitWithdraw = function() {
+  var amt    = parseFloat(document.getElementById('w-amount').value) || 0;
+  var wallet = document.getElementById('w-wallet').value.trim();
+  if (amt < 10)           { showToast('Minimum withdrawal is $10'); return; }
+  if (amt > _userBalance) { showToast('Exceeds available balance'); return; }
+  if (!wallet)            { showToast('Please enter your wallet address'); return; }
+  closeWithdrawModal();
+  window.location.href = '/dashboard-withdraw.html';
+};
+
+// ── Share profile ─────────────────────────────────────────────────────────────
+window.copyProfileLink = function() {
+  var uid  = auth.currentUser ? auth.currentUser.uid : '';
+  var url  = 'https://kreddlo.com/profile/'+uid;
+  if (navigator.clipboard) {
+    navigator.clipboard.writeText(url).then(function() { showToast('Profile link copied'); });
+  } else { showToast(url); }
+};
+
+// ── Escape key ────────────────────────────────────────────────────────────────
+document.addEventListener('keydown', function(e) {
+  if (e.key !== 'Escape') return;
+  closeProjModal(); closeWithdrawModal(); closeMobileMenu(); hidePushToast();
+});
+
+// ── Utility ───────────────────────────────────────────────────────────────────
+function escHtml(str) {
+  return String(str)
+    .replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;')
+    .replace(/"/g,'&quot;').replace(/'/g,'&#39;');
+}
+function fmt(n) { return '$'+Number(n||0).toLocaleString('en-US',{minimumFractionDigits:0,maximumFractionDigits:0}); }
+
+// ── Load dashboard data from Firestore ───────────────────────────────────────
+async function loadDashboard(uid) {
+  try {
+    // 1. User document
+    var userSnap = await getDoc(doc(db, 'users', uid));
+    var user     = userSnap.exists() ? userSnap.data() : {};
+
+    var name    = user.name || user.displayName || 'there';
+    var balance = Number(user.balance || user.availableBalance || 0);
+    _userBalance = balance;
+
+    // Update name in header
+    var nameEl = document.getElementById('user-name');
+    if (nameEl) nameEl.textContent = name.split(' ')[0];
+
+    // Avatar initials
+    var parts = name.trim().split(' ');
+    document.getElementById('user-avatar').textContent =
+      parts.length >= 2
+        ? parts[0][0] + parts[parts.length-1][0]
+        : name.slice(0,2).toUpperCase();
+
+    // Update withdraw modal max and available display
+    document.getElementById('w-amount').max = balance.toFixed(2);
+    var wAvail = document.getElementById('w-available');
+    if (wAvail) wAvail.textContent = '$'+balance.toFixed(2);
+
+    // 2. Stats
+    document.getElementById('stat-balance').textContent = fmt(balance);
+    document.getElementById('stat-balance-trend').textContent =
+      user.lastWithdrawalDate ? 'Last payout '+_relativeDate(user.lastWithdrawalDate) : 'No payouts yet';
+
+    var totalEarnings = Number(user.totalEarnings || 0);
+    document.getElementById('stat-earnings').textContent       = fmt(totalEarnings);
+    document.getElementById('stat-earnings-trend').textContent = totalEarnings > 0 ? 'All time earnings' : 'No earnings yet';
+
+    // 3. Projects — fetch last 5 as freelancer
+    var projQ = query(
+      collection(db, 'projects'),
+      where('freelancerUid', '==', uid),
+      orderBy('createdAt', 'desc'),
+      limit(5)
+    );
+    var projSnap = await getDocs(projQ);
+    var projects = projSnap.docs.map(function(d) { return Object.assign({ id: d.id }, d.data()); });
+
+    // Count active (in_progress or funded)
+    var allProjQ = query(
+      collection(db, 'projects'),
+      where('freelancerUid', '==', uid),
+      where('status', 'in', ['in_progress', 'funded'])
+    );
+    var activeSnap  = await getDocs(allProjQ);
+    var activeCount = activeSnap.size;
+
+    document.getElementById('stat-active').textContent       = activeCount;
+    document.getElementById('stat-active-trend').textContent = activeCount === 1 ? '1 active project' : activeCount+' active projects';
+
+    // Count completed
+    var doneQ = query(
+      collection(db, 'projects'),
+      where('freelancerUid', '==', uid),
+      where('status', '==', 'completed')
+    );
+    var doneSnap = await getDocs(doneQ);
+    document.getElementById('stat-completed').textContent       = doneSnap.size;
+    document.getElementById('stat-completed-trend').textContent = doneSnap.size + ' total completed';
+
+    // 4. Render projects list
+    renderProjects(projects);
+
+    // 5. This Month summary
+    var now        = new Date();
+    var monthStart = new Date(now.getFullYear(), now.getMonth(), 1);
+
+    var monthEarned    = 0;
+    var monthWithdrawn = Number(user.thisMonthWithdrawn || 0);
+    var monthEscrow    = 0;
+
+    projects.forEach(function(p) {
+      if (!p.createdAt) return;
+      var d = p.createdAt.toDate ? p.createdAt.toDate() : new Date(p.createdAt);
+      if (d >= monthStart) {
+        if (p.status === 'completed') monthEarned  += Number(p.netAmount || 0);
+        if (p.escrowStatus === 'funded' && p.status !== 'completed') monthEscrow += Number(p.amount || 0);
+      }
+    });
+
+    document.getElementById('month-earned').textContent    = fmt(monthEarned);
+    document.getElementById('month-withdrawn').textContent = fmt(monthWithdrawn);
+    document.getElementById('month-escrow').textContent    = fmt(monthEscrow);
+
+    var daysInMonth = now.getDate();
+    var dailyRate   = daysInMonth > 0 ? monthEarned / daysInMonth : 0;
+    document.getElementById('month-daily').textContent = '$'+dailyRate.toFixed(2)+' / day';
+
+    // 6. Unread notifications badge
+    try {
+      var notifQ    = query(collection(db, 'users', uid, 'notifications'), where('read', '==', false), limit(1));
+      var notifSnap = await getDocs(notifQ);
+      if (!notifSnap.empty) document.getElementById('bell-dot').style.display = 'block';
+    } catch(e) { /* non-fatal */ }
+
+  } catch(err) {
+    console.error('[dashboard] loadDashboard failed:', err);
+    showToast('Could not load dashboard data');
+  }
+}
+
+function _relativeDate(val) {
+  try {
+    var d = val && val.toDate ? val.toDate() : new Date(val);
+    var diff = Math.floor((Date.now() - d.getTime()) / 86400000);
+    if (diff === 0) return 'today';
+    if (diff === 1) return 'yesterday';
+    return diff + ' days ago';
+  } catch(e) { return ''; }
+}
+
+// ── Pull to refresh ───────────────────────────────────────────────────────────
 function refreshPageData() {
-  renderProjects();
-  // In production: re-query Firestore for user doc, balance, active project count, etc.
-  // Example: return fetchUserDashboard(DEMO.uid);
+  var uid = auth.currentUser ? auth.currentUser.uid : null;
+  if (!uid) return Promise.resolve();
+  return loadDashboard(uid);
 }
 
 (function initPullToRefresh() {
-  var touchStartY  = 0;
-  var touchStartX  = 0;
-  var isPulling    = false;
-  var PTR_THRESHOLD = 80; // px downward drag required to trigger
-  var indicator    = document.getElementById('ptr-indicator');
-  var label        = document.getElementById('ptr-label');
+  var touchStartY = 0, touchStartX = 0, isPulling = false;
+  var PTR_THRESHOLD = 80;
+  var indicator = document.getElementById('ptr-indicator');
+  var label     = document.getElementById('ptr-label');
   var _ptrCooldown = false;
 
   document.addEventListener('touchstart', function(e) {
-    touchStartY = e.touches[0].clientY;
-    touchStartX = e.touches[0].clientX;
-    isPulling   = false;
+    touchStartY = e.touches[0].clientY; touchStartX = e.touches[0].clientX; isPulling = false;
   }, { passive: true });
 
   document.addEventListener('touchmove', function(e) {
     if (_ptrCooldown) return;
     var dy = e.touches[0].clientY - touchStartY;
     var dx = Math.abs(e.touches[0].clientX - touchStartX);
-    // Only activate pull if scrolled to top, dragging mostly downward, no modal open
     if (window.scrollY < 10 && dy > 30 && dx < 60 && !document.body.classList.contains('modal-open')) {
       isPulling = true;
       label.textContent = dy > PTR_THRESHOLD ? 'Release to refresh' : 'Pull to refresh';
@@ -932,173 +970,107 @@ function refreshPageData() {
     if (!isPulling) return;
     isPulling = false;
     var dy = e.changedTouches[0].clientY - touchStartY;
-
     if (window.scrollY < 10 && dy > PTR_THRESHOLD) {
-      // Trigger refresh
       _ptrCooldown = true;
       label.textContent = 'Refreshing';
       indicator.classList.remove('ptr-pulling');
       indicator.classList.add('ptr-loading');
-
-      // Haptic pulse on refresh trigger
       try { navigator.vibrate && navigator.vibrate([30, 40, 30]); } catch(e) {}
-
-      // Run the data fetch — supports both sync and promise returns
       var result = refreshPageData();
       var done = function() {
         indicator.classList.remove('ptr-loading');
-        // Small delay so the indicator doesn't flash off instantly
-        setTimeout(function() {
-          _ptrCooldown = false;
-          showToast('Dashboard refreshed');
-        }, 300);
+        setTimeout(function() { _ptrCooldown = false; showToast('Dashboard refreshed'); }, 300);
       };
-      if (result && typeof result.then === 'function') {
-        result.then(done).catch(done);
-      } else {
-        setTimeout(done, 800); // Simulate async for demo
-      }
+      if (result && typeof result.then === 'function') result.then(done).catch(done);
+      else setTimeout(done, 800);
     } else {
-      // Dragged but not far enough — retract
       indicator.classList.remove('ptr-pulling');
     }
   }, { passive: true });
 })();
 
-// ============ STEP 18B: HAPTIC FEEDBACK ON CONFIRM/APPROVE BUTTONS ============
+// ── Haptic ────────────────────────────────────────────────────────────────────
 (function initHaptic() {
-  // Runs once on boot — intercepts clicks on any element matching the selector.
-  // Works for dynamically added buttons too via event delegation on document.
   document.addEventListener('click', function(e) {
     var btn = e.target.closest('button, [role="button"]');
     if (!btn) return;
     var txt = (btn.textContent || '').trim().toLowerCase();
-    // Target: Confirm, Approve, Submit, and Withdraw confirm variants
-    var isConfirm = /^(confirm|approve|submit withdrawal|confirm withdrawal)/.test(txt);
-    if (isConfirm) {
+    if (/^(confirm|approve|submit withdrawal|confirm withdrawal)/.test(txt)) {
       try { navigator.vibrate && navigator.vibrate(50); } catch(err) {}
     }
   }, { passive: true });
-
-  // Also attach directly to the Confirm Withdrawal button for certainty
-  // (it renders immediately so we can target it now)
   var withdrawBtn = document.querySelector('#withdraw-modal .btn-green');
-  if (withdrawBtn) {
-    withdrawBtn.addEventListener('click', function() {
-      try { navigator.vibrate && navigator.vibrate(50); } catch(err) {}
-    }, { passive: true });
-  }
+  if (withdrawBtn) withdrawBtn.addEventListener('click', function() {
+    try { navigator.vibrate && navigator.vibrate(50); } catch(err) {}
+  }, { passive: true });
 })();
 
-// ============ STEP 18C: SWIPE TO GO BACK ============
+// ── Swipe back ────────────────────────────────────────────────────────────────
 (function initSwipeBack() {
-  var touchStartX   = 0;
-  var touchStartY   = 0;
-  var EDGE_ZONE     = 30;  // px from left edge to begin recognising swipe
-  var SWIPE_MIN_DX  = 60;  // minimum horizontal travel to trigger back
-  var hint          = document.getElementById('swipe-hint');
-  var hintTimer     = null;
-  var isEdgeSwipe   = false;
+  var touchStartX = 0, touchStartY = 0, EDGE_ZONE = 30, SWIPE_MIN_DX = 60, isEdgeSwipe = false;
+  var hint = document.getElementById('swipe-hint'), hintTimer = null;
 
   document.addEventListener('touchstart', function(e) {
-    touchStartX  = e.touches[0].clientX;
-    touchStartY  = e.touches[0].clientY;
-    isEdgeSwipe  = touchStartX < EDGE_ZONE;
-
-    // Show subtle left-edge glow when touch starts in the edge zone
-    if (isEdgeSwipe) {
-      clearTimeout(hintTimer);
-      hint.classList.add('active');
-    }
+    touchStartX = e.touches[0].clientX; touchStartY = e.touches[0].clientY;
+    isEdgeSwipe = touchStartX < EDGE_ZONE;
+    if (isEdgeSwipe) { clearTimeout(hintTimer); hint.classList.add('active'); }
   }, { passive: true });
 
   document.addEventListener('touchend', function(e) {
     if (!isEdgeSwipe) return;
-
-    // Hide hint
-    hint.classList.remove('active');
-    clearTimeout(hintTimer);
-
+    hint.classList.remove('active'); clearTimeout(hintTimer);
     var dx = e.changedTouches[0].clientX - touchStartX;
     var dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
-
-    // Must be mostly horizontal, rightward, and past threshold
     if (dx > SWIPE_MIN_DX && dy < dx * 0.6) {
-      // Don't navigate back if a modal is open — close it instead
-      var projectOpen  = document.getElementById('project-modal').classList.contains('open');
-      var withdrawOpen = document.getElementById('withdraw-modal').classList.contains('open');
-      var menuOpen     = document.getElementById('mobile-menu').classList.contains('open');
-
-      if (menuOpen)     { closeMobileMenu(); return; }
-      if (projectOpen)  { closeProjModal();  return; }
-      if (withdrawOpen) { closeWithdrawModal(); return; }
-
-      // Haptic confirm before nav
+      if (document.getElementById('mobile-menu').classList.contains('open'))    { closeMobileMenu();    return; }
+      if (document.getElementById('project-modal').classList.contains('open'))  { closeProjModal();     return; }
+      if (document.getElementById('withdraw-modal').classList.contains('open')) { closeWithdrawModal(); return; }
       try { navigator.vibrate && navigator.vibrate(30); } catch(err) {}
       window.history.back();
     }
-
     isEdgeSwipe = false;
   }, { passive: true });
 
-  // Clean up hint if finger lifted without completing swipe
   document.addEventListener('touchcancel', function() {
-    hint.classList.remove('active');
-    isEdgeSwipe = false;
+    hint.classList.remove('active'); isEdgeSwipe = false;
   }, { passive: true });
 })();
 
-// ============ ESCAPE KEY ============
-document.addEventListener('keydown', function(e) {
-  if (e.key !== 'Escape') return;
-  closeProjModal(); closeWithdrawModal(); closeMobileMenu(); hidePushToast();
-});
+// ── Auth guard + boot ─────────────────────────────────────────────────────────
+setGreeting();
+buildNav();
 
-// ============ BOOT — runs immediately, no waiting ============
-(function boot() {
-  // Avatar initials
-  var parts = DEMO.name.trim().split(' ');
-  document.getElementById('user-avatar').textContent =
-    parts.length >= 2 ? parts[0][0]+parts[parts.length-1][0] : DEMO.name.slice(0,2).toUpperCase();
+onAuthStateChanged(auth, function(user) {
+  if (!user) {
+    window.location.href = '/login.html';
+    return;
+  }
 
-  // Greeting
-  setGreeting();
+  // Show skeleton avatar placeholder
+  document.getElementById('user-avatar').textContent = '..';
 
-  // Nav
-  buildNav();
-
-  // Projects
-  renderProjects();
-
-  // Bell dot (demo: show unread)
-  document.getElementById('bell-dot').style.display = 'block';
-
-  // FCM banner: show if permission not yet granted
+  // FCM banner check
   if ('Notification' in window) {
     if (Notification.permission === 'granted') {
       updateFCMBanner('granted');
-      // Real FCM init if Firebase is connected
-      if (VAPID_KEY !== 'REPLACE_WITH_REAL_VAPID_KEY') {
-        _initFCMReal();
-      }
+      _initFCMReal();
     } else if (Notification.permission === 'denied') {
       updateFCMBanner('denied');
     } else {
-      // 'default' — not yet asked
       updateFCMBanner('unknown');
     }
   } else {
-    // Browser doesn't support notifications — hide banner silently
-    updateFCMBanner('granted'); // treat as resolved so banner hides
+    updateFCMBanner('granted');
   }
 
-  // Demo: fire a simulated incoming push after 8 seconds so you can see the toast
-  setTimeout(_demoIncomingPush, 8000);
-
-  // Hide loading overlay
+  // Load real data then hide overlay
   var ov = document.getElementById('loading-overlay');
-  ov.style.display = 'none';
-})();
+  loadDashboard(user.uid).then(function() {
+    ov.style.display = 'none';
+  }).catch(function() {
+    ov.style.display = 'none';
+  });
+});
 </script>
 </body>
 </html>

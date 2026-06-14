@@ -18,6 +18,9 @@ const DEFAULTS = {
   referralCreditAmount:      2,
   stripeEnabled:             false,
   paystackEnabled:           false,
+  twitterUrl:                '',
+  linkedinUrl:               '',
+  instagramUrl:              '',
 };
 
 /**

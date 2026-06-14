@@ -117,23 +117,37 @@
   <!-- Firebase CDN -->
   <script type="module">
     import { initializeApp }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-    import { getFirestore }   from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+    import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
     import { getAuth }        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
     import { getStorage }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
     const firebaseConfig = {
-      apiKey:            "{{FIREBASE_API_KEY}}",
-      authDomain:        "{{FIREBASE_AUTH_DOMAIN}}",
-      projectId:         "{{FIREBASE_PROJECT_ID}}",
-      storageBucket:     "{{FIREBASE_STORAGE_BUCKET}}",
-      messagingSenderId: "{{FIREBASE_MESSAGING_SENDER_ID}}",
-      appId:             "{{FIREBASE_APP_ID}}",
+      apiKey:            "AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk",
+      authDomain:        "kreddlo.firebaseapp.com",
+      storageBucket:     "kreddlo.firebasestorage.app",
+      messagingSenderId: "764500458567",
+      appId:             "1:764500458567:web:2389d5cf8c688caafd0562",
     };
 
     const app     = initializeApp(firebaseConfig);
     window.db     = getFirestore(app);
     window.auth   = getAuth(app);
     window.storage = getStorage(app);
+
+    // Load social links from Firestore config
+    (async () => {
+      try {
+        const snap = await getDoc(doc(window.db, 'config', 'platform'));
+        const s = snap.exists() ? snap.data() : {};
+        const links = { twitter: s.twitterUrl || '', linkedin: s.linkedinUrl || '', instagram: s.instagramUrl || '' };
+        ['twitter', 'linkedin', 'instagram'].forEach(name => {
+          const el = document.getElementById('social-' + name);
+          if (!el) return;
+          if (links[name]) { el.href = links[name]; el.style.display = ''; }
+          else { el.style.display = 'none'; }
+        });
+      } catch (e) { /* silent fail */ }
+    })();
   </script>
 </head>
 
@@ -537,13 +551,13 @@
         <div class="flex flex-col md:items-end gap-4">
           <p class="text-navy font-700 text-[13px] uppercase tracking-widest mb-1">Connect</p>
           <div class="flex items-center gap-4">
-            <a href="#" aria-label="Twitter" class="w-9 h-9 rounded-xl bg-navy/5 hover:bg-navy/10 flex items-center justify-center transition-colors">
+            <a id="social-twitter" href="#" target="_blank" rel="noopener" aria-label="Twitter" style="display:none;" class="w-9 h-9 rounded-xl bg-navy/5 hover:bg-navy/10 flex items-center justify-center transition-colors">
               <svg width="16" height="16" fill="#0d2145" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-4.714-6.231-5.401 6.231H2.744l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
             </a>
-            <a href="#" aria-label="LinkedIn" class="w-9 h-9 rounded-xl bg-navy/5 hover:bg-navy/10 flex items-center justify-center transition-colors">
+            <a id="social-linkedin" href="#" target="_blank" rel="noopener" aria-label="LinkedIn" style="display:none;" class="w-9 h-9 rounded-xl bg-navy/5 hover:bg-navy/10 flex items-center justify-center transition-colors">
               <svg width="16" height="16" fill="#0d2145" viewBox="0 0 24 24"><path d="M16 8a6 6 0 016 6v7h-4v-7a2 2 0 00-2-2 2 2 0 00-2 2v7h-4v-7a6 6 0 016-6zM2 9h4v12H2z"/><circle cx="4" cy="4" r="2"/></svg>
             </a>
-            <a href="#" aria-label="Instagram" class="w-9 h-9 rounded-xl bg-navy/5 hover:bg-navy/10 flex items-center justify-center transition-colors">
+            <a id="social-instagram" href="#" target="_blank" rel="noopener" aria-label="Instagram" style="display:none;" class="w-9 h-9 rounded-xl bg-navy/5 hover:bg-navy/10 flex items-center justify-center transition-colors">
               <svg width="16" height="16" fill="none" stroke="#0d2145" stroke-width="2" viewBox="0 0 24 24"><rect x="2" y="2" width="20" height="20" rx="5" ry="5"/><circle cx="12" cy="12" r="4"/><circle cx="17.5" cy="6.5" r="0.5" fill="#0d2145"/></svg>
             </a>
           </div>

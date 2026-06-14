@@ -833,6 +833,28 @@ input[type=range]::-moz-range-thumb {
 
         </div>
 
+        <!-- Social Links -->
+        <div class="mt-6" style="margin-top:24px;">
+          <p class="text-sm font-medium text-gray-500 uppercase tracking-wide mb-3" style="font-size:12px;font-weight:700;color:rgba(13,33,69,0.45);letter-spacing:1.2px;text-transform:uppercase;margin:0 0 12px 0;">Social Links</p>
+          <div class="space-y-3" style="display:grid;gap:12px;">
+            <div>
+              <label class="lbl" style="display:block;margin-bottom:8px;">Twitter / X URL</label>
+              <input id="twitterUrl" type="url" placeholder="https://x.com/yourhandle"
+                     class="input-field" style="width:100%;box-sizing:border-box;"/>
+            </div>
+            <div>
+              <label class="lbl" style="display:block;margin-bottom:8px;">LinkedIn URL</label>
+              <input id="linkedinUrl" type="url" placeholder="https://linkedin.com/company/kreddlo"
+                     class="input-field" style="width:100%;box-sizing:border-box;"/>
+            </div>
+            <div>
+              <label class="lbl" style="display:block;margin-bottom:8px;">Instagram URL</label>
+              <input id="instagramUrl" type="url" placeholder="https://instagram.com/kreddlo"
+                     class="input-field" style="width:100%;box-sizing:border-box;"/>
+            </div>
+          </div>
+        </div>
+
         <div style="height:1px;background:#e2e8f0;margin:24px 0;"></div>
 
         <div style="display:flex;align-items:center;justify-content:space-between;gap:16px;flex-wrap:wrap;">
@@ -1802,6 +1824,9 @@ function loadSettings() {
     });
     if (d.stripeEnabled  !== undefined) setToggleVisual('stripe',   !!d.stripeEnabled);
     if (d.paystackEnabled !== undefined) setToggleVisual('paystack', !!d.paystackEnabled);
+    var twEl = document.getElementById('twitterUrl');  if (twEl) twEl.value  = d.twitterUrl  || '';
+    var liEl = document.getElementById('linkedinUrl'); if (liEl) liEl.value  = d.linkedinUrl || '';
+    var igEl = document.getElementById('instagramUrl');if (igEl) igEl.value  = d.instagramUrl|| '';
   }).catch(function(err) {
     console.warn('loadSettings error:', err);
   });
@@ -1835,6 +1860,9 @@ function saveSettings() {
   });
   payload.stripeEnabled  = GATEWAY_STATE.stripe;
   payload.paystackEnabled = GATEWAY_STATE.paystack;
+  payload.twitterUrl  = (document.getElementById('twitterUrl')  || {}).value ? document.getElementById('twitterUrl').value.trim()  : '';
+  payload.linkedinUrl = (document.getElementById('linkedinUrl') || {}).value ? document.getElementById('linkedinUrl').value.trim() : '';
+  payload.instagramUrl= (document.getElementById('instagramUrl')|| {}).value ? document.getElementById('instagramUrl').value.trim(): '';
 
   function finish(ok) {
     btn.innerHTML = originalText;

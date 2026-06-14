@@ -39,7 +39,7 @@ exports.handler = async (event) => {
     return respond(400, { error: 'Invalid JSON body.' });
   }
 
-  const { imageBase64, size = 'auto' } = payload;
+  const { imageBase64, size = 'auto', mode = 'person' } = payload;
 
   if (!imageBase64 || typeof imageBase64 !== 'string' || imageBase64.trim() === '') {
     return respond(400, { error: 'imageBase64 is required.' });
@@ -64,14 +64,16 @@ exports.handler = async (event) => {
 
   /* ── Build form data ── */
   // remove.bg accepts base64 via image_file_b64 form field
+  const safeMode = mode === 'signature' ? 'other' : 'person';
+
   const formFields = {
     image_file_b64: imageBase64.trim(),
     size:           safeSize,
-    type:           'person',       // optimised for profile photos
+    type:           safeMode,       // 'person' for profile photos, 'other' for signatures
     format:         'png',          // always return PNG (supports transparency)
     bg_color:       '',             // transparent background
     add_shadow:     'false',
-    semitransparency: 'true',       // keep semi-transparent areas (hair edges)
+    semitransparency: mode === 'signature' ? 'false' : 'true', // hard edges for signatures, soft for photos
     channels:       'rgba',
   };
 

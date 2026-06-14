@@ -24,6 +24,7 @@ const crypto  = require('crypto');
 const https   = require('https');
 const { initializeApp, cert, getApps } = require('firebase-admin/app');
 const { getFirestore, FieldValue }     = require('firebase-admin/firestore');
+const { getSettings } = require('./get-settings');
 
 /* ── Initialise Firebase Admin SDK once (survives warm Lambda invocations) ── */
 function getDb() {
@@ -296,6 +297,20 @@ async function handleFundedPayment(data) {
     return;
   }
 
+  /* Fetch platform fee settings and compute net amount */
+  let settings;
+  try {
+    settings = await getSettings(db);
+  } catch (err) {
+    console.warn('[nowpayments-webhook] Could not fetch settings, using defaults:', err.message);
+    settings = { platformFeePercent: 2.5, projectProtectionPercent: 1.0 };
+  }
+
+  const baseAmount        = Number(outcome_amount || pay_amount || 0);
+  const platformFeeAmt    = baseAmount * (settings.platformFeePercent / 100);
+  const protectionFeeAmt  = baseAmount * (settings.projectProtectionPercent / 100);
+  const netAmount         = baseAmount - platformFeeAmt - protectionFeeAmt;
+
   /* Update the project document */
   const updatePayload = {
     escrowStatus:    'funded',
@@ -309,6 +324,9 @@ async function handleFundedPayment(data) {
     outcomeAmount:   outcome_amount    || null,
     outcomeCurrency: outcome_currency  || null,
     paymentFee:      fee               || null,
+    platformFee:     platformFeeAmt,
+    protectionFee:   protectionFeeAmt,
+    netAmount:       netAmount,
     paymentConfirmedAt: updated_at
       ? new Date(updated_at)
       : FieldValue.serverTimestamp(),

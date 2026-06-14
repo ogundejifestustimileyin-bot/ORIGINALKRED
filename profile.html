@@ -1209,16 +1209,73 @@
     }
   };
 
-  window.handleSigUpload = function(e) {
+  window.handleSigUpload = async function(e) {
     const file = e.target.files[0];
-    if(!file) return;
-    const reader = new FileReader();
-    reader.onload = ev => {
-      uploadedSig = ev.target.result;
-      document.getElementById('sig-preview-img').src = uploadedSig;
-      document.getElementById('sig-preview-wrap').style.display = 'block';
-    };
-    reader.readAsDataURL(file);
+    if (!file) return;
+
+    // Show loading state
+    const preview = document.getElementById('sig-preview-wrap');
+    const img     = document.getElementById('sig-preview-img');
+    preview.style.display = 'block';
+    img.style.opacity = '0.4';
+    img.src = '';
+
+    const errEl = document.getElementById('err-sign');
+
+    // Read file to base64
+    const dataUrl = await new Promise((resolve, reject) => {
+      const reader = new FileReader();
+      reader.onload  = ev => resolve(ev.target.result);
+      reader.onerror = reject;
+      reader.readAsDataURL(file);
+    });
+
+    // Strip the data:image/...;base64, prefix — the API wants raw base64
+    const base64 = dataUrl.split(',')[1];
+
+    if (!base64) {
+      uploadedSig = dataUrl;
+      img.src = dataUrl;
+      img.style.opacity = '1';
+      return;
+    }
+
+    try {
+      const res = await fetch('/.netlify/functions/removebg-process', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({ imageBase64: base64, size: 'auto', mode: 'signature' }),
+      });
+
+      if (!res.ok) {
+        // Fall back to original image silently
+        console.warn('[removebg] API error, using original image');
+        uploadedSig = dataUrl;
+        img.src = dataUrl;
+        img.style.opacity = '1';
+        return;
+      }
+
+      const data = await res.json();
+
+      if (data.resultBase64) {
+        const cleanDataUrl = 'data:image/png;base64,' + data.resultBase64;
+        uploadedSig = cleanDataUrl;
+        img.src     = cleanDataUrl;
+        img.style.opacity = '1';
+      } else {
+        // Fallback
+        uploadedSig = dataUrl;
+        img.src = dataUrl;
+        img.style.opacity = '1';
+      }
+
+    } catch (err) {
+      console.warn('[removebg] Request failed, using original image:', err);
+      uploadedSig = dataUrl;
+      img.src = dataUrl;
+      img.style.opacity = '1';
+    }
   };
 
   window.submitSignature = function() {
