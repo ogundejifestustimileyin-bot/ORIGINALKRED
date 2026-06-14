@@ -136,8 +136,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
 }
 </style>
 <script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getFirestore }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getFirestore }      from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   const FIREBASE_CONFIG = {
     apiKey:            'AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk',
     authDomain:        'kreddlo.firebaseapp.com',
@@ -146,8 +147,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
     messagingSenderId: '764500458567',
     appId:             '1:764500458567:web:2389d5cf8c688caafd0562',
   };
-  const app = initializeApp(FIREBASE_CONFIG);
-  window.db = getFirestore(app);
+  const app  = initializeApp(FIREBASE_CONFIG);
+  const auth = getAuth(app);
+  window.db  = getFirestore(app);
+  onAuthStateChanged(auth, function(user) {
+    if (!user) { window.location.href = '/login.html'; return; }
+    if (typeof window._boot === 'function') window._boot(user);
+  });
 </script>
 </head>
 <body>
@@ -1115,72 +1121,59 @@ function refreshPageData() {
 })();
 
 // ======= BOOT =======
-document.addEventListener('DOMContentLoaded', ()=>{
-  import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js').then(function(authMod) {
-    authMod.onAuthStateChanged(authMod.getAuth(), function(user) {
-      if (!user) { window.location.replace('/login.html'); return; }
+window._boot = function(user) {
+  DEMO_USER.uid         = user.uid;
+  DEMO_USER.displayName = user.displayName || user.email || 'User';
 
-      DEMO_USER.uid         = user.uid;
-      DEMO_USER.displayName = user.displayName || user.email || 'User';
+  buildNav();
 
-      buildNav();
+  // Set user avatar
+  const initials = DEMO_USER.displayName.split(' ').map(n=>n[0]).join('').toUpperCase();
+  document.getElementById('user-avatar').textContent = initials;
 
-      // Set user avatar
-      const initials = DEMO_USER.displayName.split(' ').map(n=>n[0]).join('').toUpperCase();
-      document.getElementById('user-avatar').textContent = initials;
+  // Set dual balances
+  document.getElementById('balance-crypto').textContent = `$${DEMO_USER.cryptoBalance.toFixed(2)}`;
+  document.getElementById('balance-fiat').textContent   = `$${DEMO_USER.fiatBalance.toFixed(2)}`;
+  document.getElementById('max-display').textContent    = `$${DEMO_USER.cryptoBalance.toFixed(2)}`;
+  document.getElementById('bank-max-display').textContent = `$${DEMO_USER.fiatBalance.toFixed(2)}`;
+  document.getElementById('input-withdraw-amount').max  = DEMO_USER.cryptoBalance;
+  document.getElementById('input-bank-amount').max      = DEMO_USER.fiatBalance;
 
-      // Set dual balances
-      document.getElementById('balance-crypto').textContent = `$${DEMO_USER.cryptoBalance.toFixed(2)}`;
-      document.getElementById('balance-fiat').textContent   = `$${DEMO_USER.fiatBalance.toFixed(2)}`;
-      document.getElementById('max-display').textContent    = `$${DEMO_USER.cryptoBalance.toFixed(2)}`;
-      document.getElementById('bank-max-display').textContent = `$${DEMO_USER.fiatBalance.toFixed(2)}`;
-      document.getElementById('input-withdraw-amount').max  = DEMO_USER.cryptoBalance;
-      document.getElementById('input-bank-amount').max      = DEMO_USER.fiatBalance;
+  // Set wallet address
+  if (DEMO_USER.walletAddress) {
+    document.getElementById('input-wallet-address').value = DEMO_USER.walletAddress;
+  }
 
-      // Set wallet address
-      if (DEMO_USER.walletAddress) {
-        document.getElementById('input-wallet-address').value = DEMO_USER.walletAddress;
+  // Prefill bank details if saved
+  if (DEMO_USER.bankDetails) {
+    const bd = DEMO_USER.bankDetails;
+    if (bd.accountName)   document.getElementById('input-account-name').value    = bd.accountName;
+    if (bd.accountNumber) document.getElementById('input-account-number').value  = bd.accountNumber;
+    if (bd.bankName)      document.getElementById('input-bank-name').value       = bd.bankName;
+    if (bd.swift)         document.getElementById('input-swift').value           = bd.swift;
+    if (bd.country) {
+      const sel = document.getElementById('input-bank-country');
+      for (let i = 0; i < sel.options.length; i++) {
+        if (sel.options[i].text === bd.country) { sel.selectedIndex = i; break; }
       }
+    }
+  }
 
-      // Prefill bank details if saved
-      if (DEMO_USER.bankDetails) {
-        const bd = DEMO_USER.bankDetails;
-        if (bd.accountName)   document.getElementById('input-account-name').value    = bd.accountName;
-        if (bd.accountNumber) document.getElementById('input-account-number').value  = bd.accountNumber;
-        if (bd.bankName)      document.getElementById('input-bank-name').value       = bd.bankName;
-        if (bd.swift)         document.getElementById('input-swift').value           = bd.swift;
-        if (bd.country) {
-          const sel = document.getElementById('input-bank-country');
-          for (let i = 0; i < sel.options.length; i++) {
-            if (sel.options[i].text === bd.country) { sel.selectedIndex = i; break; }
-          }
-        }
-      }
+  // Default active card
+  const defaultCard = DEMO_USER.cryptoBalance > 0 ? 'crypto' : 'fiat';
+  activateBalanceCard(defaultCard);
 
-      // Default active card: crypto if balance > 0, else fiat
-      const defaultCard = DEMO_USER.cryptoBalance > 0 ? 'crypto' : 'fiat';
-      activateBalanceCard(defaultCard);
+  if (DEMO_USER.premiumStatus !== 'active') {
+    document.getElementById('early-payout-section').style.display = 'none';
+  }
 
-      // Show early payout section only for premium
-      if (DEMO_USER.premiumStatus !== 'active') {
-        document.getElementById('early-payout-section').style.display = 'none';
-      }
+  updateRateDisplay();
+  selectRateCard('usdt');
+  startRateCountdown();
 
-      // Initialize rates and select USDT by default
-      updateRateDisplay();
-      selectRateCard('usdt');
-      startRateCountdown();
-
-      // Hide loading overlay
-      setTimeout(()=>{
-        const ol = document.getElementById('loading-overlay');
-        ol.style.transition = 'opacity .4s';
-        ol.style.opacity = '0';
-        setTimeout(()=>ol.style.display='none', 400);
-      }, 700);
-    });
-  });
-});
+  // Hide overlay immediately - no artificial delay
+  document.getElementById('loading-overlay').style.display = 'none';
+};
 </script>
 <script>
 if ('serviceWorker' in navigator) {

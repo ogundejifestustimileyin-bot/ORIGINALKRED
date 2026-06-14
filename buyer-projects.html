@@ -149,8 +149,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
 }
 </style>
 <script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getFirestore }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   const FIREBASE_CONFIG = {
     apiKey:            'AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk',
     authDomain:        'kreddlo.firebaseapp.com',
@@ -159,8 +160,19 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
     messagingSenderId: '764500458567',
     appId:             '1:764500458567:web:2389d5cf8c688caafd0562',
   };
-  const app = initializeApp(FIREBASE_CONFIG);
-  window.db = getFirestore(app);
+  const app  = initializeApp(FIREBASE_CONFIG);
+  const auth = getAuth(app);
+  const db   = getFirestore(app);
+  window.db  = db;
+  onAuthStateChanged(auth, function(user) {
+    if (!user) { window.location.href = '/login.html'; return; }
+    getDoc(doc(db, 'users', user.uid)).then(function(snap) {
+      if (!snap.exists() || snap.data().role !== 'buyer') {
+        window.location.href = '/login.html'; return;
+      }
+      if (typeof window._boot === 'function') window._boot(user, snap.data());
+    }).catch(function() { window.location.href = '/login.html'; });
+  });
 </script>
 </head>
 <body>
@@ -668,45 +680,21 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
-// ============ AUTH CHECK ============
-(function waitForAuth() {
-  import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js').then(function(authMod) {
-    import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js').then(function(fsMod) {
-      authMod.onAuthStateChanged(authMod.getAuth(), function(user) {
-        if (!user) { window.location.href = '/login.html'; return; }
+// ============ BOOT ============
+window._boot = function(user, userData) {
+  DEMO_USER.uid  = user.uid;
+  DEMO_USER.name = user.displayName || (userData && userData.name) || user.email || 'User';
 
-        var db = window.db;
-        if (!db) { window.location.href = '/login.html'; return; }
+  // Avatar initials
+  var parts = DEMO_USER.name.trim().split(' ');
+  document.getElementById('user-avatar').textContent =
+    parts.length >= 2 ? parts[0][0]+parts[parts.length-1][0] : DEMO_USER.name.slice(0,2).toUpperCase();
 
-        fsMod.getDoc(fsMod.doc(db, 'users', user.uid)).then(function(snap) {
-          if (!snap.exists() || snap.data().role !== 'buyer') {
-            window.location.href = '/login.html'; return;
-          }
-
-          DEMO_USER.uid  = user.uid;
-          DEMO_USER.name = user.displayName || snap.data().name || user.email || 'User';
-
-          // Avatar initials
-          var parts = DEMO_USER.name.trim().split(' ');
-          document.getElementById('user-avatar').textContent =
-            parts.length >= 2 ? parts[0][0]+parts[parts.length-1][0] : DEMO_USER.name.slice(0,2).toUpperCase();
-
-          // Nav
-          buildNav();
-
-          // Bell dot
-          document.getElementById('bell-dot').style.display = 'block';
-
-          // Initial render
-          renderProjects();
-
-          // Hide loading overlay
-          document.getElementById('loading-overlay').style.display = 'none';
-        }).catch(function() { window.location.href = '/login.html'; });
-      });
-    });
-  });
-})();
+  buildNav();
+  document.getElementById('bell-dot').style.display = 'block';
+  renderProjects();
+  document.getElementById('loading-overlay').style.display = 'none';
+};
 </script>
 <script>
 if ('serviceWorker' in navigator) {

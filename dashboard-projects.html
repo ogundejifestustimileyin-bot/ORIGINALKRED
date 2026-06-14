@@ -154,25 +154,32 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
 <!-- Firebase SDK -->
 <script type="module">
   import { initializeApp }                                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, onAuthStateChanged }                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
   import { getFirestore, doc, updateDoc, serverTimestamp }        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   import { getStorage, ref, uploadBytes, getDownloadURL }         from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
-  const firebaseConfig = {
-    apiKey:            "AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk",
-    authDomain:        "kreddlo.firebaseapp.com",
-    projectId:         "kreddlo",
-    storageBucket:     "kreddlo.firebasestorage.app",
-    messagingSenderId: "764500458567",
-    appId:             "1:764500458567:web:2389d5cf8c688caafd0562",
+  const FIREBASE_CONFIG = {
+    apiKey:            'AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk',
+    authDomain:        'kreddlo.firebaseapp.com',
+    projectId:         'kreddlo',
+    storageBucket:     'kreddlo.firebasestorage.app',
+    messagingSenderId: '764500458567',
+    appId:             '1:764500458567:web:2389d5cf8c688caafd0562',
   };
 
-  const app      = initializeApp(firebaseConfig);
+  const app      = initializeApp(FIREBASE_CONFIG);
+  const auth     = getAuth(app);
   window.db      = getFirestore(app);
   window.storage = getStorage(app);
 
   // Expose Firestore/Storage helpers for non-module scripts
   window._fs = { doc, updateDoc, serverTimestamp };
   window._st = { ref, uploadBytes, getDownloadURL };
+
+  onAuthStateChanged(auth, function(user) {
+    if (!user) { window.location.href = '/login.html'; return; }
+    if (typeof window._boot === 'function') window._boot(user);
+  });
 </script>
 </head>
 <body>
@@ -946,33 +953,27 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ============ BOOT ============
-(function waitForAuth() {
-  import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js').then(function(authMod) {
-    authMod.onAuthStateChanged(authMod.getAuth(), function(user) {
-      if (!user) { window.location.href = '/login.html'; return; }
+window._boot = function(user) {
+  DEMO_USER.uid  = user.uid;
+  DEMO_USER.name = user.displayName || user.email || 'User';
 
-      DEMO_USER.uid  = user.uid;
-      DEMO_USER.name = user.displayName || user.email || 'User';
+  // Avatar initials
+  var parts = DEMO_USER.name.trim().split(' ');
+  document.getElementById('user-avatar').textContent =
+    parts.length >= 2 ? parts[0][0]+parts[parts.length-1][0] : DEMO_USER.name.slice(0,2).toUpperCase();
 
-      // Avatar initials
-      var parts = DEMO_USER.name.trim().split(' ');
-      document.getElementById('user-avatar').textContent =
-        parts.length >= 2 ? parts[0][0]+parts[parts.length-1][0] : DEMO_USER.name.slice(0,2).toUpperCase();
+  // Nav
+  buildNav();
 
-      // Nav
-      buildNav();
+  // Bell dot
+  document.getElementById('bell-dot').style.display = 'block';
 
-      // Bell dot
-      document.getElementById('bell-dot').style.display = 'block';
+  // Initial render
+  renderProjects();
 
-      // Initial render
-      renderProjects();
-
-      // Hide loading overlay
-      document.getElementById('loading-overlay').style.display = 'none';
-    });
-  });
-})();
+  // Hide loading overlay
+  document.getElementById('loading-overlay').style.display = 'none';
+};
 </script>
 <script>
 if ('serviceWorker' in navigator) {

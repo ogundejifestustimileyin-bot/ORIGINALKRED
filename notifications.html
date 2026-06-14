@@ -130,8 +130,9 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
 }
 </style>
 <script type="module">
-  import { initializeApp } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
-  import { getFirestore }  from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
+  import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
+  import { getFirestore }      from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   const FIREBASE_CONFIG = {
     apiKey:            'AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk',
     authDomain:        'kreddlo.firebaseapp.com',
@@ -140,8 +141,13 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
     messagingSenderId: '764500458567',
     appId:             '1:764500458567:web:2389d5cf8c688caafd0562',
   };
-  const app = initializeApp(FIREBASE_CONFIG);
-  window.db = getFirestore(app);
+  const app  = initializeApp(FIREBASE_CONFIG);
+  const auth = getAuth(app);
+  window.db  = getFirestore(app);
+  onAuthStateChanged(auth, function(user) {
+    if (!user) { window.location.href = '/login.html'; return; }
+    if (typeof window._boot === 'function') window._boot(user);
+  });
 </script>
 </head>
 <body>
@@ -559,26 +565,17 @@ function filterNotifs(type, btn) {
 }
 
 // ─── BOOT ─────────────────────────────────────────────────────────────────────
-document.addEventListener('DOMContentLoaded', () => {
-  import('https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js').then(function(authMod) {
-    authMod.onAuthStateChanged(authMod.getAuth(), function(user) {
-      if (!user) { window.location.href = '/login.html'; return; }
+window._boot = function(user) {
+  buildNav('freelancer');
 
-      buildNav('freelancer');
+  document.getElementById('notif-skeleton').style.display = 'none';
+  renderNotifications();
 
-      setTimeout(() => {
-        document.getElementById('notif-skeleton').style.display = 'none';
-        renderNotifications();
-
-        // Hide loading overlay
-        const overlay = document.getElementById('loading-overlay');
-        overlay.style.transition = 'opacity 0.35s';
-        overlay.style.opacity = '0';
-        setTimeout(() => overlay.style.display = 'none', 360);
-      }, 900);
-    });
-  });
-});
+  const overlay = document.getElementById('loading-overlay');
+  overlay.style.transition = 'opacity 0.35s';
+  overlay.style.opacity = '0';
+  setTimeout(() => overlay.style.display = 'none', 360);
+};
 </script>
 <script>
 if ('serviceWorker' in navigator) {
