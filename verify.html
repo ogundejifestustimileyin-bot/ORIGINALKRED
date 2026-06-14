@@ -1067,7 +1067,14 @@
 
       setProgressPct(85, 'Saving submission…');
 
-      const result = await response.json();
+      let result;
+      const rawText = await response.text();
+      try {
+        result = JSON.parse(rawText);
+      } catch (_) {
+        // Server returned HTML (e.g. a Netlify 500 error page) — not JSON
+        throw new Error('Server error (' + response.status + '). Check that FIREBASE_SERVICE_ACCOUNT and FIREBASE_STORAGE_BUCKET are set in Netlify env vars.');
+      }
 
       if (!response.ok) {
         throw new Error(result.error || 'Server returned ' + response.status);
