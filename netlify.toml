@@ -8,6 +8,10 @@
 [functions]
   node_bundler = "esbuild"
 
+[functions."kyc-submit"]
+  included_files = []
+
+
 [functions."scheduled-subscriptions"]
   schedule = "0 0 * * *"
 

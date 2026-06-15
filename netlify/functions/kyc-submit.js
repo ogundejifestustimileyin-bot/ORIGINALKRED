@@ -179,8 +179,11 @@ exports.handler = async function (event) {
   const { uid, frontImage, frontType, backImage, backType, selfieImage, selfieType } = payload;
 
   /* ── 2. Validate ── */
+  console.log('KYC submit received uid:', uid, 'frontType:', frontType, 'backType:', backType, 'selfieType:', selfieType);
+
   if (!uid || typeof uid !== 'string' || uid.length < 4) {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Invalid uid' }) };
+    console.error('Validation failed: Invalid uid:', uid);
+    return { statusCode: 400, body: JSON.stringify({ error: 'Invalid uid: ' + uid }) };
   }
 
   const slots = [
@@ -191,14 +194,17 @@ exports.handler = async function (event) {
 
   for (const s of slots) {
     if (!s.data || typeof s.data !== 'string') {
-      return { statusCode: 400, body: JSON.stringify({ error: `${s.name} is missing` }) };
+      console.error('Validation failed:', s.name, 'is missing');
+      return { statusCode: 400, body: JSON.stringify({ error: s.name + ' is missing' }) };
     }
     if (!MIME_EXT[s.type]) {
-      return { statusCode: 400, body: JSON.stringify({ error: `${s.name} has unsupported type: ${s.type}` }) };
+      console.error('Validation failed:', s.name, 'has unsupported type:', s.type);
+      return { statusCode: 400, body: JSON.stringify({ error: s.name + ' has unsupported type: ' + s.type }) };
     }
     const byteLen = Math.ceil(s.data.length * 0.75); // base64 → approximate bytes
     if (byteLen > MAX_BYTES) {
-      return { statusCode: 400, body: JSON.stringify({ error: `${s.name} exceeds 10 MB limit` }) };
+      console.error('Validation failed:', s.name, 'exceeds 10 MB limit');
+      return { statusCode: 400, body: JSON.stringify({ error: s.name + ' exceeds 10 MB limit' }) };
     }
   }
 
