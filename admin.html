@@ -1206,6 +1206,14 @@ function showToast(msg) {
   }, 2600);
 }
 
+/* Pops up the real Firebase error code + message so it can be read
+   without opening DevTools (works on mobile too). */
+function showError(err) {
+  var code = (err && err.code) ? err.code : 'unknown';
+  var msg  = (err && err.message) ? err.message : String(err);
+  alert('Error (' + code + '): ' + msg);
+}
+
 /* ============ TRANSACTIONS DATA ============ */
 var TRANSACTIONS = [];
 
@@ -1784,6 +1792,7 @@ function toggleGateway(gateway) {
         // Revert visual on failure
         setToggleVisual(gateway, !newState);
         showToast('Failed to update gateway setting.');
+        showError(err);
       });
   } else {
     showToast((gateway === 'stripe' ? 'Stripe' : 'Paystack') + ' payments ' + (newState ? 'enabled' : 'disabled') + ' (demo mode).');
@@ -1853,7 +1862,7 @@ function saveSettings() {
     var _f = window.firestore;
     _f.setDoc(_f.doc(window.db, 'config', 'platform'), payload, { merge: true })
       .then(function() { finish(true); })
-      .catch(function(err) { console.error('saveSettings error:', err); finish(false); });
+      .catch(function(err) { console.error('saveSettings error:', err); showError(err); finish(false); });
   } else {
     setTimeout(function() { finish(true); }, 800);
   }
