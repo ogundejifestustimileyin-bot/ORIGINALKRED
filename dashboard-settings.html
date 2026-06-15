@@ -200,7 +200,7 @@ textarea.input-field{resize:vertical;font-family:'Plus Jakarta Sans',sans-serif;
         <svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="#0d2145" stroke-width="2" stroke-linecap="round"><path d="M18 8A6 6 0 0 0 6 8c0 7-3 9-3 9h18s-3-2-3-9"/><path d="M13.73 21a2 2 0 0 1-3.46 0"/></svg>
         <span id="bell-dot" style="display:none;position:absolute;top:7px;right:7px;width:8px;height:8px;background:#c81e1e;border-radius:50%;border:2px solid #f8f9fb;"></span>
       </button>
-      <div id="user-avatar" style="width:35px;height:35px;background:linear-gradient(135deg,#2d8a5e,#3dbd7a);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;cursor:pointer;">MR</div>
+      <div id="user-avatar" style="width:35px;height:35px;background:linear-gradient(135deg,#2d8a5e,#3dbd7a);border-radius:50%;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;color:#fff;flex-shrink:0;cursor:pointer;">U</div>
       <button id="hamburger" onclick="openMobileMenu()" style="width:38px;height:38px;background:transparent;border:none;border-radius:10px;display:flex;align-items:center;justify-content:center;cursor:pointer;transition:background .15s;" onmouseover="this.style.background='rgba(13,33,69,0.06)'" onmouseout="this.style.background='transparent'">
         <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#0d2145" stroke-width="2.5" stroke-linecap="round"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="21" y2="12"/><line x1="3" y1="18" x2="21" y2="18"/></svg>
       </button>
@@ -234,18 +234,18 @@ textarea.input-field{resize:vertical;font-family:'Plus Jakarta Sans',sans-serif;
               <div style="position:relative;flex-shrink:0;">
                 <div id="photo-circle" style="width:80px;height:80px;border-radius:50%;background:linear-gradient(135deg,#2d8a5e,#3dbd7a);display:flex;align-items:center;justify-content:center;font-size:26px;font-weight:800;color:#fff;overflow:hidden;">
                   <img id="photo-img" style="width:100%;height:100%;object-fit:cover;display:none;" alt="Profile photo"/>
-                  <span id="photo-initials">MR</span>
+                  <span id="photo-initials">U</span>
                 </div>
               </div>
               <div style="display:flex;flex-direction:column;gap:6px;min-width:0;">
                 <h2 style="font-size:18px;font-weight:800;color:#0d2145;margin:0;display:flex;align-items:center;gap:8px;flex-wrap:wrap;">
-                  Marco Ricci
-                  <span id="verified-badge" class="badge badge-green" style="display:inline-flex;align-items:center;gap:4px;">
+                  <span id="profile-display-name">My Profile</span>
+                  <span id="verified-badge" class="badge badge-green" style="display:none;align-items:center;gap:4px;">
                     <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"/></svg>
                     Pro
                   </span>
                 </h2>
-                <p style="font-size:13px;font-weight:500;color:rgba(13,33,69,0.50);margin:0;">@marco-ricci</p>
+                <p style="font-size:13px;font-weight:500;color:rgba(13,33,69,0.50);margin:0;" id="profile-handle"></p>
                 <div>
                   <input type="file" id="photo-input" accept="image/*" style="display:none;" onchange="handlePhotoChange(event)"/>
                   <button type="button" onclick="document.getElementById('photo-input').click()" style="background:none;border:none;color:#2d8a5e;font-size:13px;font-weight:600;cursor:pointer;padding:0;font-family:'Plus Jakarta Sans',sans-serif;">Change Photo</button>
@@ -257,11 +257,11 @@ textarea.input-field{resize:vertical;font-family:'Plus Jakarta Sans',sans-serif;
             <div style="display:flex;flex-direction:column;gap:18px;">
               <div>
                 <label class="label" for="f-name">Full Name</label>
-                <input type="text" id="f-name" class="input-field" value="Marco Ricci"/>
+                <input type="text" id="f-name" class="input-field" value=""/>
               </div>
               <div>
                 <label class="label" for="f-title">Professional Title</label>
-                <input type="text" id="f-title" class="input-field" value="Full Stack Developer &amp; UI Designer"/>
+                <input type="text" id="f-title" class="input-field" value="" placeholder="e.g. Full Stack Developer &amp; UI Designer"/>
               </div>
               <div>
                 <label class="label" for="f-skills">Skills</label>
@@ -270,12 +270,12 @@ textarea.input-field{resize:vertical;font-family:'Plus Jakarta Sans',sans-serif;
               </div>
               <div>
                 <label class="label" for="f-desc">Service Description</label>
-                <textarea id="f-desc" class="input-field" rows="4" maxlength="600" oninput="updateCharCount()">Full stack developer with 6 years of experience building e-commerce platforms, dashboards and brand identity systems for clients across Europe. I focus on clean code, pixel-perfect UI and reliable delivery.</textarea>
+                <textarea id="f-desc" class="input-field" rows="4" maxlength="600" oninput="updateCharCount()" placeholder="Describe the services you offer to buyers..."></textarea>
                 <div class="char-count" id="char-count">0 / 600</div>
               </div>
               <div>
                 <label class="label" for="f-price">Starting Price (USD)</label>
-                <input type="number" id="f-price" class="input-field" value="250" min="0"/>
+                <input type="number" id="f-price" class="input-field" value="" min="0" placeholder="0"/>
               </div>
             </div>
 
@@ -346,7 +346,7 @@ textarea.input-field{resize:vertical;font-family:'Plus Jakarta Sans',sans-serif;
             <div id="wallet-display-view">
               <label class="label">Wallet Address</label>
               <div style="display:flex;gap:10px;align-items:stretch;">
-                <div class="ro-field" id="wallet-address-display" style="flex:1;font-weight:500;font-size:14px;color:#0d2145;overflow-wrap:anywhere;word-break:break-all;">TXh9k3mP2qR7vL4nW8zY1aB6cD5eF0gH3i</div>
+                <div class="ro-field" id="wallet-address-display" style="flex:1;font-weight:500;font-size:14px;color:#0d2145;overflow-wrap:anywhere;word-break:break-all;">Not set</div>
                 <button class="btn-secondary" onclick="copyWalletAddress()" title="Copy address" style="flex-shrink:0;padding:0 16px;">
                   <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                 </button>
@@ -495,14 +495,14 @@ textarea.input-field{resize:vertical;font-family:'Plus Jakarta Sans',sans-serif;
 <div id="toast" class="toast"></div>
 
 <script>
-// ============ DEMO DATA ============
-var DEMO = { name: 'Marco Ricci', role: 'freelancer', uid: 'demo-uid-001' };
+// ============ USER STATE ============
+var DEMO = { name: '', role: 'freelancer', uid: '' };
 
-var SKILLS = ['React', 'Node.js', 'Figma', 'Tailwind CSS'];
+var SKILLS = [];
 
 var TWO_FA_ENABLED = false;
 
-var WALLET_ADDRESS = 'TXh9k3mP2qR7vL4nW8zY1aB6cD5eF0gH3i';
+var WALLET_ADDRESS = '';
 
 // ============ STORE / INTEGRATIONS ============
 var BANNER_COLORS = [
@@ -637,16 +637,35 @@ function updateCharCount() {
 }
 
 // ============ PROFILE SAVE ============
-function saveProfile() {
+async function saveProfile() {
   var name = document.getElementById('f-name').value.trim();
   var title = document.getElementById('f-title').value.trim();
   var price = document.getElementById('f-price').value;
+  var desc = document.getElementById('f-desc').value.trim();
   if (!name) { showToast('Full name is required'); return; }
   if (!title) { showToast('Professional title is required'); return; }
   if (SKILLS.length === 0) { showToast('Add at least one skill'); return; }
   if (price === '' || Number(price) < 0) { showToast('Enter a valid starting price'); return; }
-  // Demo mode: would write to Firestore (users/{uid}) and upload photo to Storage here
-  showToast('Profile updated successfully');
+
+  var ready = await waitForFirestore();
+  if (!ready || !DEMO.uid) { showToast('Could not connect — try again.'); return; }
+
+  try {
+    var { doc, setDoc } = window._fsSettings;
+    await setDoc(doc(window.db, 'users', DEMO.uid), {
+      name: name,
+      title: title,
+      description: desc,
+      startingPrice: Number(price),
+      skills: SKILLS
+    }, { merge: true });
+
+    document.getElementById('profile-display-name').textContent = name;
+    showToast('Profile updated successfully');
+  } catch (e) {
+    console.warn('[Settings] Could not save profile:', e);
+    showToast('Could not save profile — try again.');
+  }
 }
 
 // ============ SECURITY ============
@@ -678,6 +697,7 @@ function toggle2FA() {
 
 // ============ WALLET ============
 function copyWalletAddress() {
+  if (!WALLET_ADDRESS) { showToast('No wallet address set'); return; }
   if (navigator.clipboard) {
     navigator.clipboard.writeText(WALLET_ADDRESS).then(function() { showToast('Copied'); });
   } else {
@@ -693,13 +713,23 @@ function cancelEditWallet() {
   document.getElementById('wallet-edit-view').style.display = 'none';
   document.getElementById('wallet-display-view').style.display = 'block';
 }
-function saveWallet() {
+async function saveWallet() {
   var val = document.getElementById('wallet-edit-input').value.trim();
   if (!val) { showToast('Wallet address cannot be empty'); return; }
   WALLET_ADDRESS = val;
   document.getElementById('wallet-address-display').textContent = WALLET_ADDRESS;
   document.getElementById('wallet-edit-view').style.display = 'none';
   document.getElementById('wallet-display-view').style.display = 'block';
+
+  var ready = await waitForFirestore();
+  if (ready && DEMO.uid) {
+    try {
+      var { doc, setDoc } = window._fsSettings;
+      await setDoc(doc(window.db, 'users', DEMO.uid), { walletAddress: WALLET_ADDRESS }, { merge: true });
+    } catch (e) {
+      console.warn('[Settings] Could not save wallet address:', e);
+    }
+  }
   showToast('Wallet address updated');
 }
 
@@ -940,19 +970,73 @@ window._boot = function(user) {
   document.getElementById('user-avatar').textContent    = initials;
   document.getElementById('photo-initials').textContent = initials;
 
+  // Fallback display while profile loads
+  document.getElementById('profile-display-name').textContent = DEMO.name;
+  document.getElementById('f-name').value = DEMO.name;
+
   buildNav();
   renderSkills();
   updateCharCount();
   renderNotifPrefs();
   renderBannerColors();
   updateStoreBioCount();
-  document.getElementById('wallet-address-display').textContent = WALLET_ADDRESS;
+  document.getElementById('wallet-address-display').textContent = WALLET_ADDRESS || 'Not set';
   document.getElementById('bell-dot').style.display = 'block';
 
   document.getElementById('loading-overlay').style.display = 'none';
 
+  loadProfile();
   loadStoreAndIntegrationSettings();
 };
+
+// ============ LOAD PROFILE ============
+async function loadProfile() {
+  var ready = await waitForFirestore();
+  if (!ready || !DEMO.uid) return;
+
+  try {
+    var { doc, getDoc } = window._fsSettings;
+    var snap = await getDoc(doc(window.db, 'users', DEMO.uid));
+    if (!snap.exists()) return;
+
+    var data = snap.data() || {};
+
+    var displayName = data.name || data.displayName || DEMO.name;
+    document.getElementById('profile-display-name').textContent = displayName;
+    document.getElementById('f-name').value = displayName;
+
+    var handle = (data.username || data.storeSettings?.storeSlug || '').trim();
+    document.getElementById('profile-handle').textContent = handle ? '@' + handle : '';
+
+    if (typeof data.title === 'string')       document.getElementById('f-title').value = data.title;
+    if (typeof data.description === 'string') { document.getElementById('f-desc').value = data.description; updateCharCount(); }
+    if (data.startingPrice != null)            document.getElementById('f-price').value = data.startingPrice;
+    if (Array.isArray(data.skills)) { SKILLS = data.skills.slice(); renderSkills(); }
+
+    if (data.photoUrl) {
+      var img = document.getElementById('photo-img');
+      img.src = data.photoUrl;
+      img.style.display = 'block';
+      document.getElementById('photo-initials').style.display = 'none';
+    }
+
+    // Pro badge
+    var badge = document.getElementById('verified-badge');
+    if (data.plan === 'pro') {
+      badge.style.display = 'inline-flex';
+    } else {
+      badge.style.display = 'none';
+    }
+
+    // Wallet
+    if (typeof data.walletAddress === 'string' && data.walletAddress) {
+      WALLET_ADDRESS = data.walletAddress;
+      document.getElementById('wallet-address-display').textContent = WALLET_ADDRESS;
+    }
+  } catch (e) {
+    console.warn('[Settings] Could not load profile:', e);
+  }
+}
 </script>
 <script>
 if ('serviceWorker' in navigator) {

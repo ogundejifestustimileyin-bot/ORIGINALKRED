@@ -180,10 +180,10 @@ exports.handler = async (event) => {
     });
 
     /* ── Credit seller balance ── */
-    const balanceField = order.paymentMethod === 'crypto' ? 'cryptoBalance' : 'fiatBalance';
     await db.collection('users').doc(order.sellerUid).update({
-      totalSales:        FieldValue.increment(1),
-      [balanceField]:    FieldValue.increment(order.sellerAmount),
+      totalSales:       FieldValue.increment(1),
+      availableBalance: FieldValue.increment(order.sellerAmount),
+      totalEarned:      FieldValue.increment(order.sellerAmount),
     });
 
     /* ── Schedule review-request email (48 hours = 2880 minutes) ── */

@@ -323,110 +323,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
 
 <script>
 // ============ DEMO USER ============
-var DEMO_USER = { name: 'Marco Ricci', role: 'freelancer' };
+var DEMO_USER = { uid: null, name: '', role: 'freelancer' };
 
 // ============ DEMO PROJECTS ============
-var PROJECTS = [
-  {
-    id: 'p1',
-    title: 'E-commerce Platform Redesign for French Retail Group',
-    buyer: 'Claire Dubois',
-    amount: 950,
-    deadline: '20 Jun 2026',
-    status: 'in_progress',
-    escrowStatus: 'funded',
-    freelancerSigned: true,
-    buyerSigned: true,
-    contractPdfUrl: 'https://example.com/contracts/p1.pdf'
-  },
-  {
-    id: 'p2',
-    title: 'Brand Identity and Logo System',
-    buyer: 'Heinrich Bauer',
-    amount: 480,
-    deadline: '5 Jun 2026',
-    status: 'delivered',
-    escrowStatus: 'funded',
-    freelancerSigned: true,
-    buyerSigned: true,
-    contractPdfUrl: 'https://example.com/contracts/p2.pdf',
-    deliveredAt: new Date(Date.now() - 18 * 60 * 60 * 1000) // 18 h ago â€” shows "54h" remaining
-  },
-  {
-    id: 'p3',
-    title: 'WordPress Custom Plugin for Event Management',
-    buyer: 'Luca Ferrari',
-    amount: 340,
-    deadline: '28 Jun 2026',
-    status: 'in_progress',
-    escrowStatus: 'funded',
-    freelancerSigned: true,
-    buyerSigned: true,
-    contractPdfUrl: 'https://example.com/contracts/p3.pdf'
-  },
-  {
-    id: 'p4',
-    title: 'Marketing Landing Page for SaaS Launch',
-    buyer: 'Sofia Andersen',
-    amount: 520,
-    deadline: '15 Jun 2026',
-    status: 'awaiting_signatures',
-    escrowStatus: 'unfunded',
-    freelancerSigned: true,
-    buyerSigned: false,
-    contractPdfUrl: 'https://example.com/contracts/p4.pdf'
-  },
-  {
-    id: 'p5',
-    title: 'Mobile App Onboarding Flow Redesign',
-    buyer: 'Elena Novak',
-    amount: 410,
-    deadline: '1 Jul 2026',
-    status: 'awaiting_signatures',
-    escrowStatus: 'unfunded',
-    freelancerSigned: true,
-    buyerSigned: true,
-    contractPdfUrl: 'https://example.com/contracts/p5.pdf'
-  },
-  {
-    id: 'p6',
-    title: 'Mobile App UI Design - Fitness Tracker',
-    buyer: 'Sofia Andersen',
-    amount: 620,
-    deadline: '15 Apr 2026',
-    status: 'completed',
-    escrowStatus: 'released',
-    completedDate: '15 Apr 2026',
-    freelancerSigned: true,
-    buyerSigned: true,
-    contractPdfUrl: 'https://example.com/contracts/p6.pdf'
-  },
-  {
-    id: 'p7',
-    title: 'Analytics Dashboard for Czech SaaS Company',
-    buyer: 'Elena Novak',
-    amount: 780,
-    deadline: '2 Apr 2026',
-    status: 'completed',
-    escrowStatus: 'released',
-    completedDate: '2 Apr 2026',
-    freelancerSigned: true,
-    buyerSigned: true,
-    contractPdfUrl: 'https://example.com/contracts/p7.pdf'
-  },
-  {
-    id: 'p8',
-    title: 'Custom CRM Integration for Logistics Firm',
-    buyer: 'Heinrich Bauer',
-    amount: 890,
-    deadline: '20 Mar 2026',
-    status: 'disputed',
-    escrowStatus: 'disputed',
-    freelancerSigned: true,
-    buyerSigned: true,
-    contractPdfUrl: 'https://example.com/contracts/p8.pdf'
-  }
-];
+var PROJECTS = []; // populated by Firestore in _boot
 
 var STATUS_CONFIG = {
   in_progress:         { label: 'In Progress',         cls: 'badge-blue'  },
@@ -591,7 +491,11 @@ function renderProjects() {
   if (filtered.length === 0) {
     grid.innerHTML = '';
     grid.style.display = 'none';
-    empty.style.display = 'block';
+    var emptyEl = document.getElementById('empty-state');
+    emptyEl.innerHTML = currentTab === 'active'
+      ? '<p style="color:rgba(13,33,69,0.5);text-align:center;padding:40px 20px;">No active projects yet.<br>New projects will appear here once funded.</p>'
+      : '<p style="color:rgba(13,33,69,0.5);text-align:center;padding:40px 20px;">No completed or disputed projects yet.</p>';
+    emptyEl.style.display = 'block';
     return;
   }
 
@@ -778,11 +682,22 @@ function submitDispute() {
   if (!text) { showToast('Please describe the issue before submitting'); return; }
   if (!activeDisputeProjectId) { closeDisputeModal(); return; }
 
-  // Demo: mark project as disputed
+  // Mark project as disputed in Firestore + local array
   var p = PROJECTS.find(function(x){ return x.id === activeDisputeProjectId; });
   if (p) {
     p.status = 'disputed';
     p.escrowStatus = 'disputed';
+  }
+
+  if (window.db && window._fs) {
+    var fsDoc = window._fs.doc;
+    var updateDoc = window._fs.updateDoc;
+    updateDoc(fsDoc(window.db, 'projects', activeDisputeProjectId), {
+      status: 'disputed',
+      escrowStatus: 'disputed',
+      disputeReason: text,
+      disputedAt: window._fs.serverTimestamp(),
+    }).catch(function(err) { console.warn('[submitDispute] Firestore error:', err.message); });
   }
 
   closeDisputeModal();
@@ -791,10 +706,10 @@ function submitDispute() {
 }
 
 // ============ STEP 18A: PULL TO REFRESH ============
-// Primary data refresh for this page â€” re-renders the current tab's project list.
-// In production replace refreshPageData() body with real Firestore queries.
+// Primary data refresh â€” re-fetches from Firestore and re-renders.
 function refreshPageData() {
-  renderProjects();
+  if (DEMO_USER.uid) loadProjects(DEMO_USER.uid);
+  else renderProjects();
 }
 
 (function initPullToRefresh() {
@@ -924,6 +839,59 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ============ BOOT ============
+// ============ LOAD PROJECTS FROM FIRESTORE ============
+async function loadProjects(uid) {
+  if (!window.db || !window._fsQuery) return;
+  try {
+    var q = window._fsQuery.query(
+      window._fsQuery.collection(window.db, 'projects'),
+      window._fsQuery.where('freelancerUid', '==', uid),
+      window._fsQuery.orderBy('createdAt', 'desc')
+    );
+    var snap = await window._fsQuery.getDocs(q);
+
+    // Fetch buyer names in parallel
+    var buyerUids = [];
+    snap.docs.forEach(function(d) { if (d.data().buyerUid) buyerUids.push(d.data().buyerUid); });
+    var uniqueBuyerUids = buyerUids.filter(function(v, i, a) { return a.indexOf(v) === i; });
+    var buyerMap = {};
+    await Promise.all(uniqueBuyerUids.map(async function(buid) {
+      try {
+        var bsnap = await window._fsQuery.getDoc(window._fsQuery.doc(window.db, 'users', buid));
+        if (bsnap.exists()) {
+          var bd = bsnap.data();
+          buyerMap[buid] = bd.displayName || bd.name || bd.email || 'Client';
+        }
+      } catch(e) { /* non-fatal */ }
+    }));
+
+    PROJECTS = snap.docs.map(function(d) {
+      var data = d.data();
+      return {
+        id:               d.id,
+        title:            data.title            || 'Untitled Project',
+        buyer:            buyerMap[data.buyerUid] || data.buyerName || 'Client',
+        buyerUid:         data.buyerUid,
+        buyerName:        buyerMap[data.buyerUid] || data.buyerName || '',
+        amount:           data.netAmount         || data.amount || 0,
+        deadline:         data.deadline          ? (typeof data.deadline === 'string' ? data.deadline : new Date(data.deadline.toDate ? data.deadline.toDate() : data.deadline).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})) : 'â€”',
+        status:           data.status            || 'in_progress',
+        escrowStatus:     data.escrowStatus      || 'unfunded',
+        freelancerSigned: data.freelancerSigned  || false,
+        buyerSigned:      data.buyerSigned       || false,
+        contractPdfUrl:   data.contractPdfUrl    || null,
+        deliveredAt:      data.deliveredAt       || null,
+        completedDate:    data.completedAt       ? new Date(data.completedAt.toDate ? data.completedAt.toDate() : data.completedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '',
+      };
+    });
+  } catch(err) {
+    console.error('[loadProjects]', err);
+    showToast('Could not load projects. Pull to refresh.');
+  }
+  renderProjects();
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+
 window._boot = function(user) {
   DEMO_USER.uid  = user.uid;
   DEMO_USER.name = user.displayName || user.email || 'User';
@@ -939,11 +907,8 @@ window._boot = function(user) {
   // Bell dot
   document.getElementById('bell-dot').style.display = 'block';
 
-  // Initial render
-  renderProjects();
-
-  // Hide loading overlay
-  document.getElementById('loading-overlay').style.display = 'none';
+  // Load real projects from Firestore
+  loadProjects(user.uid);
 };
 </script>
 <script>
@@ -955,12 +920,12 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-<script>Â// Safety: force-hide loading overlay after 10s if auth/boot stallsÂ(function() {Â  var _safetyTimer = setTimeout(function() {Â    var ov = document.getElementById("loading-overlay");Â    if (ov) { ov.style.display = "none"; }Â  }, 10000);Â  window._clearSafetyTimer = function() { clearTimeout(_safetyTimer); };Â})();Â</script>Â
+<script>ï¿½// Safety: force-hide loading overlay after 10s if auth/boot stallsï¿½(function() {ï¿½  var _safetyTimer = setTimeout(function() {ï¿½    var ov = document.getElementById("loading-overlay");ï¿½    if (ov) { ov.style.display = "none"; }ï¿½  }, 10000);ï¿½  window._clearSafetyTimer = function() { clearTimeout(_safetyTimer); };ï¿½})();ï¿½</script>ï¿½
 
 <script type="module">
   import { initializeApp }                                        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, onAuthStateChanged }                          from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, doc, updateDoc, serverTimestamp }        from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getFirestore, doc, updateDoc, serverTimestamp, collection, query, where, orderBy, getDocs, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   import { getStorage, ref, uploadBytes, getDownloadURL }         from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-storage.js';
 
   const FIREBASE_CONFIG = {
@@ -979,6 +944,7 @@ if ('serviceWorker' in navigator) {
 
   // Expose Firestore/Storage helpers for non-module scripts
   window._fs = { doc, updateDoc, serverTimestamp };
+  window._fsQuery = { collection, query, where, orderBy, getDocs, getDoc, doc };
   window._st = { ref, uploadBytes, getDownloadURL };
 
   onAuthStateChanged(auth, function(user) {

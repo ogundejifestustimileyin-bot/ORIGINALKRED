@@ -351,7 +351,7 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
         <!-- Wallet address field -->
         <div style="margin-bottom:20px;">
           <label id="wallet-label" style="display:block;font-size:12px;font-weight:600;color:rgba(13,33,69,0.55);margin-bottom:8px;letter-spacing:0.3px;">USDT Wallet Address</label>
-          <input type="text" id="input-wallet-address" class="inp" placeholder="Your wallet address" value="TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE">
+          <input type="text" id="input-wallet-address" class="inp" placeholder="Your wallet address" value="">
         </div>
 
         <!-- Fee breakdown -->
@@ -377,7 +377,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
         </div>
 
         <!-- Error message -->
-        <div id="withdraw-error" style="display:none;font-size:13px;font-weight:500;color:#c81e1e;margin-bottom:12px;padding:10px 14px;background:#fde8e8;border-radius:10px;"></div>
+        <div id="kyc-banner" style="display:none;align-items:center;gap:12px;background:#fff3cd;border:1.5px solid #ffc107;border-radius:12px;padding:14px 16px;margin-bottom:16px;">
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#856404" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;"><circle cx="12" cy="12" r="10"/><line x1="12" y1="8" x2="12" y2="12"/><line x1="12" y1="16" x2="12.01" y2="16"/></svg>
+  <span style="font-size:13px;font-weight:600;color:#856404;">Identity verification required. <a href="/verify.html" style="color:#2d8a5e;text-decoration:underline;">Complete KYC</a> to withdraw funds.</span>
+</div>
+<div id="withdraw-error" style="display:none;font-size:13px;font-weight:500;color:#c81e1e;margin-bottom:12px;padding:10px 14px;background:#fde8e8;border-radius:10px;"></div>
 
         <!-- Submit button -->
         <button class="btn-green" id="btn-withdraw" onclick="handleWithdraw()" style="width:100%;padding:15px 28px;font-size:15px;font-weight:700;">
@@ -390,6 +394,14 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
 
       <!-- ===================== BANK WITHDRAWAL FORM ===================== -->
       <div id="form-bank" style="display:none;">
+<div id="bank-coming-soon-banner" style="display:none;align-items:center;gap:10px;background:rgba(13,33,69,0.04);border:1.5px solid #e2e8f0;border-radius:12px;padding:13px 16px;margin-bottom:16px;">
+  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(13,33,69,0.5)" stroke-width="2" stroke-linecap="round" style="flex-shrink:0;"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>
+  <div>
+    <div style="font-size:13px;font-weight:700;color:#0d2145;">Bank withdrawals coming soon</div>
+    <div style="font-size:12px;color:rgba(13,33,69,0.5);margin-top:2px;">Use crypto withdrawal for now. Bank transfers will be available shortly.</div>
+  </div>
+</div>
+
         <div class="fu fu-3 glass" style="padding:24px 22px;margin-bottom:20px;">
           <div style="font-size:16px;font-weight:700;color:#0d2145;margin-bottom:20px;">Bank Transfer Details</div>
 
@@ -495,51 +507,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
       <div class="fu fu-5 glass" style="padding:22px;margin-bottom:32px;">
         <div style="font-size:15px;font-weight:700;color:#0d2145;margin-bottom:16px;">Recent Withdrawals</div>
         <div id="withdrawal-history">
-          <!-- Demo rows -->
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid #f0f2f6;">
-            <div style="display:flex;align-items:center;gap:12px;">
-              <div style="width:36px;height:36px;background:#e8f5ef;border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <span style="font-size:9px;font-weight:800;color:#2d8a5e;">T</span>
-              </div>
-              <div>
-                <div style="font-size:13px;font-weight:700;color:#0d2145;">USDT Withdrawal</div>
-                <div style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.45);">Jun 10, 2026 - TQn9Y2...SMe</div>
-              </div>
-            </div>
-            <div style="text-align:right;">
-              <div style="font-size:14px;font-weight:700;color:#0d2145;">$500.00</div>
-              <span class="badge badge-green" style="margin-top:3px;">Completed</span>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;border-bottom:1px solid #f0f2f6;">
-            <div style="display:flex;align-items:center;gap:12px;">
-              <div style="width:36px;height:36px;background:rgba(247,147,26,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <span style="font-size:9px;font-weight:800;color:#F7931A;">B</span>
-              </div>
-              <div>
-                <div style="font-size:13px;font-weight:700;color:#0d2145;">Bitcoin Withdrawal</div>
-                <div style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.45);">May 28, 2026 - 1A1zP1...JJk</div>
-              </div>
-            </div>
-            <div style="text-align:right;">
-              <div style="font-size:14px;font-weight:700;color:#0d2145;">$310.00</div>
-              <span class="badge badge-green" style="margin-top:3px;">Completed</span>
-            </div>
-          </div>
-          <div style="display:flex;align-items:center;justify-content:space-between;padding:13px 0;">
-            <div style="display:flex;align-items:center;gap:12px;">
-              <div style="width:36px;height:36px;background:rgba(98,126,234,0.12);border-radius:10px;display:flex;align-items:center;justify-content:center;flex-shrink:0;">
-                <span style="font-size:9px;font-weight:800;color:#627EEA;">E</span>
-              </div>
-              <div>
-                <div style="font-size:13px;font-weight:700;color:#0d2145;">Ethereum Withdrawal</div>
-                <div style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.45);">May 14, 2026 - 0x71C7...a5e</div>
-              </div>
-            </div>
-            <div style="text-align:right;">
-              <div style="font-size:14px;font-weight:700;color:#0d2145;">$200.00</div>
-              <span class="badge badge-amber" style="margin-top:3px;">Processing</span>
-            </div>
+          <div style="text-align:center;padding:24px 0;color:rgba(13,33,69,0.38);">
+            <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" style="margin:0 auto 8px;display:block;opacity:0.4;"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>
+            <div style="font-size:13px;font-weight:600;">No withdrawals yet</div>
+            <div style="font-size:12px;margin-top:4px;">Your withdrawal history will appear here.</div>
           </div>
         </div>
       </div>
@@ -613,73 +584,87 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
 <div id="toast" class="toast"></div>
 
 <script>
-// ======= DEMO DATA =======
-const DEMO_USER = {
-  displayName: 'Marco Rossi',
-  availableBalance: 1240.00,
-  cryptoBalance: 1240.00,
-  fiatBalance: 380.00,
-  walletAddress: 'TQn9Y2khEsLJW1ChVWFMSMeRDow5KcbLSE',
-  premiumStatus: 'active',
-  bankDetails: {
-    accountName: 'Marco Rossi',
-    accountNumber: '0123456789',
-    bankName: 'Guaranty Trust Bank',
-    swift: 'GTBINGLA',
-    country: 'Nigeria'
-  }
-};
-const PLATFORM_FEE_PCT = 1.5; // %
-const NOWPAYMENTS_FEE_PCT = 0.5; // %
-const HOLDING_DAYS = 7;
+// ======= APP STATE =======
+// Live balances loaded from Firestore in _boot
+let liveBalance = 0;
+let liveWalletAddress = '';
+let kycVerified = false;
+let currentUid = '';
+
+const PLATFORM_FEE_PCT     = 1.5;
+const NOWPAYMENTS_FEE_PCT  = 0.5;
+const HOLDING_DAYS         = 7;
 const EARLY_PAYOUT_FEE_PCT = 2;
-const MIN_WITHDRAWAL = 5;
-const MIN_BANK_WITHDRAWAL = 10;
+const MIN_WITHDRAWAL       = 10;
+const MIN_BANK_WITHDRAWAL  = 10;
 
 // ======= STATE =======
-let rates = { usdt: 1, bitcoin: 65660, ethereum: 2391, binancecoin: 600, 'usd-coin': 1 };
-let selectedCurrency = 'USDT';
-let selectedCoinId = 'usdt';
-let rateCountdown = 60;
-let lockedRate = null;
-let activeBalanceType = 'crypto'; // 'crypto' | 'fiat'
+let liveRates = { usdt: 1, bitcoin: 0.000015, ethereum: 0.00042, binancecoin: 0.0017, 'usd-coin': 1 };
+let selectedCurrency  = 'USDT';
+let selectedCoinId    = 'usdt';
+let rateCountdown     = 60;
+let lockedRate        = null;
+let activeBalanceType = 'crypto';
+let fiatEnabled       = false;
+
+// ======= BALANCE DISPLAY =======
+function fmt(n){ return '$' + Number(n||0).toLocaleString('en-US',{minimumFractionDigits:2,maximumFractionDigits:2}); }
+
+function renderBalances() {
+  document.getElementById('balance-crypto').textContent   = fmt(liveBalance);
+  document.getElementById('balance-fiat').textContent     = fmt(liveBalance);
+  document.getElementById('max-display').textContent      = fmt(liveBalance);
+  document.getElementById('bank-max-display').textContent = fmt(liveBalance);
+  document.getElementById('input-withdraw-amount').max    = liveBalance;
+  document.getElementById('input-bank-amount').max        = liveBalance;
+}
+
+// ======= KYC GATE =======
+function applyKycGate() {
+  const btn    = document.getElementById('btn-withdraw');
+  const errEl  = document.getElementById('withdraw-error');
+  const kycDiv = document.getElementById('kyc-banner');
+  if (!kycVerified) {
+    if (btn)    { btn.disabled = true; }
+    if (kycDiv) { kycDiv.style.display = 'flex'; }
+    if (errEl && errEl.style.display === 'none') {
+      errEl.innerHTML = 'Identity not verified. <a href="/verify.html" style="color:#2d8a5e;font-weight:700;">Complete KYC</a> to enable withdrawals.';
+      errEl.style.display = 'block';
+    }
+  } else {
+    if (btn)    { btn.disabled = false; }
+    if (kycDiv) { kycDiv.style.display = 'none'; }
+  }
+}
 
 // ======= BALANCE CARD SWITCHER =======
 function activateBalanceCard(type) {
   activeBalanceType = type;
-
   const cryptoCard = document.getElementById('card-crypto');
   const fiatCard   = document.getElementById('card-fiat');
   const formCrypto = document.getElementById('form-crypto');
   const formBank   = document.getElementById('form-bank');
   const label      = document.getElementById('active-form-label');
-  const rateSection = document.getElementById('rate-section');
 
   if (type === 'crypto') {
-    // Activate crypto card
-    cryptoCard.style.border = '2px solid #2d8a5e';
+    cryptoCard.style.border          = '2px solid #2d8a5e';
     cryptoCard.style.backgroundColor = '#e8f5ef';
-    cryptoCard.style.boxShadow = '0 8px 40px rgba(45,138,94,0.12),0 2px 8px rgba(13,33,69,0.06)';
-    // Reset fiat card
-    fiatCard.style.border = '2px solid #e2e8f0';
-    fiatCard.style.backgroundColor = '#fff';
-    fiatCard.style.boxShadow = '0 4px 24px rgba(13,33,69,0.06)';
-    // Show crypto form, hide bank form
-    formCrypto.style.display = 'block';
-    formBank.style.display   = 'none';
+    cryptoCard.style.boxShadow       = '0 8px 40px rgba(45,138,94,0.12),0 2px 8px rgba(13,33,69,0.06)';
+    fiatCard.style.border            = '2px solid #e2e8f0';
+    fiatCard.style.backgroundColor   = '#fff';
+    fiatCard.style.boxShadow         = '0 4px 24px rgba(13,33,69,0.06)';
+    if (formCrypto) formCrypto.style.display = 'block';
+    if (formBank)   formBank.style.display   = 'none';
     if (label) label.textContent = 'Withdraw Crypto Balance';
   } else {
-    // Activate fiat card
-    fiatCard.style.border = '2px solid #2d8a5e';
-    fiatCard.style.backgroundColor = '#e8f5ef';
-    fiatCard.style.boxShadow = '0 8px 40px rgba(45,138,94,0.12),0 2px 8px rgba(13,33,69,0.06)';
-    // Reset crypto card
-    cryptoCard.style.border = '2px solid #e2e8f0';
+    fiatCard.style.border            = '2px solid #2d8a5e';
+    fiatCard.style.backgroundColor   = '#e8f5ef';
+    fiatCard.style.boxShadow         = '0 8px 40px rgba(45,138,94,0.12),0 2px 8px rgba(13,33,69,0.06)';
+    cryptoCard.style.border          = '2px solid #e2e8f0';
     cryptoCard.style.backgroundColor = '#fff';
-    cryptoCard.style.boxShadow = '0 4px 24px rgba(13,33,69,0.06)';
-    // Show bank form, hide crypto form
-    formCrypto.style.display = 'none';
-    formBank.style.display   = 'block';
+    cryptoCard.style.boxShadow       = '0 4px 24px rgba(13,33,69,0.06)';
+    if (formCrypto) formCrypto.style.display = 'none';
+    if (formBank)   formBank.style.display   = 'block';
     if (label) label.textContent = 'Withdraw Fiat Balance';
   }
 }
@@ -689,69 +674,128 @@ function calcBankFees() {
   const amt     = parseFloat(document.getElementById('input-bank-amount').value) || 0;
   const platFee = amt * (PLATFORM_FEE_PCT / 100);
   const after   = amt - platFee;
-
-  document.getElementById('bank-fee-platform').textContent = amt > 0 ? `-$${platFee.toFixed(2)}` : '-';
-  document.getElementById('bank-fee-final').textContent    = amt > 0 && after > 0 ? `$${after.toFixed(2)}` : '-';
+  document.getElementById('bank-fee-platform').textContent = amt > 0 ? '-$'+platFee.toFixed(2) : '-';
+  document.getElementById('bank-fee-final').textContent    = (amt > 0 && after > 0) ? '$'+after.toFixed(2) : '-';
 }
 
-// ======= BANK WITHDRAW HANDLER =======
-function handleBankWithdraw() {
-  const errEl       = document.getElementById('bank-error');
-  const amt         = parseFloat(document.getElementById('input-bank-amount').value);
-  const accountName = document.getElementById('input-account-name').value.trim();
-  const accountNum  = document.getElementById('input-account-number').value.trim();
-  const bankName    = document.getElementById('input-bank-name').value.trim();
-  const swift       = document.getElementById('input-swift').value.trim();
-  const country     = document.getElementById('input-bank-country').value;
-  const saveDets    = document.getElementById('save-bank-details').checked;
-
+// ======= BANK WITHDRAW (real Netlify Function) =======
+async function handleBankWithdraw() {
+  var amt           = parseFloat(document.getElementById('input-bank-amount').value);
+  var accountName   = document.getElementById('input-account-name').value.trim();
+  var accountNumber = document.getElementById('input-account-number').value.trim();
+  var bankName      = document.getElementById('input-bank-name').value.trim();
+  var swift         = document.getElementById('input-swift').value.trim();
+  var country       = document.getElementById('input-bank-country').value;
+  var saveDetails   = document.getElementById('save-bank-details').checked;
+  var errEl         = document.getElementById('bank-error');
   errEl.style.display = 'none';
 
-  if (!amt || amt < MIN_BANK_WITHDRAWAL) {
-    errEl.textContent = `Minimum bank withdrawal is $${MIN_BANK_WITHDRAWAL}.00.`;
-    errEl.style.display = 'block'; return;
+  if (!kycVerified) {
+    errEl.innerHTML = 'Identity not verified. <a href="/verify.html" style="color:#2d8a5e;font-weight:700;">Complete KYC</a> to withdraw.';
+    errEl.style.display = 'block';
+    return;
   }
-  if (amt > DEMO_USER.fiatBalance) {
-    errEl.textContent = `Amount exceeds your fiat balance of $${DEMO_USER.fiatBalance.toFixed(2)}.`;
-    errEl.style.display = 'block'; return;
+  if (!amt || amt < MIN_WITHDRAWAL) {
+    errEl.textContent = 'Minimum withdrawal is $'+MIN_WITHDRAWAL+'.00.';
+    errEl.style.display = 'block';
+    return;
   }
-  if (!accountName) { errEl.textContent = 'Please enter the account holder name.'; errEl.style.display = 'block'; return; }
-  if (!accountNum)  { errEl.textContent = 'Please enter your bank account number.'; errEl.style.display = 'block'; return; }
-  if (!bankName)    { errEl.textContent = 'Please enter your bank name.';            errEl.style.display = 'block'; return; }
-  if (!country)     { errEl.textContent = 'Please select your country.';             errEl.style.display = 'block'; return; }
+  if (amt > liveBalance) {
+    errEl.textContent = 'Amount exceeds your available balance of '+fmt(liveBalance)+'.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!accountName) {
+    errEl.textContent = 'Please enter the account holder name.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!accountNumber) {
+    errEl.textContent = 'Please enter your bank account number.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!bankName) {
+    errEl.textContent = 'Please enter your bank name.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!country) {
+    errEl.textContent = 'Please select your country.';
+    errEl.style.display = 'block';
+    return;
+  }
 
-  const btn = document.getElementById('btn-bank-withdraw');
+  var platFee = amt * (PLATFORM_FEE_PCT / 100);
+  var after   = amt - platFee;
+
+  var btn = document.getElementById('btn-bank-withdraw');
+  var originalHtml = btn.innerHTML;
   btn.disabled = true;
-  btn.innerHTML = '<div class="spinner"></div> Processing...';
+  btn.innerHTML = '<div class="spinner"></div> Processing\u2026';
 
-  // Simulate API call (demo mode)
-  setTimeout(() => {
-    btn.disabled = false;
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg> Send to Bank Account';
-    showToast('Bank withdrawal initiated. Funds are on their way.');
-  }, 2200);
+  try {
+    var res = await fetch('/.netlify/functions/create-bank-payout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        uid:           currentUid,
+        amount:        amt,
+        accountName:   accountName,
+        accountNumber: accountNumber,
+        bankName:      bankName,
+        swift:         swift,
+        country:       country,
+        saveDetails:   saveDetails,
+        fees: { platformFee: platFee },
+      }),
+    });
+    var result = await res.json();
+    if (result.success) {
+      if (typeof result.newBalance === 'number') {
+        liveBalance = result.newBalance;
+        renderBalances();
+      }
+      showToast(result.message || 'Bank withdrawal request received.');
+      document.getElementById('input-bank-amount').value = '';
+      document.getElementById('input-account-name').value = '';
+      document.getElementById('input-account-number').value = '';
+      document.getElementById('input-bank-name').value = '';
+      document.getElementById('input-swift').value = '';
+      document.getElementById('input-bank-country').value = '';
+      document.getElementById('save-bank-details').checked = false;
+      calcBankFees();
+    } else {
+      errEl.textContent = result.error || 'Withdrawal failed. Please try again.';
+      errEl.style.display = 'block';
+    }
+  } catch (e) {
+    console.error('[withdraw] create-bank-payout error:', e);
+    errEl.textContent = 'Network error. Please check your connection and try again.';
+    errEl.style.display = 'block';
+  }
+  btn.disabled = false;
+  btn.innerHTML = originalHtml;
 }
 
 // ======= NAV =======
 const NAV_LINKS = [
-  { label:'Dashboard', href:'dashboard.html', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>' },
-  { label:'Projects', href:'dashboard-projects.html', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>' },
-  { label:'Earnings', href:'dashboard-earnings.html', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' },
-  { label:'Withdraw', href:'dashboard-withdraw.html', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' },
-  { label:'Contracts', href:'dashboard-contracts.html', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>' },
-  { label:'Settings', href:'dashboard-settings.html', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>' },
+  { label:'Dashboard',  href:'dashboard.html',           icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="3" y="3" width="7" height="7"/><rect x="14" y="3" width="7" height="7"/><rect x="14" y="14" width="7" height="7"/><rect x="3" y="14" width="7" height="7"/></svg>' },
+  { label:'Projects',   href:'dashboard-projects.html',  icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M22 19a2 2 0 0 1-2 2H4a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h5l2 3h9a2 2 0 0 1 2 2z"/></svg>' },
+  { label:'Earnings',   href:'dashboard-earnings.html',  icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="12" y1="1" x2="12" y2="23"/><path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/></svg>' },
+  { label:'Withdraw',   href:'dashboard-withdraw.html',  icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg>' },
+  { label:'Contracts',  href:'dashboard-contracts.html', icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>' },
+  { label:'Settings',   href:'dashboard-settings.html',  icon:'<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>' },
 ];
-
 function buildNav() {
-  const cur = 'dashboard-withdraw.html';
+  const cur  = 'dashboard-withdraw.html';
   const html = NAV_LINKS.map(l => {
     const active = l.href === cur;
-    return `<a href="${l.href}" class="nav-link${active?' active':''}">${l.icon}<span>${l.label}</span></a>`;
+    return '<a href="'+l.href+'" class="nav-link'+(active?' active':'')+'">'+l.icon+'<span>'+l.label+'</span></a>';
   }).join('');
   document.getElementById('desktop-nav').innerHTML = html;
-  document.getElementById('mobile-nav').innerHTML = html;
+  document.getElementById('mobile-nav').innerHTML  = html;
 }
-
 function openMobileMenu(){
   document.getElementById('mobile-menu').classList.add('open');
   document.getElementById('mobile-dim').classList.add('open');
@@ -765,140 +809,195 @@ function closeMobileMenu(){
 function handleLogout(){ window.location.href='login.html'; }
 
 // ======= TOAST =======
-function showToast(msg, duration=3500){
-  const t=document.getElementById('toast');
-  t.textContent=msg;t.classList.add('show');
-  setTimeout(()=>t.classList.remove('show'),duration);
+function showToast(msg, duration){
+  duration = duration || 3500;
+  var t=document.getElementById('toast');
+  t.textContent=msg; t.classList.add('show');
+  setTimeout(function(){ t.classList.remove('show'); }, duration);
 }
 
-// ======= EXCHANGE RATES =======
-const DEMO_RATES_PER_USD = {
-  usdt: 1,
-  bitcoin: 0.00001524,
-  ethereum: 0.00041820,
-  binancecoin: 0.00167,
-  'usd-coin': 1
-};
+// ======= LIVE EXCHANGE RATES (CoinGecko) =======
+async function fetchLiveRates() {
+  try {
+    const res = await fetch(
+      'https://api.coingecko.com/api/v3/simple/price?ids=tether,bitcoin,ethereum,binancecoin,usd-coin&vs_currencies=usd',
+      { cache: 'no-store' }
+    );
+    if (!res.ok) throw new Error('rate fetch failed');
+    const data = await res.json();
+    liveRates = {
+      usdt:        data.tether       ? 1 / data.tether['usd']       : 1,
+      bitcoin:     data.bitcoin      ? 1 / data.bitcoin['usd']      : liveRates.bitcoin,
+      ethereum:    data.ethereum     ? 1 / data.ethereum['usd']     : liveRates.ethereum,
+      binancecoin: data.binancecoin  ? 1 / data.binancecoin['usd']  : liveRates.binancecoin,
+      'usd-coin':  data['usd-coin']  ? 1 / data['usd-coin']['usd']  : 1,
+    };
+  } catch(e) {
+    console.warn('[withdraw] CoinGecko fetch failed, using cached rates:', e.message);
+  }
+  updateRateDisplay();
+}
 
 function updateRateDisplay(){
-  document.getElementById('rate-val-usdt').textContent = `${DEMO_RATES_PER_USD.usdt.toFixed(4)} USDT`;
-  document.getElementById('rate-val-btc').textContent = `${DEMO_RATES_PER_USD.bitcoin.toFixed(8)} BTC`;
-  document.getElementById('rate-val-eth').textContent = `${DEMO_RATES_PER_USD.ethereum.toFixed(8)} ETH`;
+  const r = liveRates;
+  const usdtEl = document.getElementById('rate-val-usdt');
+  const btcEl  = document.getElementById('rate-val-btc');
+  const ethEl  = document.getElementById('rate-val-eth');
+  if (usdtEl) usdtEl.textContent = (r.usdt||1).toFixed(4)+' USDT';
+  if (btcEl)  btcEl.textContent  = (r.bitcoin||0).toFixed(8)+' BTC';
+  if (ethEl)  ethEl.textContent  = (r.ethereum||0).toFixed(8)+' ETH';
   calcFees();
 }
 
 function startRateCountdown(){
-  setInterval(()=>{
+  setInterval(function() {
     rateCountdown--;
-    if(rateCountdown <= 0){
+    if (rateCountdown <= 0) {
       rateCountdown = 60;
-      updateRateDisplay();
+      fetchLiveRates();
     }
     const el = document.getElementById('rate-countdown');
-    if(el) el.textContent = rateCountdown;
+    if (el) el.textContent = rateCountdown;
   }, 1000);
 }
 
 function selectRateCard(coinId){
-  // Map coinId to currency
   const map = { usdt:'USDT', bitcoin:'BTC', ethereum:'ETH' };
-  if(map[coinId]) selectCurrency(map[coinId], coinId);
+  if (map[coinId]) selectCurrency(map[coinId], coinId);
 }
 
 // ======= CURRENCY SELECTION =======
 function selectCurrency(symbol, coinId){
   selectedCurrency = symbol;
-  selectedCoinId = coinId;
-
-  // Update currency buttons
-  document.querySelectorAll('.curr-btn').forEach(b => b.classList.remove('selected'));
-  const cb = document.getElementById('curr-'+symbol);
-  if(cb) cb.classList.add('selected');
-
-  // Update rate cards
-  document.querySelectorAll('.rate-card').forEach(c => c.classList.remove('selected'));
-  const mapToCard = { usdt:'rate-usdt', bitcoin:'rate-bitcoin', ethereum:'rate-ethereum' };
-  if(mapToCard[coinId]){
-    document.getElementById(mapToCard[coinId]).classList.add('selected');
+  selectedCoinId   = coinId;
+  document.querySelectorAll('.curr-btn').forEach(function(b){ b.classList.remove('selected'); });
+  var cb = document.getElementById('curr-'+symbol);
+  if (cb) cb.classList.add('selected');
+  document.querySelectorAll('.rate-card').forEach(function(c){ c.classList.remove('selected'); });
+  var mapToCard = { usdt:'rate-usdt', bitcoin:'rate-bitcoin', ethereum:'rate-ethereum' };
+  if (mapToCard[coinId]) {
+    var rc = document.getElementById(mapToCard[coinId]);
+    if (rc) rc.classList.add('selected');
   }
-
-  // Update wallet label
-  document.getElementById('wallet-label').textContent = `${symbol} Wallet Address`;
-
+  var wl = document.getElementById('wallet-label');
+  if (wl) wl.textContent = symbol+' Wallet Address';
   calcFees();
 }
 
 // ======= FEE CALCULATION =======
 function calcFees(){
-  const amt = parseFloat(document.getElementById('input-withdraw-amount').value) || 0;
-  const nowFee = amt * (NOWPAYMENTS_FEE_PCT / 100);
-  const platFee = amt * (PLATFORM_FEE_PCT / 100);
-  const afterFees = amt - nowFee - platFee;
-  const rate = DEMO_RATES_PER_USD[selectedCoinId] || 1;
-  const cryptoAmount = afterFees * rate;
+  var amt       = parseFloat(document.getElementById('input-withdraw-amount').value) || 0;
+  var nowFee    = amt * (NOWPAYMENTS_FEE_PCT / 100);
+  var platFee   = amt * (PLATFORM_FEE_PCT / 100);
+  var afterFees = amt - nowFee - platFee;
+  var rate      = liveRates[selectedCoinId] || 1;
+  var cryptoAmt = afterFees * rate;
 
-  document.getElementById('fee-network').textContent = amt > 0 ? `-$${nowFee.toFixed(2)}` : '-';
-  document.getElementById('fee-platform').textContent = amt > 0 ? `-$${platFee.toFixed(2)}` : '-';
+  var feeNet  = document.getElementById('fee-network');
+  var feePlat = document.getElementById('fee-platform');
+  var feeFin  = document.getElementById('fee-final');
+  var feeUsd  = document.getElementById('fee-final-usd');
 
-  if(amt > 0 && afterFees > 0){
-    if(selectedCoinId === 'usdt' || selectedCoinId === 'usd-coin'){
-      document.getElementById('fee-final').textContent = `${afterFees.toFixed(2)} ${selectedCurrency}`;
-    } else {
-      document.getElementById('fee-final').textContent = `${cryptoAmount.toFixed(8)} ${selectedCurrency}`;
-    }
-    document.getElementById('fee-final-usd').textContent = `â‰ˆ $${afterFees.toFixed(2)} USD`;
+  if (feeNet)  feeNet.textContent  = amt > 0 ? '-$'+nowFee.toFixed(2)  : '-';
+  if (feePlat) feePlat.textContent = amt > 0 ? '-$'+platFee.toFixed(2) : '-';
+  if (amt > 0 && afterFees > 0) {
+    var isStable = selectedCoinId === 'usdt' || selectedCoinId === 'usd-coin';
+    if (feeFin) feeFin.textContent = isStable
+      ? afterFees.toFixed(2)+' '+selectedCurrency
+      : cryptoAmt.toFixed(8)+' '+selectedCurrency;
+    if (feeUsd) feeUsd.textContent = '\u2248 $'+afterFees.toFixed(2)+' USD';
   } else {
-    document.getElementById('fee-final').textContent = '-';
-    document.getElementById('fee-final-usd').textContent = '';
+    if (feeFin) feeFin.textContent = '-';
+    if (feeUsd) feeUsd.textContent = '';
   }
 }
 
-// ======= WITHDRAW HANDLER =======
-function handleWithdraw(){
-  const amt = parseFloat(document.getElementById('input-withdraw-amount').value);
-  const wallet = document.getElementById('input-wallet-address').value.trim();
-  const errEl = document.getElementById('withdraw-error');
+// ======= CRYPTO WITHDRAW (real Netlify Function) =======
+async function handleWithdraw(){
+  var amt    = parseFloat(document.getElementById('input-withdraw-amount').value);
+  var wallet = document.getElementById('input-wallet-address').value.trim();
+  var errEl  = document.getElementById('withdraw-error');
   errEl.style.display = 'none';
 
-  if(!amt || amt < MIN_WITHDRAWAL){
-    errEl.textContent = `Minimum withdrawal is $${MIN_WITHDRAWAL}.00. Please enter a valid amount.`;
+  if (!kycVerified) {
+    errEl.innerHTML = 'Identity not verified. <a href="/verify.html" style="color:#2d8a5e;font-weight:700;">Complete KYC</a> to withdraw.';
     errEl.style.display = 'block';
     return;
   }
-  if(amt > DEMO_USER.availableBalance){
-    errEl.textContent = `Amount exceeds your available balance of $${DEMO_USER.availableBalance.toFixed(2)}.`;
+  if (!amt || amt < MIN_WITHDRAWAL) {
+    errEl.textContent = 'Minimum withdrawal is $'+MIN_WITHDRAWAL+'.00.';
     errEl.style.display = 'block';
     return;
   }
-  if(!wallet){
+  if (amt > liveBalance) {
+    errEl.textContent = 'Amount exceeds your available balance of '+fmt(liveBalance)+'.';
+    errEl.style.display = 'block';
+    return;
+  }
+  if (!wallet) {
     errEl.textContent = 'Please enter a wallet address.';
     errEl.style.display = 'block';
     return;
   }
 
-  // Lock the rate at this moment
-  lockedRate = DEMO_RATES_PER_USD[selectedCoinId];
+  lockedRate = liveRates[selectedCoinId] || 1;
+  var nowFee    = amt * (NOWPAYMENTS_FEE_PCT / 100);
+  var platFee   = amt * (PLATFORM_FEE_PCT / 100);
+  var afterFees = amt - nowFee - platFee;
+  var amountCoin = parseFloat((afterFees * lockedRate).toFixed(8));
 
-  const btn = document.getElementById('btn-withdraw');
+  var btn = document.getElementById('btn-withdraw');
   btn.disabled = true;
-  btn.innerHTML = '<div class="spinner"></div> Processing...';
+  btn.innerHTML = '<div class="spinner"></div> Processing\u2026';
 
-  // Simulate API call
-  setTimeout(()=>{
-    btn.disabled = false;
-    btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Confirm Withdrawal';
-    showToast('Withdrawal initiated. Funds are on their way.');
-  }, 2200);
+  try {
+    var res = await fetch('/.netlify/functions/create-payout', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        uid:          currentUid,
+        amount:       amt,
+        amountCoin:   amountCoin,
+        amountUsdt:   afterFees,
+        currency:     selectedCurrency,
+        coinId:       selectedCoinId,
+        network:      selectedCurrency,
+        walletAddress: wallet,
+        exchangeRate: lockedRate,
+        usdtRate:     liveRates['usdt'] || 1,
+        fees: { nowpaymentsFee: nowFee, platformFee: platFee },
+      }),
+    });
+    var result = await res.json();
+    if (result.success) {
+      if (typeof result.newBalance === 'number') {
+        liveBalance = result.newBalance;
+        renderBalances();
+      }
+      showToast(result.message || 'Withdrawal initiated. Funds are on their way.');
+      document.getElementById('input-withdraw-amount').value = '';
+      calcFees();
+    } else {
+      errEl.textContent = result.error || 'Withdrawal failed. Please try again.';
+      errEl.style.display = 'block';
+    }
+  } catch(e) {
+    console.error('[withdraw] create-payout error:', e);
+    errEl.textContent = 'Network error. Please check your connection and try again.';
+    errEl.style.display = 'block';
+  }
+  btn.disabled = false;
+  btn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="7 10 12 15 17 10"/><line x1="12" y1="15" x2="12" y2="3"/></svg> Confirm Withdrawal';
 }
 
 // ======= EARLY PAYOUT MODAL =======
 function openEarlyPayoutModal(){
-  const amt = parseFloat(document.getElementById('input-withdraw-amount').value) || 0;
-  const epFee = amt * (EARLY_PAYOUT_FEE_PCT / 100);
-  const final = amt - epFee;
-  document.getElementById('ep-amount').textContent = `$${amt.toFixed(2)}`;
-  document.getElementById('ep-fee').textContent = `-$${epFee.toFixed(2)}`;
-  document.getElementById('ep-final').textContent = `$${final.toFixed(2)}`;
+  var amt   = parseFloat(document.getElementById('input-withdraw-amount').value) || 0;
+  var epFee = amt * (EARLY_PAYOUT_FEE_PCT / 100);
+  var final = amt - epFee;
+  document.getElementById('ep-amount').textContent = '$'+amt.toFixed(2);
+  document.getElementById('ep-fee').textContent    = '-$'+epFee.toFixed(2);
+  document.getElementById('ep-final').textContent  = '$'+final.toFixed(2);
   document.getElementById('modal-early').classList.add('open');
   document.body.style.overflow = 'hidden';
 }
@@ -912,43 +1011,34 @@ function confirmEarlyPayout(){
 }
 
 // ======= MORE CURRENCIES MODAL =======
-const ALL_CURRENCIES = [
-  { symbol:'USDT', name:'Tether', color:'#26a17b', abbr:'T', coinId:'usdt' },
-  { symbol:'BTC', name:'Bitcoin', color:'#F7931A', abbr:'B', coinId:'bitcoin' },
-  { symbol:'ETH', name:'Ethereum', color:'#627EEA', abbr:'E', coinId:'ethereum' },
-  { symbol:'BNB', name:'BNB', color:'#F3BA2F', abbr:'B', coinId:'binancecoin' },
-  { symbol:'USDC', name:'USD Coin', color:'#2775CA', abbr:'U', coinId:'usd-coin' },
-  { symbol:'LTC', name:'Litecoin', color:'#345D9D', abbr:'L', coinId:'litecoin' },
-  { symbol:'XRP', name:'Ripple', color:'#006097', abbr:'X', coinId:'ripple' },
-  { symbol:'DOGE', name:'Dogecoin', color:'#C2A633', abbr:'D', coinId:'dogecoin' },
-  { symbol:'SOL', name:'Solana', color:'#9945FF', abbr:'S', coinId:'solana' },
-  { symbol:'ADA', name:'Cardano', color:'#0033AD', abbr:'A', coinId:'cardano' },
-  { symbol:'TRX', name:'TRON', color:'#FF0013', abbr:'T', coinId:'tron' },
-  { symbol:'MATIC', name:'Polygon', color:'#8247E5', abbr:'M', coinId:'matic-network' },
+var ALL_CURRENCIES = [
+  { symbol:'USDT',  name:'Tether',    color:'#26a17b', abbr:'T', coinId:'usdt' },
+  { symbol:'BTC',   name:'Bitcoin',   color:'#F7931A', abbr:'B', coinId:'bitcoin' },
+  { symbol:'ETH',   name:'Ethereum',  color:'#627EEA', abbr:'E', coinId:'ethereum' },
+  { symbol:'BNB',   name:'BNB',       color:'#F3BA2F', abbr:'B', coinId:'binancecoin' },
+  { symbol:'USDC',  name:'USD Coin',  color:'#2775CA', abbr:'U', coinId:'usd-coin' },
+  { symbol:'LTC',   name:'Litecoin',  color:'#345D9D', abbr:'L', coinId:'litecoin' },
+  { symbol:'XRP',   name:'Ripple',    color:'#006097', abbr:'X', coinId:'ripple' },
+  { symbol:'DOGE',  name:'Dogecoin',  color:'#C2A633', abbr:'D', coinId:'dogecoin' },
+  { symbol:'SOL',   name:'Solana',    color:'#9945FF', abbr:'S', coinId:'solana' },
+  { symbol:'ADA',   name:'Cardano',   color:'#0033AD', abbr:'A', coinId:'cardano' },
+  { symbol:'TRX',   name:'TRON',      color:'#FF0013', abbr:'T', coinId:'tron' },
+  { symbol:'MATIC', name:'Polygon',   color:'#8247E5', abbr:'M', coinId:'matic-network' },
 ];
-
-function renderCurrencyList(filter=''){
-  const list = document.getElementById('currency-list');
-  const filtered = ALL_CURRENCIES.filter(c =>
-    c.name.toLowerCase().includes(filter.toLowerCase()) ||
-    c.symbol.toLowerCase().includes(filter.toLowerCase())
-  );
-  list.innerHTML = filtered.map(c => `
-    <button onclick="selectFromModal('${c.symbol}','${c.coinId}')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1.5px solid #e2e8f0;background:#fff;cursor:pointer;transition:all .2s;text-align:left;width:100%;" onmouseover="this.style.borderColor='#2d8a5e';this.style.background='#e8f5ef'" onmouseout="this.style.borderColor='#e2e8f0';this.style.background='#fff'">
-      <div style="width:36px;height:36px;background:${c.color};border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="font-size:11px;font-weight:800;color:#fff;">${c.abbr}</span></div>
-      <div>
-        <div style="font-size:14px;font-weight:700;color:#0d2145;">${c.name}</div>
-        <div style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.45);">${c.symbol}</div>
-      </div>
-    </button>
-  `).join('');
+function renderCurrencyList(filter){
+  filter = filter || '';
+  var list     = document.getElementById('currency-list');
+  var filtered = ALL_CURRENCIES.filter(function(c) {
+    return c.name.toLowerCase().indexOf(filter.toLowerCase()) !== -1 ||
+           c.symbol.toLowerCase().indexOf(filter.toLowerCase()) !== -1;
+  });
+  list.innerHTML = filtered.map(function(c) {
+    return '<button onclick="selectFromModal(\''+c.symbol+'\',\''+c.coinId+'\')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;border-radius:12px;border:1.5px solid #e2e8f0;background:#fff;cursor:pointer;transition:all .2s;text-align:left;width:100%;" onmouseover="this.style.borderColor=\'#2d8a5e\';this.style.background=\'#e8f5ef\'" onmouseout="this.style.borderColor=\'#e2e8f0\';this.style.background=\'#fff\'"><div style="width:36px;height:36px;background:'+c.color+';border-radius:50%;display:flex;align-items:center;justify-content:center;flex-shrink:0;"><span style="font-size:11px;font-weight:800;color:#fff;">'+c.abbr+'</span></div><div><div style="font-size:14px;font-weight:700;color:#0d2145;">'+c.name+'</div><div style="font-size:12px;font-weight:500;color:rgba(13,33,69,0.45);">'+c.symbol+'</div></div></button>';
+  }).join('');
 }
-
 function filterCurrencies(){
-  const q = document.getElementById('currency-search').value;
-  renderCurrencyList(q);
+  renderCurrencyList(document.getElementById('currency-search').value);
 }
-
 function openMoreModal(){
   renderCurrencyList('');
   document.getElementById('modal-more').classList.add('open');
@@ -963,195 +1053,195 @@ function selectFromModal(symbol, coinId){
   selectCurrency(symbol, coinId);
 }
 
-// ======= STEP 18A: PULL TO REFRESH =======
-// Refreshes balance display, rate cards, and fee calculation from demo/live data.
-// In production replace the body of refreshPageData() with real Firestore + CoinGecko calls.
-function refreshPageData() {
-  updateRateDisplay();
-  document.getElementById('balance-crypto').textContent    = `$${DEMO_USER.cryptoBalance.toFixed(2)}`;
-  document.getElementById('balance-fiat').textContent      = `$${DEMO_USER.fiatBalance.toFixed(2)}`;
-  document.getElementById('max-display').textContent       = `$${DEMO_USER.cryptoBalance.toFixed(2)}`;
-  document.getElementById('bank-max-display').textContent  = `$${DEMO_USER.fiatBalance.toFixed(2)}`;
+// ======= PULL TO REFRESH =======
+async function refreshPageData() {
+  try {
+    if (window.db && currentUid) {
+      var mod = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+      var snap = await mod.getDoc(mod.doc(window.db, 'users', currentUid));
+      if (snap.exists()) {
+        var d = snap.data();
+        liveBalance       = Number(d.availableBalance || 0);
+        liveWalletAddress = d.walletAddress || '';
+        kycVerified       = d.kycStatus === 'verified';
+        renderBalances();
+        applyKycGate();
+        var wi = document.getElementById('input-wallet-address');
+        if (wi && liveWalletAddress) wi.value = liveWalletAddress;
+      }
+    }
+  } catch(e) {
+    console.warn('[withdraw] refresh failed:', e.message);
+  }
+  await fetchLiveRates();
   calcFees();
   calcBankFees();
 }
 
 (function initPullToRefresh() {
-  let touchStartY  = 0;
-  let touchStartX  = 0;
-  let isPulling    = false;
-  const PTR_THRESHOLD = 80;
-  const indicator  = document.getElementById('ptr-indicator');
-  const label      = document.getElementById('ptr-label');
-  let _ptrCooldown = false;
-
-  document.addEventListener('touchstart', (e) => {
+  var touchStartY = 0, touchStartX = 0, isPulling = false;
+  var PTR_THRESHOLD = 80;
+  var indicator  = document.getElementById('ptr-indicator');
+  var label      = document.getElementById('ptr-label');
+  var _ptrCooldown = false;
+  document.addEventListener('touchstart', function(e) {
     touchStartY = e.touches[0].clientY;
     touchStartX = e.touches[0].clientX;
     isPulling   = false;
   }, { passive: true });
-
-  document.addEventListener('touchmove', (e) => {
+  document.addEventListener('touchmove', function(e) {
     if (_ptrCooldown) return;
-    const dy = e.touches[0].clientY - touchStartY;
-    const dx = Math.abs(e.touches[0].clientX - touchStartX);
-    // Guard: page top, mostly downward, no modal open
-    const anyModalOpen =
+    var dy = e.touches[0].clientY - touchStartY;
+    var dx = Math.abs(e.touches[0].clientX - touchStartX);
+    var anyModalOpen =
       document.getElementById('modal-early').classList.contains('open') ||
       document.getElementById('modal-more').classList.contains('open');
     if (window.scrollY < 10 && dy > 30 && dx < 60 && !anyModalOpen) {
       isPulling = true;
-      label.textContent = dy > PTR_THRESHOLD ? 'Release to refresh' : 'Pull to refresh';
-      indicator.classList.add('ptr-pulling');
+      if (label) label.textContent = dy > PTR_THRESHOLD ? 'Release to refresh' : 'Pull to refresh';
+      if (indicator) indicator.classList.add('ptr-pulling');
     }
   }, { passive: true });
-
-  document.addEventListener('touchend', (e) => {
+  document.addEventListener('touchend', function(e) {
     if (!isPulling) return;
     isPulling = false;
-    const dy = e.changedTouches[0].clientY - touchStartY;
-
+    var dy = e.changedTouches[0].clientY - touchStartY;
     if (window.scrollY < 10 && dy > PTR_THRESHOLD) {
       _ptrCooldown = true;
-      label.textContent = 'Refreshing';
-      indicator.classList.remove('ptr-pulling');
-      indicator.classList.add('ptr-loading');
-
-      // Haptic triple-pulse on trigger
-      try { navigator.vibrate && navigator.vibrate([30, 40, 30]); } catch(err) {}
-
-      const result = refreshPageData();
-      const done = () => {
-        indicator.classList.remove('ptr-loading');
-        setTimeout(() => {
-          _ptrCooldown = false;
-          showToast('Rates and balance refreshed');
-        }, 300);
+      if (label) label.textContent = 'Refreshing';
+      if (indicator) { indicator.classList.remove('ptr-pulling'); indicator.classList.add('ptr-loading'); }
+      try { navigator.vibrate && navigator.vibrate([30,40,30]); } catch(e2){}
+      var result = refreshPageData();
+      var done = function() {
+        if (indicator) indicator.classList.remove('ptr-loading');
+        setTimeout(function(){ _ptrCooldown = false; showToast('Balance and rates refreshed'); }, 300);
       };
-      if (result && typeof result.then === 'function') {
-        result.then(done).catch(done);
-      } else {
-        setTimeout(done, 800);
-      }
+      if (result && typeof result.then === 'function') result.then(done).catch(done);
+      else setTimeout(done, 800);
     } else {
-      indicator.classList.remove('ptr-pulling');
+      if (indicator) indicator.classList.remove('ptr-pulling');
     }
   }, { passive: true });
 })();
 
-// ======= STEP 18B: HAPTIC FEEDBACK ON CONFIRM / APPROVE BUTTONS =======
-// Targets on this page:
-//   "Confirm Withdrawal"  â€” btn-withdraw (id)
-//   "Confirm Early Payout" â€” inside modal-early
-// Delegated listener catches both plus any future additions.
+// ======= HAPTIC FEEDBACK =======
 (function initHaptic() {
-  document.addEventListener('click', (e) => {
-    const btn = e.target.closest('button, [role="button"]');
+  document.addEventListener('click', function(e) {
+    var btn = e.target.closest('button, [role="button"]');
     if (!btn) return;
-    const txt = (btn.textContent || '').trim().toLowerCase();
-    if (/^(confirm|approve)/.test(txt)) {
-      try { navigator.vibrate && navigator.vibrate(50); } catch(err) {}
+    if (/^(confirm|approve)/i.test((btn.textContent||'').trim())) {
+      try { navigator.vibrate && navigator.vibrate(50); } catch(e2){}
     }
   }, { passive: true });
 })();
 
-// ======= STEP 18C: SWIPE TO GO BACK =======
+// ======= SWIPE TO GO BACK =======
 (function initSwipeBack() {
-  let touchStartX  = 0;
-  let touchStartY  = 0;
-  const EDGE_ZONE    = 30;
-  const SWIPE_MIN_DX = 60;
-  const hint         = document.getElementById('swipe-hint');
-  let isEdgeSwipe    = false;
-
-  document.addEventListener('touchstart', (e) => {
+  var touchStartX = 0, touchStartY = 0, isEdgeSwipe = false;
+  var EDGE_ZONE = 30, SWIPE_MIN_DX = 60;
+  var hint = document.getElementById('swipe-hint');
+  document.addEventListener('touchstart', function(e) {
     touchStartX = e.touches[0].clientX;
     touchStartY = e.touches[0].clientY;
     isEdgeSwipe = touchStartX < EDGE_ZONE;
-    if (isEdgeSwipe) hint.classList.add('active');
+    if (isEdgeSwipe && hint) hint.classList.add('active');
   }, { passive: true });
-
-  document.addEventListener('touchend', (e) => {
+  document.addEventListener('touchend', function(e) {
     if (!isEdgeSwipe) return;
-    hint.classList.remove('active');
-
-    const dx = e.changedTouches[0].clientX - touchStartX;
-    const dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
-
+    if (hint) hint.classList.remove('active');
+    var dx = e.changedTouches[0].clientX - touchStartX;
+    var dy = Math.abs(e.changedTouches[0].clientY - touchStartY);
     if (dx > SWIPE_MIN_DX && dy < dx * 0.6) {
-      // Close open layers in priority order before navigating
-      const menuOpen  = document.getElementById('mobile-menu').classList.contains('open');
-      const earlyOpen = document.getElementById('modal-early').classList.contains('open');
-      const moreOpen  = document.getElementById('modal-more').classList.contains('open');
-
-      if (menuOpen)  { closeMobileMenu();  isEdgeSwipe = false; return; }
-      if (earlyOpen) { closeEarlyModal();  isEdgeSwipe = false; return; }
-      if (moreOpen)  { closeMoreModal();   isEdgeSwipe = false; return; }
-
-      try { navigator.vibrate && navigator.vibrate(30); } catch(err) {}
+      if (document.getElementById('mobile-menu').classList.contains('open'))  { closeMobileMenu(); isEdgeSwipe=false; return; }
+      if (document.getElementById('modal-early').classList.contains('open'))  { closeEarlyModal(); isEdgeSwipe=false; return; }
+      if (document.getElementById('modal-more').classList.contains('open'))   { closeMoreModal();  isEdgeSwipe=false; return; }
+      try { navigator.vibrate && navigator.vibrate(30); } catch(e2){}
       window.history.back();
     }
     isEdgeSwipe = false;
   }, { passive: true });
-
-  document.addEventListener('touchcancel', () => {
-    hint.classList.remove('active');
+  document.addEventListener('touchcancel', function() {
+    if (hint) hint.classList.remove('active');
     isEdgeSwipe = false;
   }, { passive: true });
 })();
 
-// ======= BOOT =======
-window._boot = function(user) {
-  DEMO_USER.uid         = user.uid;
-  DEMO_USER.displayName = user.displayName || user.email || 'User';
+// ======= BOOT â€” Real Firebase data =======
+window._boot = async function(user) {
+  currentUid = user.uid;
+  var displayName = user.displayName || user.email || 'User';
 
   buildNav();
 
-  // Set user avatar
-  const initials = DEMO_USER.displayName.split(' ').map(n=>n[0]).join('').toUpperCase();
-  document.getElementById('user-avatar').textContent = initials;
+  // Avatar initials
+  var initials = displayName.split(' ').map(function(n){ return n[0]||''; }).join('').toUpperCase().slice(0,2) || 'U';
+  var av = document.getElementById('user-avatar');
+  if (av) av.textContent = initials;
 
-  // Set dual balances
-  document.getElementById('balance-crypto').textContent = `$${DEMO_USER.cryptoBalance.toFixed(2)}`;
-  document.getElementById('balance-fiat').textContent   = `$${DEMO_USER.fiatBalance.toFixed(2)}`;
-  document.getElementById('max-display').textContent    = `$${DEMO_USER.cryptoBalance.toFixed(2)}`;
-  document.getElementById('bank-max-display').textContent = `$${DEMO_USER.fiatBalance.toFixed(2)}`;
-  document.getElementById('input-withdraw-amount').max  = DEMO_USER.cryptoBalance;
-  document.getElementById('input-bank-amount').max      = DEMO_USER.fiatBalance;
+  // Show loading state
+  var bCrypto = document.getElementById('balance-crypto');
+  var bFiat   = document.getElementById('balance-fiat');
+  if (bCrypto) bCrypto.textContent = '...';
+  if (bFiat)   bFiat.textContent   = '...';
 
-  // Set wallet address
-  if (DEMO_USER.walletAddress) {
-    document.getElementById('input-wallet-address').value = DEMO_USER.walletAddress;
-  }
-
-  // Prefill bank details if saved
-  if (DEMO_USER.bankDetails) {
-    const bd = DEMO_USER.bankDetails;
-    if (bd.accountName)   document.getElementById('input-account-name').value    = bd.accountName;
-    if (bd.accountNumber) document.getElementById('input-account-number').value  = bd.accountNumber;
-    if (bd.bankName)      document.getElementById('input-bank-name').value       = bd.bankName;
-    if (bd.swift)         document.getElementById('input-swift').value           = bd.swift;
-    if (bd.country) {
-      const sel = document.getElementById('input-bank-country');
-      for (let i = 0; i < sel.options.length; i++) {
-        if (sel.options[i].text === bd.country) { sel.selectedIndex = i; break; }
-      }
-    }
-  }
-
-  // Default active card
-  const defaultCard = DEMO_USER.cryptoBalance > 0 ? 'crypto' : 'fiat';
-  activateBalanceCard(defaultCard);
-
-  if (DEMO_USER.premiumStatus !== 'active') {
-    document.getElementById('early-payout-section').style.display = 'none';
-  }
-
+  activateBalanceCard('crypto');
   updateRateDisplay();
   selectRateCard('usdt');
+
+  try {
+    var mod  = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    var snap = await mod.getDoc(mod.doc(window.db, 'users', currentUid));
+    if (snap.exists()) {
+      var d = snap.data();
+      liveBalance       = Number(d.availableBalance || 0);
+      liveWalletAddress = d.walletAddress || '';
+      kycVerified       = d.kycStatus === 'verified';
+
+      // Prefill wallet from Firebase (no hardcoded address)
+      var walletInput = document.getElementById('input-wallet-address');
+      if (walletInput && liveWalletAddress) walletInput.value = liveWalletAddress;
+
+      // Early payout â€” pro/premium only
+      var isPro = d.plan === 'pro' || d.premiumStatus === 'active';
+      var epSection = document.getElementById('early-payout-section');
+      if (epSection && !isPro) epSection.style.display = 'none';
+    }
+  } catch(e) {
+    console.error('[withdraw] Firestore load failed:', e.message);
+    showToast('Could not load balance. Pull down to retry.');
+  }
+
+  // ======= FIAT (BANK) AVAILABILITY â€” config/platform =======
+  try {
+    var modCfg   = await import('https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js');
+    var cfgSnap  = await modCfg.getDoc(modCfg.doc(window.db, 'config', 'platform'));
+    fiatEnabled  = cfgSnap.exists() && (
+      cfgSnap.data().paystackEnabled === true ||
+      cfgSnap.data().stripeEnabled   === true
+    );
+  } catch(e) {
+    console.warn('[withdraw] config/platform load failed:', e.message);
+    fiatEnabled = false;
+  }
+
+  var fiatCardEl = document.getElementById('card-fiat');
+  var bankBanner = document.getElementById('bank-coming-soon-banner');
+  if (fiatEnabled) {
+    if (fiatCardEl) { fiatCardEl.style.pointerEvents = ''; fiatCardEl.style.opacity = ''; }
+    if (bankBanner) bankBanner.style.display = 'none';
+  } else {
+    if (fiatCardEl) { fiatCardEl.style.pointerEvents = 'none'; fiatCardEl.style.opacity = '0.6'; }
+    if (bankBanner) bankBanner.style.display = 'flex';
+  }
+
+  renderBalances();
+  applyKycGate();
+  calcFees();
+  calcBankFees();
+
+  await fetchLiveRates();
   startRateCountdown();
 
-  // Hide overlay immediately - no artificial delay
   document.getElementById('loading-overlay').style.display = 'none';
 };
 </script>
@@ -1164,7 +1254,7 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-<script>Â// Safety: force-hide loading overlay after 10s if auth/boot stallsÂ(function() {Â  var _safetyTimer = setTimeout(function() {Â    var ov = document.getElementById("loading-overlay");Â    if (ov) { ov.style.display = "none"; }Â  }, 10000);Â  window._clearSafetyTimer = function() { clearTimeout(_safetyTimer); };Â})();Â</script>Â
+<script>ï¿½// Safety: force-hide loading overlay after 10s if auth/boot stallsï¿½(function() {ï¿½  var _safetyTimer = setTimeout(function() {ï¿½    var ov = document.getElementById("loading-overlay");ï¿½    if (ov) { ov.style.display = "none"; }ï¿½  }, 10000);ï¿½  window._clearSafetyTimer = function() { clearTimeout(_safetyTimer); };ï¿½})();ï¿½</script>ï¿½
 
 <script type="module">
   import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';

@@ -269,109 +269,10 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
 
 <script>
 // ============ DEMO USER (buyer) ============
-var DEMO_USER = { name: 'Claire Dubois', role: 'buyer', uid: 'demo-buyer-1' };
+var DEMO_USER = { name: '', role: 'buyer', uid: null };
 
-// ============ DEMO PROJECTS (buyerUid equals uid) ============
-var PROJECTS = [
-  {
-    id: 'b1',
-    title: 'E-commerce Platform Redesign for French Retail Group',
-    freelancer: 'Marco Ricci',
-    amount: 950,
-    deadline: '20 Jun 2026',
-    status: 'in_progress',
-    escrowStatus: 'funded',
-    freelancerSigned: true,
-    buyerSigned: true,
-    contractPdfUrl: 'https://example.com/contracts/b1.pdf'
-  },
-  {
-    id: 'b2',
-    title: 'Landing Page Copywriting for SaaS Launch',
-    freelancer: 'Amara Okafor',
-    amount: 280,
-    deadline: '18 Jun 2026',
-    status: 'delivered',
-    escrowStatus: 'funded',
-    freelancerSigned: true,
-    buyerSigned: true,
-    contractPdfUrl: 'https://example.com/contracts/b2.pdf'
-  },
-  {
-    id: 'b3',
-    title: 'WordPress Custom Plugin for Event Management',
-    freelancer: 'Luca Ferrari',
-    amount: 340,
-    deadline: '28 Jun 2026',
-    status: 'in_progress',
-    escrowStatus: 'funded',
-    freelancerSigned: true,
-    buyerSigned: true,
-    contractPdfUrl: 'https://example.com/contracts/b3.pdf'
-  },
-  {
-    id: 'b4',
-    title: 'Brand Strategy Workshop for Fintech Startup',
-    freelancer: 'TomÃ¡s Vidal',
-    amount: 450,
-    deadline: '15 Jul 2026',
-    status: 'awaiting_signatures',
-    escrowStatus: 'unfunded',
-    freelancerSigned: true,
-    buyerSigned: true,
-    contractPdfUrl: 'https://example.com/contracts/b4.pdf'
-  },
-  {
-    id: 'b5',
-    title: 'Backend API Integration Support',
-    freelancer: 'Daniela Reyes',
-    amount: 340,
-    deadline: '22 Apr 2026',
-    status: 'disputed',
-    escrowStatus: 'disputed',
-    freelancerSigned: true,
-    buyerSigned: true,
-    contractPdfUrl: 'https://example.com/contracts/b5.pdf'
-  },
-  {
-    id: 'b6',
-    title: 'Mobile App UI Design - Fitness Tracker',
-    freelancer: 'Sofia Andersen',
-    amount: 620,
-    deadline: '15 Apr 2026',
-    status: 'completed',
-    escrowStatus: 'released',
-    completedDate: '15 Apr 2026',
-    freelancerSigned: true,
-    buyerSigned: true,
-    contractPdfUrl: 'https://example.com/contracts/b6.pdf'
-  },
-  {
-    id: 'b7',
-    title: 'Analytics Dashboard for Internal Reporting',
-    freelancer: 'Elena Novak',
-    amount: 780,
-    deadline: '2 Apr 2026',
-    status: 'completed',
-    escrowStatus: 'released',
-    completedDate: '2 Apr 2026',
-    freelancerSigned: true,
-    buyerSigned: true,
-    contractPdfUrl: 'https://example.com/contracts/b7.pdf'
-  },
-  {
-    id: 'b8',
-    title: 'Custom CRM Integration for Logistics Firm',
-    freelancer: 'Heinrich Bauer',
-    amount: 890,
-    deadline: '20 Mar 2026',
-    status: 'disputed',
-    escrowStatus: 'disputed',
-    freelancerSigned: true,
-    buyerSigned: true,
-    contractPdfUrl: 'https://example.com/contracts/b8.pdf'
-  }
-];
+// ============ LIVE DATA â€” populated by loadBuyerProjects() in _boot ============
+var PROJECTS = [];
 
 var STATUS_CONFIG = {
   in_progress:         { label: 'In Progress',         cls: 'badge-blue'  },
@@ -552,6 +453,13 @@ function renderProjects() {
   var empty = document.getElementById('empty-state');
   var searchTerm = document.getElementById('search-input').value.trim().toLowerCase();
 
+  if (PROJECTS.length === 0) {
+    var grid = document.getElementById('projects-grid');
+    var empty = document.getElementById('empty-state');
+    if (grid) { grid.innerHTML = ''; grid.style.display = 'none'; }
+    if (empty) { empty.style.display = 'block'; empty.innerHTML = '<p style="color:rgba(13,33,69,0.5);text-align:center;padding:40px 20px;">No projects yet.<br>Projects will appear here once funded.</p>'; }
+    return;
+  }
   var filtered = PROJECTS.filter(function(p) {
     if (currentTab === 'active') {
       return p.status !== 'completed' && p.status !== 'disputed';
@@ -654,6 +562,61 @@ document.addEventListener('keydown', function(e) {
   }
 });
 
+// ============ LOAD BUYER PROJECTS FROM FIRESTORE ============
+async function loadBuyerProjects(uid) {
+  if (!window.db || !window._fsQ) return;
+  var fsQ = window._fsQ;
+  try {
+    var q = fsQ.query(
+      fsQ.collection(window.db, 'projects'),
+      fsQ.where('buyerUid', '==', uid),
+      fsQ.orderBy('createdAt', 'desc')
+    );
+    var snap = await fsQ.getDocs(q);
+
+    // Fetch freelancer names in parallel
+    var flUids = [];
+    snap.docs.forEach(function(d) { if (d.data().freelancerUid) flUids.push(d.data().freelancerUid); });
+    var uniqueFlUids = flUids.filter(function(v, i, a) { return a.indexOf(v) === i; });
+    var flMap = {};
+    await Promise.all(uniqueFlUids.map(async function(fuid) {
+      try {
+        var fsnap = await fsQ.getDoc(fsQ.doc(window.db, 'users', fuid));
+        if (fsnap.exists()) {
+          var fd = fsnap.data();
+          flMap[fuid] = fd.displayName || fd.name || fd.email || 'Freelancer';
+        }
+      } catch(e) { /* non-fatal */ }
+    }));
+
+    PROJECTS = snap.docs.map(function(d) {
+      var data = d.data();
+      var dl = data.deadline;
+      return {
+        id:               d.id,
+        title:            data.title          || 'Untitled Project',
+        freelancer:       flMap[data.freelancerUid] || data.freelancerName || 'Freelancer',
+        freelancerUid:    data.freelancerUid,
+        buyerUid:         data.buyerUid,
+        amount:           data.amount         || data.netAmount || 0,
+        deadline:         dl ? (typeof dl === 'string' ? dl : new Date(dl.toDate ? dl.toDate() : dl).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'})) : 'â€”',
+        status:           data.status         || 'in_progress',
+        escrowStatus:     data.escrowStatus   || 'unfunded',
+        freelancerSigned: data.freelancerSigned || false,
+        buyerSigned:      data.buyerSigned    || false,
+        contractPdfUrl:   data.contractPdfUrl || null,
+        deliveredAt:      data.deliveredAt    || null,
+        completedDate:    data.completedAt    ? new Date(data.completedAt.toDate ? data.completedAt.toDate() : data.completedAt).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '',
+      };
+    });
+  } catch(err) {
+    console.error('[loadBuyerProjects]', err);
+    showToast('Could not load projects. Pull to refresh.');
+  }
+  renderProjects();
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+
 // ============ BOOT ============
 window._boot = function(user, userData) {
   DEMO_USER.uid  = user.uid;
@@ -666,8 +629,7 @@ window._boot = function(user, userData) {
 
   buildNav();
   document.getElementById('bell-dot').style.display = 'block';
-  renderProjects();
-  document.getElementById('loading-overlay').style.display = 'none';
+  loadBuyerProjects(user.uid);
 };
 </script>
 <script>
@@ -679,12 +641,12 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-<script>Â// Safety: force-hide loading overlay after 10s if auth/boot stallsÂ(function() {Â  var _safetyTimer = setTimeout(function() {Â    var ov = document.getElementById("loading-overlay");Â    if (ov) { ov.style.display = "none"; }Â  }, 10000);Â  window._clearSafetyTimer = function() { clearTimeout(_safetyTimer); };Â})();Â</script>Â
+<script>ï¿½// Safety: force-hide loading overlay after 10s if auth/boot stallsï¿½(function() {ï¿½  var _safetyTimer = setTimeout(function() {ï¿½    var ov = document.getElementById("loading-overlay");ï¿½    if (ov) { ov.style.display = "none"; }ï¿½  }, 10000);ï¿½  window._clearSafetyTimer = function() { clearTimeout(_safetyTimer); };ï¿½})();ï¿½</script>ï¿½
 
 <script type="module">
   import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getFirestore, doc, getDoc, collection, query, where, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   const FIREBASE_CONFIG = {
     apiKey:            'AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk',
     authDomain:        'kreddlo.firebaseapp.com',
@@ -697,6 +659,7 @@ if ('serviceWorker' in navigator) {
   const auth = getAuth(app);
   const db   = getFirestore(app);
   window.db  = db;
+  window._fsQ = { collection, query, where, orderBy, getDocs, getDoc, doc };
   onAuthStateChanged(auth, function(user) {
     if (!user) { window.location.href = '/login.html'; return; }
     getDoc(doc(db, 'users', user.uid)).then(function(snap) {

@@ -337,54 +337,20 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
 <script>
 // ============ DEMO USER ============
 var DEMO = {
-  name: 'Marco Ricci',
-  premiumStatus: 'inactive', // change to 'active' to preview premium analytics
-  availableBalance: 1240.50
+  uid: null,
+  name: '',
+  premiumStatus: 'inactive',
+  availableBalance: 0
 };
 
-// ============ DEMO PROJECTS (completed, with netAmount + completedAt) ============
+// ============ LIVE DATA â€” populated by loadEarningsData() in _boot ============
 function daysAgo(n) {
   var d = new Date();
   d.setDate(d.getDate() - n);
   return d;
 }
-var DEMO_PROJECTS = [
-  { netAmount: 180,  completedAt: daysAgo(1)  },
-  { netAmount: 320,  completedAt: daysAgo(3)  },
-  { netAmount: 95,   completedAt: daysAgo(5)  },
-  { netAmount: 410,  completedAt: daysAgo(8)  },
-  { netAmount: 260,  completedAt: daysAgo(11) },
-  { netAmount: 150,  completedAt: daysAgo(14) },
-  { netAmount: 380,  completedAt: daysAgo(18) },
-  { netAmount: 220,  completedAt: daysAgo(22) },
-  { netAmount: 470,  completedAt: daysAgo(27) },
-  { netAmount: 300,  completedAt: daysAgo(34) },
-  { netAmount: 540,  completedAt: daysAgo(45) },
-  { netAmount: 275,  completedAt: daysAgo(58) },
-  { netAmount: 390,  completedAt: daysAgo(72) },
-  { netAmount: 610,  completedAt: daysAgo(95) },
-  { netAmount: 340,  completedAt: daysAgo(120) },
-  { netAmount: 460,  completedAt: daysAgo(150) },
-  { netAmount: 290,  completedAt: daysAgo(180) },
-  { netAmount: 520,  completedAt: daysAgo(210) },
-  { netAmount: 370,  completedAt: daysAgo(245) },
-  { netAmount: 430,  completedAt: daysAgo(280) },
-  { netAmount: 310,  completedAt: daysAgo(330) }
-];
-
-// ============ DEMO PAYOUTS ============
-var DEMO_PAYOUTS = [
-  { date: daysAgo(2),  amountUsd: 940,  amountCrypto: 940.32,  currency: 'USDT', wallet: 'TXn2...8kLp', status: 'completed' },
-  { date: daysAgo(9),  amountUsd: 480,  amountCrypto: 480.11,  currency: 'USDT', wallet: 'TXn2...8kLp', status: 'completed' },
-  { date: daysAgo(20), amountUsd: 620,  amountCrypto: 0.0094,  currency: 'BTC',  wallet: 'bc1q...9f3m', status: 'completed' },
-  { date: daysAgo(35), amountUsd: 350,  amountCrypto: 350.07,  currency: 'USDT', wallet: 'TXn2...8kLp', status: 'completed' },
-  { date: daysAgo(50), amountUsd: 275,  amountCrypto: 0.182,   currency: 'ETH',  wallet: '0xAb3...2eD1', status: 'completed' },
-  { date: daysAgo(75), amountUsd: 600,  amountCrypto: 600.45,  currency: 'USDT', wallet: 'TXn2...8kLp', status: 'pending'   },
-  { date: daysAgo(110),amountUsd: 410,  amountCrypto: 410.02,  currency: 'USDT', wallet: 'TXn2...8kLp', status: 'completed' },
-  { date: daysAgo(160),amountUsd: 530,  amountCrypto: 530.19,  currency: 'USDT', wallet: 'TXn2...8kLp', status: 'completed' },
-  { date: daysAgo(200),amountUsd: 290,  amountCrypto: 0.0044,  currency: 'BTC',  wallet: 'bc1q...9f3m', status: 'failed'    },
-  { date: daysAgo(260),amountUsd: 470,  amountCrypto: 470.28,  currency: 'USDT', wallet: 'TXn2...8kLp', status: 'completed' }
-];
+var DEMO_PROJECTS = []; // filled from Firestore: projects (completed) + product-orders (paid)
+var DEMO_PAYOUTS  = []; // filled from Firestore: payouts collection
 
 var STATUS = {
   completed: { label:'Completed', cls:'badge-green' },
@@ -475,7 +441,7 @@ function renderSummaryCards(period) {
   document.getElementById('card-pending').classList.remove('sk');
   document.getElementById('card-pending').style.width = 'auto';
   document.getElementById('card-pending').style.height = 'auto';
-  document.getElementById('card-pending').textContent = '$' + DEMO.availableBalance.toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
+  document.getElementById('card-pending').textContent = '$' + (DEMO.availableBalance || 0).toLocaleString(undefined,{minimumFractionDigits:2,maximumFractionDigits:2});
 
   var trendEarned = document.getElementById('trend-earned');
   trendEarned.querySelector('span').textContent = projectsInPeriod.length + ' projects completed';
@@ -631,6 +597,11 @@ function renderPayouts() {
   var tbody = document.getElementById('payout-table-body');
   var cards = document.getElementById('payout-cards');
 
+  if (!DEMO_PAYOUTS.length) {
+    tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;padding:32px 20px;color:rgba(13,33,69,0.45);font-size:14px;">No payouts yet</td></tr>';
+    cards.innerHTML = '<p style="text-align:center;padding:32px 20px;color:rgba(13,33,69,0.45);font-size:14px;">No payouts yet</p>';
+    return;
+  }
   tbody.innerHTML = DEMO_PAYOUTS.map(function(p) {
     var s = STATUS[p.status] || STATUS.completed;
     var dateStr = p.date.toLocaleDateString('en-GB', { day:'numeric', month:'short', year:'numeric' });
@@ -694,7 +665,7 @@ function exportCSV() {
 function renderPremiumSection() {
   var wrap = document.getElementById('premium-section');
 
-  if (DEMO.premiumStatus !== 'active') {
+  if (DEMO.premiumStatus !== 'active' && DEMO.plan !== 'pro') {
     wrap.innerHTML =
       '<div class="premium-lock-wrap">'
         + '<div class="premium-blur">'
@@ -801,14 +772,16 @@ function selectPeriod(period) {
   renderChart(period);
 }
 
-// ============ STEP 18A: PULL TO REFRESH ============
-// Primary data refresh for this page â€” re-renders all earnings data from demo set.
-// In production replace the body of refreshPageData() with real Firestore queries.
+// ============ PULL TO REFRESH ============
 function refreshPageData() {
-  renderSummaryCards(currentPeriod);
-  renderChart(currentPeriod);
-  renderPayouts();
-  renderPremiumSection();
+  if (DEMO.uid) {
+    loadEarningsData(DEMO.uid);
+  } else {
+    renderSummaryCards(currentPeriod);
+    renderChart(currentPeriod);
+    renderPayouts();
+    renderPremiumSection();
+  }
 }
 
 (function initPullToRefresh() {
@@ -931,6 +904,88 @@ document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closeMobileMenu();
 });
 
+// ============ LOAD EARNINGS DATA FROM FIRESTORE ============
+async function loadEarningsData(uid) {
+  if (!window.db || !window._fsQ) return;
+  var fsQ = window._fsQ;
+
+  try {
+    // â”€â”€ Query 1: completed projects (freelancer side) â”€â”€
+    var q1 = fsQ.query(
+      fsQ.collection(window.db, 'projects'),
+      fsQ.where('freelancerUid', '==', uid),
+      fsQ.where('status', '==', 'completed')
+    );
+    var snap1 = await fsQ.getDocs(q1);
+    var projectEarnings = snap1.docs.map(function(d) {
+      var data = d.data();
+      var ts = data.completedAt;
+      return {
+        netAmount:   data.netAmount || data.amount || 0,
+        completedAt: ts ? (ts.toDate ? ts.toDate() : new Date(ts)) : new Date()
+      };
+    });
+
+    // â”€â”€ Query 2: paid product orders (seller side) â”€â”€
+    var q2 = fsQ.query(
+      fsQ.collection(window.db, 'product-orders'),
+      fsQ.where('sellerUid', '==', uid),
+      fsQ.where('paymentStatus', '==', 'paid')
+    );
+    var snap2 = await fsQ.getDocs(q2);
+    var productEarnings = snap2.docs.map(function(d) {
+      var data = d.data();
+      var ts = data.deliveredAt || data.createdAt;
+      return {
+        netAmount:   data.sellerAmount || 0,
+        completedAt: ts ? (ts.toDate ? ts.toDate() : new Date(ts)) : new Date()
+      };
+    });
+
+    // Merge both into DEMO_PROJECTS (shape filterByPeriod already expects)
+    DEMO_PROJECTS = projectEarnings.concat(productEarnings);
+
+    // â”€â”€ Query 3: payouts â”€â”€
+    var q3 = fsQ.query(
+      fsQ.collection(window.db, 'payouts'),
+      fsQ.where('userUid', '==', uid),
+      fsQ.orderBy('createdAt', 'desc')
+    );
+    var snap3 = await fsQ.getDocs(q3);
+    DEMO_PAYOUTS = snap3.docs.map(function(d) {
+      var data = d.data();
+      var ts = data.createdAt;
+      return {
+        date:        ts ? (ts.toDate ? ts.toDate() : new Date(ts)) : new Date(),
+        amountUsd:   data.amount       || 0,
+        amountCrypto: data.amountCoin  || data.amount || 0,
+        currency:    data.currency     || 'USDT',
+        wallet:      data.walletAddress ? data.walletAddress.slice(0,6) + '...' + data.walletAddress.slice(-4) : 'â€”',
+        status:      data.status       || 'pending'
+      };
+    });
+
+    // â”€â”€ User doc: availableBalance + plan â”€â”€
+    var userSnap = await fsQ.getDoc(fsQ.doc(window.db, 'users', uid));
+    if (userSnap.exists()) {
+      var ud = userSnap.data();
+      DEMO.availableBalance = ud.availableBalance || 0;
+      DEMO.premiumStatus    = ud.premiumStatus    || 'inactive';
+      DEMO.plan             = ud.plan             || '';
+    }
+
+  } catch(err) {
+    console.error('[loadEarningsData]', err);
+    showToast('Could not load earnings data. Pull to refresh.');
+  }
+
+  renderSummaryCards(currentPeriod);
+  renderChart(currentPeriod);
+  renderPayouts();
+  renderPremiumSection();
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+
 // ============ BOOT ============
 window._boot = function(user) {
   DEMO.uid  = user.uid;
@@ -947,14 +1002,8 @@ window._boot = function(user) {
   // Bell dot
   document.getElementById('bell-dot').style.display = 'block';
 
-  // Initial render
-  renderSummaryCards(currentPeriod);
-  renderChart(currentPeriod);
-  renderPayouts();
-  renderPremiumSection();
-
-  // Hide loading overlay
-  document.getElementById('loading-overlay').style.display = 'none';
+  // Load real data from Firestore
+  loadEarningsData(user.uid);
 };
 </script>
 <script>
@@ -966,12 +1015,12 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-<script>Â// Safety: force-hide loading overlay after 10s if auth/boot stallsÂ(function() {Â  var _safetyTimer = setTimeout(function() {Â    var ov = document.getElementById("loading-overlay");Â    if (ov) { ov.style.display = "none"; }Â  }, 10000);Â  window._clearSafetyTimer = function() { clearTimeout(_safetyTimer); };Â})();Â</script>Â
+<script>ï¿½// Safety: force-hide loading overlay after 10s if auth/boot stallsï¿½(function() {ï¿½  var _safetyTimer = setTimeout(function() {ï¿½    var ov = document.getElementById("loading-overlay");ï¿½    if (ov) { ov.style.display = "none"; }ï¿½  }, 10000);ï¿½  window._clearSafetyTimer = function() { clearTimeout(_safetyTimer); };ï¿½})();ï¿½</script>ï¿½
 
 <script type="module">
   import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore }      from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getFirestore, collection, query, where, orderBy, getDocs, getDoc, doc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   const FIREBASE_CONFIG = {
     apiKey:            'AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk',
     authDomain:        'kreddlo.firebaseapp.com',
@@ -982,7 +1031,8 @@ if ('serviceWorker' in navigator) {
   };
   const app  = initializeApp(FIREBASE_CONFIG);
   const auth = getAuth(app);
-  window.db  = getFirestore(app);
+  window.db   = getFirestore(app);
+  window._fsQ = { collection, query, where, orderBy, getDocs, getDoc, doc };
   onAuthStateChanged(auth, function(user) {
     if (!user) { window.location.href = '/login.html'; return; }
     if (typeof window._boot === 'function') window._boot(user);

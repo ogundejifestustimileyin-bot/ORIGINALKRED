@@ -1,7 +1,7 @@
 /**
  * Netlify Scheduled Function: process-email-queue.js
  * Path: netlify/functions/process-email-queue.js
- * Schedule: every 5 minutes (*/5 * * * *)
+ * Schedule: every 5 minutes (cron: 5-minute interval)
  *
  * Processes delayed emails from the email-queue Firestore collection.
  *

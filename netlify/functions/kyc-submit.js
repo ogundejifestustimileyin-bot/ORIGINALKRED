@@ -1,158 +1,144 @@
 /**
  * Netlify Function: kyc-submit.js
- * Path: netlify/functions/kyc-submit.js
  *
- * Receives a POST from verify.html containing base64-encoded images of the
- * user's NIN card (front + back) and a selfie.
- * 
- * What it does:
- *   1. Validates the payload (uid, three images present, size limits).
- *   2. Uploads the three images to Firebase Storage under:
- *        kyc/{uid}/nin-front.jpg
- *        kyc/{uid}/nin-back.jpg
- *        kyc/{uid}/selfie.jpg
- *   3. Updates Firestore users/{uid} with:
- *        kycStatus:        'under-review'
- *        kycSubmittedAt:   server timestamp
- *        kycDocumentType:  'NIN Card'
- *        kycImages: { frontUrl, backUrl, selfieUrl }  ← signed 7-day URLs
- *   4. Returns { ok: true }.
- *   5. Sends an internal admin notification email via Brevo (optional but recommended).
+ * Receives a POST from verify.html with base64-encoded images (front, back, selfie).
+ * Uploads them to Cloudinary (free tier — no Firebase Storage needed).
+ * Saves the permanent Cloudinary URLs to Firestore users/{uid}.kycImages.
+ * Sets kycStatus to 'under-review'.
  *
- * Environment variables required (set in Netlify UI → Site settings → Env vars):
- *   FIREBASE_SERVICE_ACCOUNT  — full service account JSON (single-line string)
- *   FIREBASE_STORAGE_BUCKET   — e.g. "kreddlo.firebasestorage.app"
- *   BREVO_API_KEY             — for admin notification email
- *   BREVO_SENDER_EMAIL        — e.g. noreply@kreddlo.com
- *   BREVO_SENDER_NAME         — e.g. Kreddlo
- *   ADMIN_EMAIL               — email that receives the "new KYC to review" alert
- *   PLATFORM_URL              — e.g. https://kreddlo.com
+ * Environment variables required (Netlify UI → Site settings → Env vars):
+ *   FIREBASE_SERVICE_ACCOUNT   — single-line JSON service account
+ *   CLOUDINARY_CLOUD_NAME      — e.g. "my-cloud"
+ *   CLOUDINARY_API_KEY         — from Cloudinary dashboard
+ *   CLOUDINARY_API_SECRET      — from Cloudinary dashboard
  *
- * POST body (JSON):
- *   {
- *     uid:          string,   // Firebase Auth UID
- *     frontImage:   string,   // base64 (no data: prefix)
- *     frontType:    string,   // MIME type e.g. "image/jpeg"
- *     backImage:    string,
- *     backType:     string,
- *     selfieImage:  string,
- *     selfieType:   string,
- *   }
- *
- * Response:
- *   200  { ok: true }
- *   400  { error: string }   — validation failure
- *   500  { error: string }   — server failure
+ * Optional:
+ *   BREVO_API_KEY, BREVO_SENDER_EMAIL, BREVO_SENDER_NAME, ADMIN_EMAIL, PLATFORM_URL
  */
 
 const { initializeApp, cert, getApps } = require('firebase-admin/app');
 const { getFirestore, FieldValue }     = require('firebase-admin/firestore');
-const { getStorage }                   = require('firebase-admin/storage');
+const https                            = require('https');
+const crypto                           = require('crypto');
 
-/* ── Singleton Firebase Admin init ── */
-function getServices() {
+/* ── Firebase Admin singleton ── */
+function getDb() {
   if (!getApps().length) {
-    let serviceAccount;
-    try {
-      serviceAccount = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}');
-    } catch {
-      throw new Error('FIREBASE_SERVICE_ACCOUNT is not valid JSON.');
-    }
-    const bucket = process.env.FIREBASE_STORAGE_BUCKET;
-    if (!bucket) throw new Error('FIREBASE_STORAGE_BUCKET env var is not set.');
-    initializeApp({ credential: cert(serviceAccount), storageBucket: bucket });
+    let sa;
+    try { sa = JSON.parse(process.env.FIREBASE_SERVICE_ACCOUNT || '{}'); }
+    catch { throw new Error('FIREBASE_SERVICE_ACCOUNT is not valid JSON.'); }
+    initializeApp({ credential: cert(sa) });
   }
-  return {
-    db:      getFirestore(),
-    storage: getStorage().bucket(),
+  return getFirestore();
+}
+
+/* ── Upload one base64 image to Cloudinary ── */
+async function uploadToCloudinary(base64Data, mimeType, publicId) {
+  const cloudName  = process.env.CLOUDINARY_CLOUD_NAME;
+  const apiKey     = process.env.CLOUDINARY_API_KEY;
+  const apiSecret  = process.env.CLOUDINARY_API_SECRET;
+
+  if (!cloudName || !apiKey || !apiSecret) {
+    throw new Error('Cloudinary env vars not set (CLOUDINARY_CLOUD_NAME, CLOUDINARY_API_KEY, CLOUDINARY_API_SECRET).');
+  }
+
+  const timestamp = Math.floor(Date.now() / 1000).toString();
+  const folder    = 'kyc';
+
+  // Build signature
+  const sigStr  = `folder=${folder}&public_id=${publicId}&timestamp=${timestamp}${apiSecret}`;
+  const signature = crypto.createHash('sha256').update(sigStr).digest('hex');
+
+  // Build multipart form body
+  const boundary = '----FormBoundary' + Math.random().toString(36).slice(2);
+  const dataUri  = `data:${mimeType};base64,${base64Data}`;
+
+  const fields = {
+    file:       dataUri,
+    api_key:    apiKey,
+    timestamp:  timestamp,
+    public_id:  publicId,
+    folder:     folder,
+    signature:  signature,
   };
+
+  let body = '';
+  for (const [key, val] of Object.entries(fields)) {
+    body += `--${boundary}\r\nContent-Disposition: form-data; name="${key}"\r\n\r\n${val}\r\n`;
+  }
+  body += `--${boundary}--\r\n`;
+
+  const bodyBuf = Buffer.from(body, 'utf8');
+
+  return new Promise((resolve, reject) => {
+    const req = https.request({
+      hostname: 'api.cloudinary.com',
+      path:     `/v1_1/${cloudName}/image/upload`,
+      method:   'POST',
+      headers:  {
+        'Content-Type':   `multipart/form-data; boundary=${boundary}`,
+        'Content-Length': bodyBuf.length,
+      },
+    }, (res) => {
+      let data = '';
+      res.on('data', chunk => data += chunk);
+      res.on('end', () => {
+        try {
+          const parsed = JSON.parse(data);
+          if (parsed.secure_url) {
+            resolve(parsed.secure_url);
+          } else {
+            reject(new Error('Cloudinary error: ' + (parsed.error?.message || data)));
+          }
+        } catch (e) {
+          reject(new Error('Cloudinary response parse error: ' + data.slice(0, 200)));
+        }
+      });
+    });
+    req.on('error', reject);
+    req.write(bodyBuf);
+    req.end();
+  });
 }
 
-/* ── MIME → file extension ── */
-const MIME_EXT = {
-  'image/jpeg': 'jpg',
-  'image/png':  'png',
-  'image/webp': 'webp',
-};
-
-/* ── Max image size: 10 MB decoded ── */
-const MAX_BYTES = 10 * 1024 * 1024;
-
-/* ── Upload one base64 image to Storage, return a signed 7-day URL ── */
-async function uploadImage(bucket, uid, slot, base64Data, mimeType) {
-  const ext  = MIME_EXT[mimeType] || 'jpg';
-  const path = `kyc/${uid}/${slot}.${ext}`;
-  const buf  = Buffer.from(base64Data, 'base64');
-
-  const file = bucket.file(path);
-  await file.save(buf, {
-    metadata: {
-      contentType: mimeType,
-      metadata: { uid, slot, uploadedAt: new Date().toISOString() },
-    },
-  });
-
-  // Signed URL valid for 7 days — admin reviews within this window
-  const [signedUrl] = await file.getSignedUrl({
-    action:  'read',
-    expires: Date.now() + 7 * 24 * 60 * 60 * 1000,
-  });
-
-  return signedUrl;
-}
-
-/* ── Optional: send admin notification email via Brevo ── */
+/* ── Optional admin notification email ── */
 async function notifyAdmin({ uid, adminEmail, platformUrl }) {
   const apiKey = process.env.BREVO_API_KEY;
-  if (!apiKey || !adminEmail) return; // silently skip if not configured
+  if (!apiKey || !adminEmail) return;
 
   const senderEmail = process.env.BREVO_SENDER_EMAIL || 'noreply@kreddlo.com';
   const senderName  = process.env.BREVO_SENDER_NAME  || 'Kreddlo';
-  const reviewUrl   = `${platformUrl || 'https://kreddlo.com'}/admin.html`;
-
-  const body = {
-    sender:  { email: senderEmail, name: senderName },
-    to:      [{ email: adminEmail }],
-    subject: 'New KYC Submission — Action Required',
-    htmlContent: `
-      <div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;">
-        <h2 style="color:#0d2145;margin:0 0 12px 0;">New KYC Submission</h2>
-        <p style="color:#4a5568;font-size:15px;line-height:1.6;margin:0 0 20px 0;">
-          A freelancer (UID: <code style="background:#f7fafc;padding:2px 6px;border-radius:4px;">${uid}</code>)
-          has submitted their NIN card and selfie for identity verification.
-        </p>
-        <a href="${reviewUrl}" style="display:inline-block;background:#2d8a5e;color:#fff;text-decoration:none;padding:13px 28px;border-radius:50px;font-weight:600;font-size:15px;">
-          Review in Admin Panel
-        </a>
-        <p style="color:#a0aec0;font-size:12px;margin-top:32px;">
-          This is an automated notification from Kreddlo. Do not reply to this email.
-        </p>
-      </div>
-    `,
-  };
+  const reviewUrl   = (platformUrl || 'https://kreddlo.com') + '/admin.html';
 
   try {
     await fetch('https://api.brevo.com/v3/smtp/email', {
       method:  'POST',
-      headers: {
-        'accept':       'application/json',
-        'api-key':      apiKey,
-        'content-type': 'application/json',
-      },
-      body: JSON.stringify(body),
+      headers: { 'accept': 'application/json', 'api-key': apiKey, 'content-type': 'application/json' },
+      body: JSON.stringify({
+        sender:      { email: senderEmail, name: senderName },
+        to:          [{ email: adminEmail }],
+        subject:     'New KYC Submission — Action Required',
+        htmlContent: `<div style="font-family:Arial,sans-serif;max-width:560px;margin:0 auto;padding:32px 24px;">
+          <h2 style="color:#0d2145;margin:0 0 12px 0;">New KYC Submission</h2>
+          <p style="color:#4a5568;font-size:15px;line-height:1.6;margin:0 0 20px 0;">
+            A freelancer (UID: <code>${uid}</code>) has submitted their NIN card and selfie for identity verification.
+          </p>
+          <a href="${reviewUrl}" style="display:inline-block;background:#2d8a5e;color:#fff;text-decoration:none;padding:13px 28px;border-radius:50px;font-weight:600;font-size:15px;">
+            Review in Admin Panel
+          </a>
+        </div>`,
+      }),
     });
   } catch (err) {
-    // Non-fatal — log and continue
     console.warn('Admin notification email failed:', err.message);
   }
 }
-
 
 /* ════════════════════════════════════
    MAIN HANDLER
 ════════════════════════════════════ */
 exports.handler = async function (event) {
-  /* ── CORS preflight ── */
+  /* CORS preflight */
   if (event.httpMethod === 'OPTIONS') {
     return {
       statusCode: 204,
@@ -168,111 +154,84 @@ exports.handler = async function (event) {
     return { statusCode: 405, body: JSON.stringify({ error: 'Method not allowed' }) };
   }
 
-  /* ── 1. Parse body ── */
+  /* Parse body */
   let payload;
-  try {
-    payload = JSON.parse(event.body || '{}');
-  } catch {
-    return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON body' }) };
-  }
+  try { payload = JSON.parse(event.body || '{}'); }
+  catch { return { statusCode: 400, body: JSON.stringify({ error: 'Invalid JSON body' }) }; }
 
-  const { uid, frontImage, frontType, backImage, backType, selfieImage, selfieType } = payload;
+  const { uid, frontImage, backImage, selfieImage } = payload;
 
-  /* ── 2. Validate ── */
-  console.log('KYC submit received uid:', uid, 'frontType:', frontType, 'backType:', backType, 'selfieType:', selfieType);
+  console.log('KYC submit — uid:', uid, 'frontImage length:', frontImage?.length, 'backImage length:', backImage?.length, 'selfieImage length:', selfieImage?.length);
 
+  /* Validate uid */
   if (!uid || typeof uid !== 'string' || uid.length < 4) {
-    console.error('Validation failed: Invalid uid:', uid);
-    return { statusCode: 400, body: JSON.stringify({ error: 'Invalid uid: ' + uid }) };
+    console.error('Invalid uid:', uid);
+    return { statusCode: 400, body: JSON.stringify({ error: 'Invalid uid' }) };
   }
 
-  const slots = [
-    { name: 'frontImage',  data: frontImage,  type: frontType  },
-    { name: 'backImage',   data: backImage,   type: backType   },
-    { name: 'selfieImage', data: selfieImage, type: selfieType },
-  ];
-
-  for (const s of slots) {
-    if (!s.data || typeof s.data !== 'string') {
-      console.error('Validation failed:', s.name, 'is missing');
-      return { statusCode: 400, body: JSON.stringify({ error: s.name + ' is missing' }) };
-    }
-    if (!MIME_EXT[s.type]) {
-      console.error('Validation failed:', s.name, 'has unsupported type:', s.type);
-      return { statusCode: 400, body: JSON.stringify({ error: s.name + ' has unsupported type: ' + s.type }) };
-    }
-    const byteLen = Math.ceil(s.data.length * 0.75); // base64 → approximate bytes
-    if (byteLen > MAX_BYTES) {
-      console.error('Validation failed:', s.name, 'exceeds 10 MB limit');
-      return { statusCode: 400, body: JSON.stringify({ error: s.name + ' exceeds 10 MB limit' }) };
+  /* Validate images present */
+  for (const [name, data] of [['frontImage', frontImage], ['backImage', backImage], ['selfieImage', selfieImage]]) {
+    if (!data || typeof data !== 'string' || data.length < 100) {
+      console.error(name, 'is missing or too short');
+      return { statusCode: 400, body: JSON.stringify({ error: name + ' is missing' }) };
     }
   }
 
-  /* ── 3. Firebase ── */
-  let db, bucket;
-  try {
-    ({ db, storage: bucket } = getServices());
-  } catch (err) {
+  /* Firebase */
+  let db;
+  try { db = getDb(); }
+  catch (err) {
     console.error('Firebase init error:', err.message);
-    return { statusCode: 500, body: JSON.stringify({ error: 'Server configuration error' }) };
+    return { statusCode: 500, body: JSON.stringify({ error: 'Server configuration error: ' + err.message }) };
   }
 
-  /* ── 4. Check that the user exists and isn't already verified ── */
+  /* Check user exists and isn't already verified */
   try {
     const userSnap = await db.collection('users').doc(uid).get();
     if (!userSnap.exists) {
-      return { statusCode: 400, body: JSON.stringify({ error: 'User not found' }) };
+      return { statusCode: 400, body: JSON.stringify({ error: 'User not found in database' }) };
     }
-    const currentStatus = userSnap.data().kycStatus;
-    if (currentStatus === 'verified') {
+    if (userSnap.data().kycStatus === 'verified') {
       return { statusCode: 400, body: JSON.stringify({ error: 'User is already verified' }) };
     }
   } catch (err) {
     console.error('Firestore user lookup failed:', err.message);
-    return { statusCode: 500, body: JSON.stringify({ error: 'Database error checking user' }) };
+    return { statusCode: 500, body: JSON.stringify({ error: 'Database error: ' + err.message }) };
   }
 
-  /* ── 5. Upload images in parallel ── */
+  /* Upload to Cloudinary */
   let frontUrl, backUrl, selfieUrl;
   try {
+    console.log('Uploading to Cloudinary...');
     [frontUrl, backUrl, selfieUrl] = await Promise.all([
-      uploadImage(bucket, uid, 'nin-front',  frontImage,  frontType),
-      uploadImage(bucket, uid, 'nin-back',   backImage,   backType),
-      uploadImage(bucket, uid, 'selfie',     selfieImage, selfieType),
+      uploadToCloudinary(frontImage,  'image/jpeg', `${uid}-nin-front`),
+      uploadToCloudinary(backImage,   'image/jpeg', `${uid}-nin-back`),
+      uploadToCloudinary(selfieImage, 'image/jpeg', `${uid}-selfie`),
     ]);
+    console.log('Cloudinary upload success. frontUrl:', frontUrl);
   } catch (err) {
-    console.error('Storage upload error:', err.message);
-    return { statusCode: 500, body: JSON.stringify({ error: 'Failed to upload images. Please try again.' }) };
+    console.error('Cloudinary upload error:', err.message);
+    return { statusCode: 500, body: JSON.stringify({ error: 'Image upload failed: ' + err.message }) };
   }
 
-  /* ── 6. Write Firestore ── */
+  /* Write to Firestore */
   try {
     await db.collection('users').doc(uid).update({
-      kycStatus:       'under-review',
-      kycDocumentType: 'NIN Card',
-      kycSubmittedAt:  FieldValue.serverTimestamp(),
-      kycImages: {
-        frontUrl,
-        backUrl,
-        selfieUrl,
-      },
-      // Clear any previous rejection reason
+      kycStatus:          'under-review',
+      kycDocumentType:    'NIN Card',
+      kycSubmittedAt:     FieldValue.serverTimestamp(),
+      kycImages: { frontUrl, backUrl, selfieUrl },
       kycRejectionReason: FieldValue.delete(),
     });
   } catch (err) {
     console.error('Firestore update error:', err.message);
-    return { statusCode: 500, body: JSON.stringify({ error: 'Failed to record submission. Please try again.' }) };
+    return { statusCode: 500, body: JSON.stringify({ error: 'Failed to save submission: ' + err.message }) };
   }
 
-  /* ── 7. Notify admin (non-blocking) ── */
-  await notifyAdmin({
-    uid,
-    adminEmail:  process.env.ADMIN_EMAIL,
-    platformUrl: process.env.PLATFORM_URL,
-  });
+  /* Notify admin */
+  await notifyAdmin({ uid, adminEmail: process.env.ADMIN_EMAIL, platformUrl: process.env.PLATFORM_URL });
 
-  /* ── 8. Done ── */
-  console.log(`KYC submitted successfully for uid: ${uid}`);
+  console.log('KYC submitted successfully for uid:', uid);
   return {
     statusCode: 200,
     headers: { 'Content-Type': 'application/json' },

@@ -491,8 +491,13 @@ window.closeMobileMenu = function() {
 let _cpStep        = 1;
 const CP_TOTAL     = 5;
 let _cpCoverFile   = null;   // File object for cover image
+let _cpDeliveryFile = null;  // File object for downloadable delivery file (Pro)
+let _cpDeliveryVideo = null; // File object for delivery video (Pro)
+let _cpDeliveryFileUrl  = null; // existing uploaded delivery file URL (edit mode)
+let _cpDeliveryVideoUrl = null; // existing uploaded delivery video URL (edit mode)
 let _cpDelivery    = 'digital-download'; // default selected
 let _currentUser   = null;   // set by onAuthStateChanged
+let _currentUserPlan = 'free'; // 'free' | 'pro' — set by onAuthStateChanged
 let _cpEditId      = null;   // non-null when editing existing product
 let _cpPublishActive = true; // default active on publish
 
@@ -502,6 +507,10 @@ const STEP_LABELS  = ['Basics','Delivery Type','Delivery Content','Integrations'
 window.openCreateModal = function() {
   _cpStep      = 1;
   _cpCoverFile = null;
+  _cpDeliveryFile = null;
+  _cpDeliveryVideo = null;
+  _cpDeliveryFileUrl  = null;
+  _cpDeliveryVideoUrl = null;
   _cpDelivery  = 'digital-download';
   _cpEditId    = null;
   _cpPublishActive = true;
@@ -726,6 +735,10 @@ function cpResetForm() {
   });
   // Reset cover
   _cpCoverFile = null;
+  _cpDeliveryFile = null;
+  _cpDeliveryVideo = null;
+  _cpDeliveryFileUrl  = null;
+  _cpDeliveryVideoUrl = null;
   document.getElementById('cp-upload-placeholder').style.display = '';
   document.getElementById('cp-upload-preview-wrap').style.display = 'none';
   document.getElementById('cp-upload-preview-img').src = '';
@@ -931,6 +944,38 @@ window.cpCopyLink = function() {
 // escHtml already defined above; alias for step 5 inline use
 function escHtml5(s) { return escHtml(s); }
 
+// ── Upload a large file directly to Cloudinary using a signed signature ──
+// resourceType: 'raw' (downloadable files) or 'video'
+async function cpUploadToCloudinarySigned(file, resourceType) {
+  // 1. Get signed params from our Netlify function (also checks Pro plan)
+  const sigRes = await fetch('/.netlify/functions/sign-delivery-upload', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ uid: _currentUser.uid, resourceType }),
+  });
+  const sig = await sigRes.json();
+  if (!sigRes.ok) throw new Error(sig.error || 'Could not authorize upload');
+
+  // 2. Upload the file directly to Cloudinary
+  const form = new FormData();
+  form.append('file', file);
+  form.append('api_key', sig.apiKey);
+  form.append('timestamp', sig.timestamp);
+  form.append('signature', sig.signature);
+  form.append('folder', sig.folder);
+  form.append('public_id', sig.publicId);
+
+  const uploadRes = await fetch(`https://api.cloudinary.com/v1_1/${sig.cloudName}/${sig.resourceType}/upload`, {
+    method: 'POST',
+    body: form,
+  });
+  const uploadData = await uploadRes.json();
+  if (!uploadRes.ok || !uploadData.secure_url) {
+    throw new Error(uploadData.error?.message || 'Upload to Cloudinary failed');
+  }
+  return uploadData.secure_url;
+}
+
 // ── Full Firestore submit ──
 async function cpSubmit() {
   if (!_currentUser) { showToast('Not signed in. Please reload.'); return; }
@@ -947,6 +992,77 @@ async function cpSubmit() {
     const baseSlug  = makeSlug(data.title) || 'product';
     const slug      = await resolveSlug(baseSlug, _cpEditId);
 
+    // Upload cover image to Cloudinary if a new file was selected
+    let coverUrl = null;
+    if (_cpCoverFile) {
+      nextBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:spin .7s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-8.49"/></svg>Uploading cover...';
+      try {
+        const base64 = await new Promise((resolve, reject) => {
+          const img = new Image();
+          const objUrl = URL.createObjectURL(_cpCoverFile);
+          img.onload = () => {
+            URL.revokeObjectURL(objUrl);
+            const MAX = 1200;
+            let w = img.width, h = img.height;
+            if (w > MAX || h > MAX) {
+              if (w > h) { h = Math.round(h * MAX / w); w = MAX; }
+              else { w = Math.round(w * MAX / h); h = MAX; }
+            }
+            const canvas = document.createElement('canvas');
+            canvas.width = w; canvas.height = h;
+            canvas.getContext('2d').drawImage(img, 0, 0, w, h);
+            resolve(canvas.toDataURL('image/jpeg', 0.85).split(',')[1]);
+          };
+          img.onerror = () => reject(new Error('Failed to read cover image'));
+          img.src = objUrl;
+        });
+        const res = await fetch('/.netlify/functions/upload-image', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ image: base64, folder: 'products', publicId: _currentUser.uid + '-' + Date.now() }),
+        });
+        const result = await res.json();
+        if (!res.ok) throw new Error(result.error || 'Upload failed');
+        coverUrl = result.url;
+      } catch (uploadErr) {
+        showToast('Cover upload failed: ' + uploadErr.message);
+        nextBtn.disabled = false; backBtn.disabled = false;
+        nextBtn.style.opacity = '1'; nextBtn.innerHTML = 'Publish Product';
+        return;
+      }
+      nextBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:spin .7s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-8.49"/></svg>Saving...';
+    }
+
+    // Upload delivery file (Pro) if a new one was selected
+    let deliveryFileUrl = null;
+    if (_cpDeliveryFile) {
+      nextBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:spin .7s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-8.49"/></svg>Uploading file...';
+      try {
+        deliveryFileUrl = await cpUploadToCloudinarySigned(_cpDeliveryFile, 'raw');
+      } catch (uploadErr) {
+        showToast('File upload failed: ' + uploadErr.message);
+        nextBtn.disabled = false; backBtn.disabled = false;
+        nextBtn.style.opacity = '1'; nextBtn.innerHTML = 'Publish Product';
+        return;
+      }
+      nextBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:spin .7s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-8.49"/></svg>Saving...';
+    }
+
+    // Upload delivery video (Pro) if a new one was selected
+    let deliveryVideoUrl = null;
+    if (_cpDeliveryVideo) {
+      nextBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:spin .7s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-8.49"/></svg>Uploading video...';
+      try {
+        deliveryVideoUrl = await cpUploadToCloudinarySigned(_cpDeliveryVideo, 'video');
+      } catch (uploadErr) {
+        showToast('Video upload failed: ' + uploadErr.message);
+        nextBtn.disabled = false; backBtn.disabled = false;
+        nextBtn.style.opacity = '1'; nextBtn.innerHTML = 'Publish Product';
+        return;
+      }
+      nextBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" style="animation:spin .7s linear infinite"><polyline points="23 4 23 10 17 10"/><path d="M20.49 15a9 9 0 1 1-.49-8.49"/></svg>Saving...';
+    }
+
     const payload = {
       uid:          _currentUser.uid,
       title:        data.title,
@@ -959,6 +1075,12 @@ async function cpSubmit() {
       integrations: data.integrations,
       updatedAt:    serverTimestamp(),
     };
+
+    if (coverUrl) payload.coverUrl = coverUrl;
+    if (deliveryFileUrl)  payload.deliveryFileUrl  = deliveryFileUrl;
+    else if (_cpDeliveryFileUrl) payload.deliveryFileUrl = _cpDeliveryFileUrl;
+    if (deliveryVideoUrl) payload.deliveryVideoUrl = deliveryVideoUrl;
+    else if (_cpDeliveryVideoUrl) payload.deliveryVideoUrl = _cpDeliveryVideoUrl;
 
     // Delivery-type-specific fields
     if (data.fileUrl)        payload.fileUrl        = data.fileUrl;
@@ -1083,25 +1205,36 @@ function cpRenderStep3() {
   let html = '';
 
   if (type === 'digital-download' || type === 'template' || type === 'ebook') {
+    const isPro = _currentUserPlan === 'pro';
+
     html = `
       <p style="font-size:13px;font-weight:500;color:rgba(13,33,69,0.52);margin:0 0 18px;line-height:1.5;">Upload the file buyers will receive, or provide a download URL.</p>
       <div class="cp-field">
         <label class="cp-label">Upload file <span style="color:rgba(13,33,69,0.35);font-weight:500">(ZIP, PDF, PSD, etc.)</span></label>
+        ${isPro ? `
         <div class="cp-upload-zone" id="cp-file-zone" style="padding:20px 16px;">
-          <input type="file" id="cp-delivery-file" accept=".zip,.pdf,.psd,.ai,.fig,.sketch,.docx,.xlsx,.pptx,.epub,.mp4,.mov" tabindex="-1" aria-label="Upload delivery file"/>
+          <input type="file" id="cp-delivery-file" accept=".zip,.pdf,.psd,.ai,.fig,.sketch,.docx,.xlsx,.pptx,.epub" tabindex="-1" aria-label="Upload delivery file"/>
           <div id="cp-file-placeholder">
             <div style="width:40px;height:40px;background:rgba(45,138,94,0.10);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2d8a5e" stroke-width="2" stroke-linecap="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/><polyline points="17 8 12 3 7 8"/><line x1="12" y1="3" x2="12" y2="15"/></svg>
             </div>
             <p style="font-size:13px;font-weight:600;color:#0d2145;margin:0 0 2px;">Tap to upload file</p>
-            <p style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.42);margin:0;">Max 500 MB</p>
+            <p style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.42);margin:0;">Max 100 MB</p>
           </div>
           <div id="cp-file-selected" style="display:none;width:100%;text-align:center;">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2d8a5e" stroke-width="2" stroke-linecap="round" style="margin-bottom:6px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
             <p id="cp-file-name" style="font-size:12px;font-weight:600;color:#0d2145;margin:0 0 2px;word-break:break-all;"></p>
             <p style="font-size:11px;color:rgba(13,33,69,0.42);margin:0;">Tap to replace</p>
           </div>
-        </div>
+        </div>` : `
+        <div class="cp-upload-zone" style="padding:20px 16px;position:relative;opacity:0.6;cursor:default;border-style:dashed;">
+          <div style="width:40px;height:40px;background:rgba(13,33,69,0.06);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(13,33,69,0.45)" stroke-width="2" stroke-linecap="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>
+          </div>
+          <p style="font-size:13px;font-weight:600;color:#0d2145;margin:0 0 2px;">File upload is a Pro feature</p>
+          <p style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.42);margin:0 0 10px;">Upgrade to Pro to upload files directly. You can still use a download URL below.</p>
+          <a href="/pricing.html" style="display:inline-flex;align-items:center;gap:6px;background:#0d2145;color:#fff;border-radius:9px;padding:8px 16px;font-size:12px;font-weight:700;text-decoration:none;">Upgrade to Pro</a>
+        </div>`}
       </div>
       <div style="display:flex;align-items:center;gap:10px;margin:4px 0 16px;">
         <div style="flex:1;height:1px;background:#e8eaf0;"></div>
@@ -1112,6 +1245,39 @@ function cpRenderStep3() {
         <label class="cp-label" for="cp-file-url">File / download URL</label>
         <input class="cp-input" id="cp-file-url" type="url" inputmode="url" placeholder="https://drive.google.com/file/..." autocomplete="off"/>
         <p style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.42);margin-top:5px;">Buyers will be sent this link after payment.</p>
+      </div>
+
+      <div style="display:flex;align-items:center;gap:10px;margin:20px 0 16px;">
+        <div style="flex:1;height:1px;background:#e8eaf0;"></div>
+        <span style="font-size:11px;font-weight:600;color:rgba(13,33,69,0.35);text-transform:uppercase;letter-spacing:1px;">Optional</span>
+        <div style="flex:1;height:1px;background:#e8eaf0;"></div>
+      </div>
+      <div class="cp-field">
+        <label class="cp-label">Demo / walkthrough video <span style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.42);">Optional</span></label>
+        ${isPro ? `
+        <div class="cp-upload-zone" id="cp-video-zone" style="padding:20px 16px;">
+          <input type="file" id="cp-delivery-video" accept=".mp4,.mov,.webm" tabindex="-1" aria-label="Upload delivery video"/>
+          <div id="cp-video-placeholder">
+            <div style="width:40px;height:40px;background:rgba(45,138,94,0.10);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="#2d8a5e" stroke-width="2" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+            </div>
+            <p style="font-size:13px;font-weight:600;color:#0d2145;margin:0 0 2px;">Tap to upload video</p>
+            <p style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.42);margin:0;">MP4, MOV or WEBM — Max 500 MB</p>
+          </div>
+          <div id="cp-video-selected" style="display:none;width:100%;text-align:center;">
+            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="#2d8a5e" stroke-width="2" stroke-linecap="round" style="margin-bottom:6px;"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+            <p id="cp-video-name" style="font-size:12px;font-weight:600;color:#0d2145;margin:0 0 2px;word-break:break-all;"></p>
+            <p style="font-size:11px;color:rgba(13,33,69,0.42);margin:0;">Tap to replace</p>
+          </div>
+        </div>` : `
+        <div class="cp-upload-zone" style="padding:20px 16px;position:relative;opacity:0.6;cursor:default;border-style:dashed;">
+          <div style="width:40px;height:40px;background:rgba(13,33,69,0.06);border-radius:12px;display:flex;align-items:center;justify-content:center;margin:0 auto 8px;">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="rgba(13,33,69,0.45)" stroke-width="2" stroke-linecap="round"><polygon points="23 7 16 12 23 17 23 7"/><rect x="1" y="5" width="15" height="14" rx="2" ry="2"/></svg>
+          </div>
+          <p style="font-size:13px;font-weight:600;color:#0d2145;margin:0 0 2px;">Video upload is a Pro feature</p>
+          <p style="font-size:11px;font-weight:500;color:rgba(13,33,69,0.42);margin:0 0 10px;">Upgrade to Pro to add a demo or walkthrough video to your product.</p>
+          <a href="/pricing.html" style="display:inline-flex;align-items:center;gap:6px;background:#0d2145;color:#fff;border-radius:9px;padding:8px 16px;font-size:12px;font-weight:700;text-decoration:none;">Upgrade to Pro</a>
+        </div>`}
       </div>`;
 
   } else if (type === 'manual') {
@@ -1163,13 +1329,18 @@ function cpRenderStep3() {
 
   panel.innerHTML = html;
 
-  // Bind file upload for download types
+  // Bind file & video upload for download types (Pro only — inputs only exist if isPro)
   if (type === 'digital-download' || type === 'template' || type === 'ebook') {
     const fi = document.getElementById('cp-delivery-file');
     if (fi) {
       fi.addEventListener('change', function(e) {
         const f = e.target.files && e.target.files[0];
         if (!f) return;
+        if (f.size > 100 * 1024 * 1024) {
+          showToast('File too large — max 100 MB.');
+          return;
+        }
+        _cpDeliveryFile = f;
         document.getElementById('cp-file-placeholder').style.display = 'none';
         const sel = document.getElementById('cp-file-selected');
         sel.style.display = 'block';
@@ -1185,10 +1356,52 @@ function cpRenderStep3() {
         e.preventDefault(); fz.classList.remove('drag');
         const f = e.dataTransfer.files && e.dataTransfer.files[0];
         if (!f) return;
+        if (f.size > 100 * 1024 * 1024) {
+          showToast('File too large — max 100 MB.');
+          return;
+        }
+        _cpDeliveryFile = f;
         document.getElementById('cp-file-placeholder').style.display = 'none';
         const sel = document.getElementById('cp-file-selected');
         sel.style.display = 'block';
         document.getElementById('cp-file-name').textContent = f.name + ' (' + (f.size / 1024 / 1024).toFixed(2) + ' MB)';
+      });
+    }
+
+    // Video upload
+    const vi = document.getElementById('cp-delivery-video');
+    if (vi) {
+      vi.addEventListener('change', function(e) {
+        const f = e.target.files && e.target.files[0];
+        if (!f) return;
+        if (f.size > 500 * 1024 * 1024) {
+          showToast('Video too large — max 500 MB.');
+          return;
+        }
+        _cpDeliveryVideo = f;
+        document.getElementById('cp-video-placeholder').style.display = 'none';
+        const sel = document.getElementById('cp-video-selected');
+        sel.style.display = 'block';
+        document.getElementById('cp-video-name').textContent = f.name + ' (' + (f.size / 1024 / 1024).toFixed(2) + ' MB)';
+      });
+    }
+    const vz = document.getElementById('cp-video-zone');
+    if (vz) {
+      vz.addEventListener('dragover', e => { e.preventDefault(); vz.classList.add('drag'); });
+      vz.addEventListener('dragleave', () => vz.classList.remove('drag'));
+      vz.addEventListener('drop', e => {
+        e.preventDefault(); vz.classList.remove('drag');
+        const f = e.dataTransfer.files && e.dataTransfer.files[0];
+        if (!f) return;
+        if (f.size > 500 * 1024 * 1024) {
+          showToast('Video too large — max 500 MB.');
+          return;
+        }
+        _cpDeliveryVideo = f;
+        document.getElementById('cp-video-placeholder').style.display = 'none';
+        const sel = document.getElementById('cp-video-selected');
+        sel.style.display = 'block';
+        document.getElementById('cp-video-name').textContent = f.name + ' (' + (f.size / 1024 / 1024).toFixed(2) + ' MB)';
       });
     }
   }
@@ -1205,6 +1418,26 @@ function cpRenderStep3() {
       if (type === 'digital-download' || type === 'template' || type === 'ebook') {
         const fu = document.getElementById('cp-file-url');
         if (fu && d.fileUrl) fu.value = d.fileUrl;
+        if (d.deliveryFileUrl) {
+          _cpDeliveryFileUrl = d.deliveryFileUrl;
+          const ph = document.getElementById('cp-file-placeholder');
+          const sel = document.getElementById('cp-file-selected');
+          if (ph && sel) {
+            ph.style.display = 'none';
+            sel.style.display = 'block';
+            document.getElementById('cp-file-name').textContent = 'Uploaded file on record';
+          }
+        }
+        if (d.deliveryVideoUrl) {
+          _cpDeliveryVideoUrl = d.deliveryVideoUrl;
+          const ph = document.getElementById('cp-video-placeholder');
+          const sel = document.getElementById('cp-video-selected');
+          if (ph && sel) {
+            ph.style.display = 'none';
+            sel.style.display = 'block';
+            document.getElementById('cp-video-name').textContent = 'Uploaded video on record';
+          }
+        }
       } else if (type === 'manual') {
         const cal  = document.getElementById('cp-coaching-cal');
         const meet = document.getElementById('cp-coaching-meet');
@@ -1449,6 +1682,8 @@ onAuthStateChanged(auth, async user => {
       return;
     }
 
+    _currentUserPlan = profile.plan === 'pro' ? 'pro' : 'free';
+
     // ── Authenticated freelancer: boot UI ──
     buildNav();
     setAvatar(profile.displayName || user.displayName || user.email);
@@ -1466,6 +1701,7 @@ onAuthStateChanged(auth, async user => {
   } catch (err) {
     console.error('[dashboard-products] profile fetch error:', err);
     // Graceful fallback — still show page
+    _currentUserPlan = 'free';
     buildNav();
     setAvatar(user.displayName || user.email);
     hideOverlay();
@@ -1732,6 +1968,6 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-<script>�// Safety: force-hide loading overlay after 10s if auth/boot stalls�(function() {�  var _safetyTimer = setTimeout(function() {�    var ov = document.getElementById("loading-overlay");�    if (ov) { ov.style.display = "none"; }�  }, 10000);�  window._clearSafetyTimer = function() { clearTimeout(_safetyTimer); };�})();�</script>�
+<script>�// Safety: force-hide loading overlay after 10s if auth/boot stalls�(function() {�  var _safetyTimer = setTimeout(function() {�    var ov = document.getElementById("loading-overlay");�    if (ov) { ov.style.display = "none"; }�  }, 10000);�  window._clearSafetyTimer = function() { clearTimeout(_safetyTimer); };�})();�</script>�
 </body>
 </html>

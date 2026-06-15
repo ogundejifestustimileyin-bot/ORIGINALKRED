@@ -1069,13 +1069,10 @@
         method:  'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          uid:          window._currentUid,
-          frontImage:   frontB64,
-          frontType:    'image/jpeg',
-          backImage:    backB64,
-          backType:     'image/jpeg',
-          selfieImage:  selfieB64,
-          selfieType:   'image/jpeg',
+          uid:        window._currentUid,
+          frontImage: frontB64,
+          backImage:  backB64,
+          selfieImage: selfieB64,
         }),
       });
 

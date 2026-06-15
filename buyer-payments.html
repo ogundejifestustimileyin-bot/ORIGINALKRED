@@ -356,113 +356,12 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
 // ══════════════════════════════════════════
 //  DEMO USER
 // ══════════════════════════════════════════
-var DEMO_USER = { name: 'Claire Dubois', role: 'buyer', uid: 'demo-buyer-1' };
+var DEMO_USER = { name: '', role: 'buyer', uid: null };
 
 // ══════════════════════════════════════════
-//  DEMO PAYMENT DATA  (20 records = 2 pages)
+//  LIVE DATA — populated by loadBuyerPayments() in _boot
 // ══════════════════════════════════════════
-var PAYMENTS = [
-  {
-    id:'pay-001', project:'E-commerce Platform Redesign', freelancer:'Marco Ricci',
-    amount:950.00, fee:23.75, protection:9.50, total:983.25,
-    method:'USDT (TRC-20)', date:'12 May 2026', status:'completed'
-  },
-  {
-    id:'pay-002', project:'Landing Page Copywriting', freelancer:'Amara Okafor',
-    amount:280.00, fee:7.00, protection:2.80, total:289.80,
-    method:'Bitcoin', date:'1 May 2026', status:'completed'
-  },
-  {
-    id:'pay-003', project:'Mobile App UI Design', freelancer:'Sofia Andersen',
-    amount:620.00, fee:15.50, protection:6.20, total:641.70,
-    method:'USDC (ERC-20)', date:'15 Apr 2026', status:'completed'
-  },
-  {
-    id:'pay-004', project:'Brand Strategy Workshop', freelancer:'Tomas Vidal',
-    amount:450.00, fee:11.25, protection:4.50, total:465.75,
-    method:'Ethereum', date:'9 Apr 2026', status:'completed'
-  },
-  {
-    id:'pay-005', project:'API Integration Support', freelancer:'Daniela Reyes',
-    amount:340.00, fee:8.50, protection:3.40, total:351.90,
-    method:'Bitcoin', date:'22 Mar 2026', status:'pending'
-  },
-  {
-    id:'pay-006', project:'SEO Content Package', freelancer:'Luca Bianchi',
-    amount:520.00, fee:13.00, protection:5.20, total:538.20,
-    method:'USDT (TRC-20)', date:'10 Mar 2026', status:'completed'
-  },
-  {
-    id:'pay-007', project:'Motion Graphics Pack', freelancer:'Yemi Adeyemi',
-    amount:780.00, fee:19.50, protection:7.80, total:807.30,
-    method:'USDC (ERC-20)', date:'2 Mar 2026', status:'completed'
-  },
-  {
-    id:'pay-008', project:'Social Media Strategy', freelancer:'Elena Petrov',
-    amount:310.00, fee:7.75, protection:3.10, total:320.85,
-    method:'Bitcoin', date:'18 Feb 2026', status:'completed'
-  },
-  {
-    id:'pay-009', project:'Data Dashboard Build', freelancer:'Kwame Asante',
-    amount:1100.00, fee:27.50, protection:11.00, total:1138.50,
-    method:'Ethereum', date:'5 Feb 2026', status:'completed'
-  },
-  {
-    id:'pay-010', project:'Email Newsletter Design', freelancer:'Ines Marques',
-    amount:220.00, fee:5.50, protection:2.20, total:227.70,
-    method:'USDT (TRC-20)', date:'24 Jan 2026', status:'completed'
-  },
-  {
-    id:'pay-011', project:'Product Photography Direction', freelancer:'Ryo Tanaka',
-    amount:680.00, fee:17.00, protection:6.80, total:703.80,
-    method:'Bitcoin', date:'15 Jan 2026', status:'completed'
-  },
-  {
-    id:'pay-012', project:'Backend API Refactor', freelancer:'Chioma Obi',
-    amount:890.00, fee:22.25, protection:8.90, total:921.15,
-    method:'USDC (ERC-20)', date:'8 Jan 2026', status:'completed'
-  },
-  {
-    id:'pay-013', project:'Pitch Deck Design', freelancer:'Arjun Mehta',
-    amount:400.00, fee:10.00, protection:4.00, total:414.00,
-    method:'Ethereum', date:'28 Dec 2025', status:'completed'
-  },
-  {
-    id:'pay-014', project:'Podcast Editing - 12 Episodes', freelancer:'Fatou Diallo',
-    amount:360.00, fee:9.00, protection:3.60, total:372.60,
-    method:'USDT (TRC-20)', date:'19 Dec 2025', status:'completed'
-  },
-  {
-    id:'pay-015', project:'Webflow Development', freelancer:'Ivan Petrov',
-    amount:740.00, fee:18.50, protection:7.40, total:765.90,
-    method:'Bitcoin', date:'11 Dec 2025', status:'completed'
-  },
-  {
-    id:'pay-016', project:'Brand Identity System', freelancer:'Aisha Conteh',
-    amount:1300.00, fee:32.50, protection:13.00, total:1345.50,
-    method:'USDC (ERC-20)', date:'1 Dec 2025', status:'completed'
-  },
-  {
-    id:'pay-017', project:'Python Automation Scripts', freelancer:'Ngo Thi Huong',
-    amount:490.00, fee:12.25, protection:4.90, total:507.15,
-    method:'Ethereum', date:'22 Nov 2025', status:'completed'
-  },
-  {
-    id:'pay-018', project:'Community Growth Strategy', freelancer:'Seun Adebayo',
-    amount:275.00, fee:6.88, protection:2.75, total:284.63,
-    method:'USDT (TRC-20)', date:'14 Nov 2025', status:'refunded'
-  },
-  {
-    id:'pay-019', project:'iOS App QA Testing', freelancer:'Maja Kovac',
-    amount:315.00, fee:7.88, protection:3.15, total:326.03,
-    method:'Bitcoin', date:'6 Nov 2025', status:'completed'
-  },
-  {
-    id:'pay-020', project:'Technical Documentation', freelancer:'Samuel Eto',
-    amount:190.00, fee:4.75, protection:1.90, total:196.65,
-    method:'USDC (ERC-20)', date:'28 Oct 2025', status:'completed'
-  }
-];
+var PAYMENTS = [];
 
 // Status display config
 var STATUS_CONFIG = {
@@ -477,7 +376,7 @@ var STATUS_CONFIG = {
 // ══════════════════════════════════════════
 var PAGE_SIZE = 10;
 var currentPage = 1;
-var totalPages = Math.ceil(PAYMENTS.length / PAGE_SIZE);
+var totalPages = 1; // recalculated after data loads
 var expandedCards = {};
 
 // ══════════════════════════════════════════
@@ -727,6 +626,103 @@ document.addEventListener('keydown', function(e) {
 });
 
 // ══════════════════════════════════════════
+//  LOAD BUYER PAYMENTS FROM FIRESTORE
+// ══════════════════════════════════════════
+async function loadBuyerPayments(uid) {
+  if (!window.db || !window._fsQ) return;
+  var fsQ = window._fsQ;
+  try {
+    // Query projects where buyer is the logged-in user
+    var q = fsQ.query(
+      fsQ.collection(window.db, 'projects'),
+      fsQ.where('buyerUid', '==', uid),
+      fsQ.orderBy('createdAt', 'desc')
+    );
+    var snap = await fsQ.getDocs(q);
+
+    // Also query product-orders where buyer is the logged-in user
+    var q2 = fsQ.query(
+      fsQ.collection(window.db, 'product-orders'),
+      fsQ.where('buyerUid', '==', uid),
+      fsQ.orderBy('createdAt', 'desc')
+    );
+    var snap2 = await fsQ.getDocs(q2);
+
+    // Fetch freelancer names for projects
+    var flUids = [];
+    snap.docs.forEach(function(d) { if (d.data().freelancerUid) flUids.push(d.data().freelancerUid); });
+    var uniqueFlUids = flUids.filter(function(v, i, a) { return a.indexOf(v) === i; });
+    var flMap = {};
+    await Promise.all(uniqueFlUids.map(async function(fuid) {
+      try {
+        var fsnap = await fsQ.getDoc(fsQ.doc(window.db, 'users', fuid));
+        if (fsnap.exists()) {
+          var fd = fsnap.data();
+          flMap[fuid] = fd.displayName || fd.name || fd.email || 'Freelancer';
+        }
+      } catch(e) { /* non-fatal */ }
+    }));
+
+    // Map projects to payment records
+    var projectPayments = snap.docs
+      .filter(function(d) { return d.data().escrowStatus === 'funded' || d.data().escrowStatus === 'released'; })
+      .map(function(d) {
+        var data = d.data();
+        var ts = data.createdAt;
+        var dateStr = ts ? new Date(ts.toDate ? ts.toDate() : ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—';
+        var amt = data.amount || data.netAmount || 0;
+        var fee = parseFloat((amt * 0.025).toFixed(2));
+        var protection = parseFloat((amt * 0.01).toFixed(2));
+        return {
+          id:         d.id,
+          project:    data.title || 'Untitled Project',
+          freelancer: flMap[data.freelancerUid] || data.freelancerName || 'Freelancer',
+          amount:     amt,
+          fee:        fee,
+          protection: protection,
+          total:      parseFloat((amt + fee + protection).toFixed(2)),
+          method:     data.paymentMethod || 'Crypto',
+          date:       dateStr,
+          status:     data.escrowStatus === 'released' ? 'completed' : (data.status === 'disputed' ? 'disputed' : 'completed')
+        };
+      });
+
+    // Map product orders to payment records
+    var productPayments = snap2.docs.map(function(d) {
+      var data = d.data();
+      var ts = data.createdAt;
+      var dateStr = ts ? new Date(ts.toDate ? ts.toDate() : ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : '—';
+      var amt = data.amount || 0;
+      return {
+        id:         d.id,
+        project:    data.productTitle || 'Product Purchase',
+        freelancer: data.sellerName   || 'Seller',
+        amount:     amt,
+        fee:        parseFloat((amt * 0.025).toFixed(2)),
+        protection: 0,
+        total:      parseFloat((amt * 1.025).toFixed(2)),
+        method:     data.paymentMethod || 'Crypto',
+        date:       dateStr,
+        status:     data.paymentStatus === 'paid' ? 'completed' : 'pending'
+      };
+    });
+
+    PAYMENTS = projectPayments.concat(productPayments);
+    // Sort by most recent first (date strings won't sort perfectly — use index order from Firestore)
+    totalPages = Math.ceil(PAYMENTS.length / PAGE_SIZE) || 1;
+    currentPage = 1;
+
+  } catch(err) {
+    console.error('[loadBuyerPayments]', err);
+    showToast('Could not load payments. Pull to refresh.');
+  }
+  renderStats();
+  renderPage();
+  document.getElementById('bell-dot').style.display = 'block';
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+
+// ══════════════════════════════════════════
 //  BOOT
 // ══════════════════════════════════════════
 window._boot = function(user, userData) {
@@ -739,13 +735,9 @@ window._boot = function(user, userData) {
     parts.length >= 2 ? parts[0][0] + parts[parts.length-1][0] : DEMO_USER.name.slice(0,2).toUpperCase();
 
   buildNav();
-  renderStats();
-  renderPage();
-
-  document.getElementById('bell-dot').style.display = 'block';
   document.getElementById('mb-signout').onclick = handleLogout;
   document.getElementById('dt-signout').onclick = handleLogout;
-  document.getElementById('loading-overlay').style.display = 'none';
+  loadBuyerPayments(user.uid);
 };
 </script>
 <script>
@@ -757,12 +749,12 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-<script>�// Safety: force-hide loading overlay after 10s if auth/boot stalls�(function() {�  var _safetyTimer = setTimeout(function() {�    var ov = document.getElementById("loading-overlay");�    if (ov) { ov.style.display = "none"; }�  }, 10000);�  window._clearSafetyTimer = function() { clearTimeout(_safetyTimer); };�})();�</script>�
+<script>�// Safety: force-hide loading overlay after 10s if auth/boot stalls�(function() {�  var _safetyTimer = setTimeout(function() {�    var ov = document.getElementById("loading-overlay");�    if (ov) { ov.style.display = "none"; }�  }, 10000);�  window._clearSafetyTimer = function() { clearTimeout(_safetyTimer); };�})();�</script>�
 
 <script type="module">
   import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getFirestore, doc, getDoc, collection, query, where, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   const FIREBASE_CONFIG = {
     apiKey:            'AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk',
     authDomain:        'kreddlo.firebaseapp.com',
@@ -775,6 +767,7 @@ if ('serviceWorker' in navigator) {
   const auth = getAuth(app);
   const db   = getFirestore(app);
   window.db  = db;
+  window._fsQ = { collection, query, where, orderBy, getDocs, getDoc, doc };
   onAuthStateChanged(auth, function(user) {
     if (!user) { window.location.href = '/login.html'; return; }
     getDoc(doc(db, 'users', user.uid)).then(function(snap) {

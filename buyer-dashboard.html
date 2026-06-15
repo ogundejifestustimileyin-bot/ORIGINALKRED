@@ -368,19 +368,11 @@ body{font-family:'Plus Jakarta Sans',sans-serif;background:#f8f9fb;color:#0d2145
 
 <script>
 // ============ DEMO DATA ============
-var DEMO = {
-  name: 'Claire Dubois', role: 'buyer', uid: 'demo-buyer-1'
-};
+var DEMO = { name: '', role: 'buyer', uid: null };
 
-var PROJECTS = [
-  { id:'b1', title:'E-commerce Platform Redesign', freelancer:'Marco Ricci',     amount:950, netAmount:926.25, status:'in_progress', signed:true,  escrowStatus:'funded',   date:'12 May 2026', desc:'Full redesign and frontend development of an e-commerce platform for a French retail brand. Includes responsive layouts, product filtering, and cart integration.' },
-  { id:'b2', title:'Landing Page Copywriting',     freelancer:'Amara Okafor',    amount:280, netAmount:273.00, status:'delivered',   signed:true,  escrowStatus:'funded',   date:'1 May 2026',  desc:'Conversion focused landing page copy for a SaaS product launch, including headline variants and email sequence.' },
-  { id:'b3', title:'Mobile App UI Design',         freelancer:'Sofia Andersen',  amount:620, netAmount:604.50, status:'completed',   signed:true,  escrowStatus:'released', date:'15 Apr 2026', desc:'Complete UI/UX design for an iOS fitness tracking application. 24 screens including onboarding, dashboard, workout tracking, and social features.' },
-  { id:'b4', title:'Brand Strategy Workshop',      freelancer:'TomÃ¡s Vidal',     amount:450, netAmount:438.75, status:'unsigned',    signed:false, escrowStatus:'unfunded', date:'9 Jun 2026',  desc:'Two part remote brand strategy workshop covering positioning, voice and visual direction for a new fintech brand.' },
-  { id:'b5', title:'API Integration Support',      freelancer:'Daniela Reyes',   amount:340, netAmount:331.50, status:'disputed',    signed:true,  escrowStatus:'funded',   date:'22 Apr 2026', desc:'Backend integration support connecting a third party payments API to an existing Node.js service.' }
-];
-
-var DISPUTES_COUNT = 1;
+// LIVE DATA â€” populated by loadBuyerDashboard() in _boot
+var PROJECTS = [];
+var DISPUTES_COUNT = 0;
 
 var STATUS = {
   unsigned:   { label:'Awaiting Signature', cls:'badge-grey'  },
@@ -451,7 +443,7 @@ function renderStats() {
   // Quick stats panel
   var escrow = PROJECTS.reduce(function(sum, p){ return sum + (p.escrowStatus === 'funded' ? p.amount : 0); }, 0);
   var spentMonth = PROJECTS.reduce(function(sum, p){ return sum + (p.escrowStatus !== 'unfunded' ? p.amount : 0); }, 0);
-  var hired = new Set(PROJECTS.map(function(p){ return p.freelancer; })).size;
+  var hired = new Set(PROJECTS.map(function(p){ return p.freelancerUid || p.freelancer; })).size;
   var avg = totalSpent > 0 ? totalSpent / PROJECTS.filter(function(p){ return p.escrowStatus !== 'unfunded'; }).length : 0;
 
   document.getElementById('qs-spent-month').textContent = 'â‚¬' + spentMonth.toLocaleString();
@@ -462,6 +454,10 @@ function renderStats() {
 
 // ============ PROJECTS LIST ============
 function renderProjects() {
+  if (PROJECTS.length === 0) {
+    document.getElementById('projects-list').innerHTML = '<p style="color:rgba(13,33,69,0.5);text-align:center;padding:32px 20px;font-size:14px;">No projects yet. <a href="/browse.html" style="color:#2d8a5e;font-weight:600;">Browse freelancers</a> to get started.</p>';
+    return;
+  }
   document.getElementById('projects-list').innerHTML = PROJECTS.map(function(p) {
     var s = STATUS[p.status] || STATUS.in_progress;
     return '<div class="proj-row">'
@@ -562,6 +558,62 @@ document.addEventListener('keydown', function(e) {
   closeMobileMenu();
 });
 
+// ============ LOAD BUYER DASHBOARD FROM FIRESTORE ============
+async function loadBuyerDashboard(uid) {
+  if (!window.db || !window._fsQ) return;
+  var fsQ = window._fsQ;
+  try {
+    var q = fsQ.query(
+      fsQ.collection(window.db, 'projects'),
+      fsQ.where('buyerUid', '==', uid),
+      fsQ.orderBy('createdAt', 'desc')
+    );
+    var snap = await fsQ.getDocs(q);
+
+    // Fetch freelancer names in parallel
+    var flUids = [];
+    snap.docs.forEach(function(d) { if (d.data().freelancerUid) flUids.push(d.data().freelancerUid); });
+    var uniqueFlUids = flUids.filter(function(v, i, a) { return a.indexOf(v) === i; });
+    var flMap = {};
+    await Promise.all(uniqueFlUids.map(async function(fuid) {
+      try {
+        var fsnap = await fsQ.getDoc(fsQ.doc(window.db, 'users', fuid));
+        if (fsnap.exists()) {
+          var fd = fsnap.data();
+          flMap[fuid] = fd.displayName || fd.name || fd.email || 'Freelancer';
+        }
+      } catch(e) { /* non-fatal */ }
+    }));
+
+    PROJECTS = snap.docs.map(function(d) {
+      var data = d.data();
+      var ts = data.createdAt;
+      var dateStr = ts ? new Date(ts.toDate ? ts.toDate() : ts).toLocaleDateString('en-GB',{day:'numeric',month:'short',year:'numeric'}) : 'â€”';
+      var amt = data.amount || data.netAmount || 0;
+      return {
+        id:            d.id,
+        title:         data.title          || 'Untitled Project',
+        freelancer:    flMap[data.freelancerUid] || data.freelancerName || 'Freelancer',
+        freelancerUid: data.freelancerUid,
+        amount:        amt,
+        netAmount:     data.netAmount      || amt,
+        status:        data.status         || 'in_progress',
+        signed:        data.freelancerSigned && data.buyerSigned,
+        escrowStatus:  data.escrowStatus   || 'unfunded',
+        date:          dateStr,
+        desc:          data.description    || '',
+      };
+    });
+    DISPUTES_COUNT = PROJECTS.filter(function(p){ return p.status === 'disputed'; }).length;
+  } catch(err) {
+    console.error('[loadBuyerDashboard]', err);
+    showToast('Could not load dashboard data. Pull to refresh.');
+  }
+  renderStats();
+  renderProjects();
+  document.getElementById('loading-overlay').style.display = 'none';
+}
+
 // ============ BOOT ============
 window._boot = function(user, userData) {
   DEMO.uid  = user.uid;
@@ -574,13 +626,8 @@ window._boot = function(user, userData) {
 
   setGreeting();
   buildNav();
-  renderStats();
-  renderProjects();
-
-  // Bell dot
   document.getElementById('bell-dot').style.display = 'block';
-
-  document.getElementById('loading-overlay').style.display = 'none';
+  loadBuyerDashboard(user.uid);
 };
 </script>
 <script>
@@ -592,12 +639,12 @@ if ('serviceWorker' in navigator) {
   });
 }
 </script>
-<script>Â// Safety: force-hide loading overlay after 10s if auth/boot stallsÂ(function() {Â  var _safetyTimer = setTimeout(function() {Â    var ov = document.getElementById("loading-overlay");Â    if (ov) { ov.style.display = "none"; }Â  }, 10000);Â  window._clearSafetyTimer = function() { clearTimeout(_safetyTimer); };Â})();Â</script>Â
+<script>ï¿½// Safety: force-hide loading overlay after 10s if auth/boot stallsï¿½(function() {ï¿½  var _safetyTimer = setTimeout(function() {ï¿½    var ov = document.getElementById("loading-overlay");ï¿½    if (ov) { ov.style.display = "none"; }ï¿½  }, 10000);ï¿½  window._clearSafetyTimer = function() { clearTimeout(_safetyTimer); };ï¿½})();ï¿½</script>ï¿½
 
 <script type="module">
   import { initializeApp }     from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js';
   import { getAuth, onAuthStateChanged } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js';
-  import { getFirestore, doc, getDoc } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
+  import { getFirestore, doc, getDoc, collection, query, where, orderBy, getDocs } from 'https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js';
   const FIREBASE_CONFIG = {
     apiKey:            'AIzaSyADHwnG1Im3IF5VetCilku1WeefjUR8Zkk',
     authDomain:        'kreddlo.firebaseapp.com',
@@ -610,6 +657,7 @@ if ('serviceWorker' in navigator) {
   const auth = getAuth(app);
   const db   = getFirestore(app);
   window.db  = db;
+  window._fsQ = { collection, query, where, orderBy, getDocs, getDoc, doc };
   onAuthStateChanged(auth, function(user) {
     if (!user) { window.location.href = '/login.html'; return; }
     getDoc(doc(db, 'users', user.uid)).then(function(snap) {

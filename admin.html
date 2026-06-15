@@ -162,8 +162,11 @@ body {
 
 #page-content { flex: 1; padding: 22px 18px; max-width: 1200px; width: 100%; margin: 0 auto; position: relative; }
 
-/* Overview grid */
-#overview-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 28px; }
+/* Overview grid — mobile-first: 1 col on phones */
+#overview-grid { display: grid; grid-template-columns: 1fr; gap: 16px; margin-bottom: 28px; }
+@media(min-width: 480px) {
+  #overview-grid { grid-template-columns: 1fr 1fr; }
+}
 
 /* Pills */
 .filter-pill { padding: 9px 20px; border-radius: 50px; font-size: 13px; font-weight: 600; border: none; cursor: pointer; transition: background .15s, color .15s, box-shadow .15s; }
